@@ -4,7 +4,7 @@
    [appMenu insertItem:item atIndex:about + 1];
  }
  
-+// Uranus Browser: registers the native messaging host a release app carries
++// UrAnus Browser: registers the native messaging host a release app carries
 +// (package-release.sh puts it in Contents/Resources/native-host), through
 +// which the shell imports from other browsers and runs the agent bridge.
 +// Chromium finds a user-level host only by its manifest in the user data
@@ -30,7 +30,7 @@
 +    NSDictionary* manifest = @{
 +      @"name" : @"dev.oprimo.anus.host",
 +      @"description" :
-+          @"Uranus Browser: imports from other browsers and the agent bridge",
++          @"UrAnus Browser: imports from other browsers and the agent bridge",
 +      @"path" : launcher,
 +      @"type" : @"stdio",
 +      @"allowed_origins" :
@@ -57,7 +57,7 @@
 +                                                  attributes:nil
 +                                                       error:&error] ||
 +        ![json writeToFile:path options:NSDataWritingAtomic error:&error]) {
-+      LOG(ERROR) << "Uranus Browser: can't register the native host: "
++      LOG(ERROR) << "UrAnus Browser: can't register the native host: "
 +                 << base::SysNSStringToUTF8(error.localizedDescription);
 +    }
 +  });

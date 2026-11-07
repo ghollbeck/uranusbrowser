@@ -12,7 +12,7 @@ export * from '../shared/agentTools';
 export const DEFAULT_AGENT_PORT = 7390;
 
 /**
- * An MCP server (Streamable HTTP) that lets coding agents see and drive Uranus Browser's tabs.
+ * An MCP server (Streamable HTTP) that lets coding agents see and drive UrAnus Browser's tabs.
  *
  * It only listens on 127.0.0.1, only answers requests whose Host is local, and every
  * request needs the bearer token shown in Settings. `register` adds the tools.

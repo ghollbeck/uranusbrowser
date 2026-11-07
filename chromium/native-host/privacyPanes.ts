@@ -6,7 +6,7 @@
 import { execFile } from 'node:child_process';
 
 export const PRIVACY_PANES = {
-  /** "Allow Uranus Browser to modify other apps" (macOS App Management). There is no prompt API for it. */
+  /** "Allow UrAnus Browser to modify other apps" (macOS App Management). There is no prompt API for it. */
   appManagement: 'x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles',
   microphone: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone',
   camera: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Camera',

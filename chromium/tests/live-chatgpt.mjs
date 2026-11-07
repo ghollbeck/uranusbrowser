@@ -1,7 +1,7 @@
 // A supervised live check of Sign in with ChatGPT (docs/ai-providers.md), against the real
 // Codex app-server and a real ChatGPT plan. Not part of the automated suite: someone has to
-// finish the ChatGPT sign-in in the tab Uranus Browser opens (unless Uranus Browser is signed in already).
-//   1. Settings › AI › Sign In opens the ChatGPT sign-in page in a Uranus Browser tab; waits up to
+// finish the ChatGPT sign-in in the tab UrAnus Browser opens (unless UrAnus Browser is signed in already).
+//   1. Settings › AI › Sign In opens the ChatGPT sign-in page in a UrAnus Browser tab; waits up to
 //      10 minutes for Codex to report the sign-in, then checks the row and the tab closing;
 //   2. picks a ChatGPT model in the panel's model menu;
 //   3. asks "Open example.com and tell me its title", and checks the navigate step in the
@@ -10,7 +10,7 @@
 // Uses the signed-in state in ~/Library/Application Support/Anus Browser/ai (the real one), and a
 // throwaway browser profile.
 //
-//   node chromium/tests/live-chatgpt.mjs [--app /Applications/Uranus Browser.app] [--shots <dir>] [--keep-model]
+//   node chromium/tests/live-chatgpt.mjs [--app /Applications/UrAnus Browser.app] [--shots <dir>] [--keep-model]
 //        [--model <label text, e.g. GPT-6-Luna>] [--prompt "<a task of your own>"]
 // With --prompt, the checks are: at least one browser step, an answer, and no error.
 import { spawn } from 'node:child_process';
@@ -24,7 +24,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shots = arg('--shots');
 const wantModel = arg('--model');
 const prompt = arg('--prompt');
@@ -37,7 +37,7 @@ const check = (ok, what) => {
 if (shots) fs.mkdirSync(shots, { recursive: true });
 fs.mkdirSync(profile, { recursive: true });
 const browser = spawn(
-  path.join(app, 'Contents/MacOS/Uranus Browser'),
+  path.join(app, 'Contents/MacOS/UrAnus Browser'),
   [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900'],
   { stdio: 'ignore' },
 );
@@ -80,9 +80,9 @@ const chatBefore = before.features?.chat;
 if (!before.providers?.find((p) => p.id === 'codex')?.ready) {
   await click(settings, '#ai-chatgpt-action');
   const authTab = await cdp.waitTarget((t) => t.type === 'page' && /^https:\/\/auth\.openai\.com\//.test(t.url), 30000).catch(() => undefined);
-  check(!!authTab, 'Sign In opens the ChatGPT sign-in page in a Uranus Browser tab');
+  check(!!authTab, 'Sign In opens the ChatGPT sign-in page in a UrAnus Browser tab');
   await shot(settings, 'live-1-waiting');
-  console.log('\n>>> Finish signing in to ChatGPT in the Uranus Browser window that just opened (10 minutes).\n');
+  console.log('\n>>> Finish signing in to ChatGPT in the UrAnus Browser window that just opened (10 minutes).\n');
   // Asked of the host, so closing the Settings window meanwhile doesn't matter.
   await until(async () => (await hub('ai:request', { op: 'view' }))?.providers?.find((p) => p.id === 'codex')?.ready, 'the ChatGPT sign-in', 600000);
   await wait(1500);

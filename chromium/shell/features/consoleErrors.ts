@@ -48,7 +48,7 @@ export function watchConsoleErrors(fn: () => void) {
   onChange = fn;
 }
 
-/** Counts by Uranus Browser tab id, for UiState.consoleErrors (only tabs that have some). */
+/** Counts by UrAnus Browser tab id, for UiState.consoleErrors (only tabs that have some). */
 export function consoleErrors(anusIdFor: (chromeTabId: number) => string | undefined): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [tabId, n] of counts) {

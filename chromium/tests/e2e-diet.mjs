@@ -1,4 +1,4 @@
-// End-to-end test of the Algorithm Diet in a real Uranus Browser with a throwaway profile, this
+// End-to-end test of the Algorithm Diet in a real UrAnus Browser with a throwaway profile, this
 // worktree's shell (--anus-shell-dir) and native host. No network: pages for real hostnames are
 // served by a local fixture server through --host-resolver-rules.
 //   1. Live tracking: an article and a short video, each in front for a while, become measured
@@ -10,7 +10,7 @@
 //      the pages list. The export is personal data: it only goes into the throwaway profile,
 //      which is deleted at the end (keep --shots outside the repo).
 //
-//   node chromium/tests/e2e-diet.mjs [--app /Applications/Uranus Browser.app] [--bundled] [--history file.json] [--model] [--shots dir]
+//   node chromium/tests/e2e-diet.mjs [--app /Applications/UrAnus Browser.app] [--bundled] [--history file.json] [--model] [--shots dir]
 // --bundled tests the app's own shell and host (a packaged build) instead of this worktree's.
 import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -25,7 +25,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = path.resolve(arg('--shell-dir', path.join(root, 'chromium/shell/dist')));
 const hostScript = path.join(root, 'chromium/native-host/dist/anus-host.cjs');
 const history = arg('--history') && path.resolve(arg('--history'));
@@ -70,7 +70,7 @@ const guarded = (session) => {
 async function launch() {
   fs.mkdirSync(profile, { recursive: true });
   const browser = spawn(
-    path.join(app, 'Contents/MacOS/Uranus Browser'),
+    path.join(app, 'Contents/MacOS/UrAnus Browser'),
     [
       `--user-data-dir=${profile}`,
       ...(bundled ? [] : [`--anus-shell-dir=${shellDir}`]),

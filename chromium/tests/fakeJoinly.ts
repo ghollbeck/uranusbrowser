@@ -1,6 +1,6 @@
 // A stand-in for the user's joinly server, for the tests: a small MCP server (Streamable HTTP,
 // with sessions, the way joinly's FastMCP serves it) on 127.0.0.1 and a random port, with the
-// tools Uranus Browser uses and joinly's /health. It never opens a browser or a meeting, and records
+// tools UrAnus Browser uses and joinly's /health. It never opens a browser or a meeting, and records
 // every call so tests can say what did and did not reach it.
 //
 // The shapes are the REAL server's (joinly 0.5.4 on fastmcp 2.10, checked by running its
@@ -67,7 +67,7 @@ export class FakeJoinly {
   /** speak_text fails (joinly's text is "Error while speaking text"). */
   speakFails = false;
   /** The bot's own name in the transcript when it speaks. */
-  botSpeaker = 'Uranus Browser AI assistant';
+  botSpeaker = 'UrAnus Browser AI assistant';
   /** Only one session at a time, like joinly's single bot browser. */
   exclusive = true;
   /** How long (ms) the bot browser stays taken after a session's DELETE. */

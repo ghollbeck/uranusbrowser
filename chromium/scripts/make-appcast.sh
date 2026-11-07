@@ -1,14 +1,14 @@
 #!/bin/bash
 # Generate a signed Sparkle appcast locally. Set ANUS_DOWNLOAD_URL_PREFIX to the
 # HTTPS asset prefix (with trailing /) and ANUS_RELEASE_SITE_URL to your release site.
-# Usage: make-appcast.sh <Uranus-Browser-version[-x64].dmg> [appcast folder]
+# Usage: make-appcast.sh <UrAnus-Browser-version[-x64].dmg> [appcast folder]
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=env.sh
 . "$here/scripts/env.sh"
 
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-  echo "usage: $0 <Uranus-Browser-<version>.dmg> [<folder>]" >&2
+  echo "usage: $0 <UrAnus-Browser-<version>.dmg> [<folder>]" >&2
   exit 1
 fi
 dmg="$1"

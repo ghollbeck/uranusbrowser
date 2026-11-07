@@ -1,5 +1,5 @@
-// End-to-end test of the Agent panel in a real Uranus Browser, against the local test page and the
-// real model provider (the OpenAI key from the Keychain; set-openai-key.sh). Drives Uranus Browser
+// End-to-end test of the Agent panel in a real UrAnus Browser, against the local test page and the
+// real model provider (the OpenAI key from the Keychain; set-openai-key.sh). Drives UrAnus Browser
 // over the DevTools protocol, like a user would through the panel:
 //   1. opens the panel from the shell (as the toolbar button does);
 //   2. asks the agent to summarise the test page, scroll to the bottom, click "Add one",
@@ -8,7 +8,7 @@
 //      checks nothing was submitted;
 //   4. checks the API key appears nowhere the panel, page or logs can see.
 //
-//   node chromium/tests/e2e.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist]
+//   node chromium/tests/e2e.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist]
 //        [--dev-host] [--keep] [--shots <dir>] [--ai-dir <dir>]
 //
 // The AI choices (Settings › AI, ~/Library/Application Support/Anus Browser/ai) belong to the Mac, not
@@ -34,7 +34,7 @@ const arg = (name, fallback) => {
   return i > 0 ? process.argv[i + 1] : fallback;
 };
 const has = (name) => process.argv.includes(name);
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir');
 const shots = arg('--shots');
 const profile = path.join(here, '.scratch', `e2e-profile-${Date.now()}`);
@@ -49,12 +49,12 @@ const check = (ok, what) => {
 
 const fixture = await startFixtureServer(0);
 fs.mkdirSync(profile, { recursive: true });
-const binary = path.join(app, 'Contents/MacOS/Uranus Browser');
+const binary = path.join(app, 'Contents/MacOS/UrAnus Browser');
 // --use-mock-keychain: a fresh profile would otherwise ask the macOS Keychain for its storage
 // key, and hold every request until someone answers.
 const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900'];
 if (shellDir) flags.push(`--anus-shell-dir=${path.resolve(shellDir)}`);
-console.log(`Uranus Browser: ${app}\nprofile: ${profile}\nAI folder: ${aiDir}\ntest page: ${fixture.url}`);
+console.log(`UrAnus Browser: ${app}\nprofile: ${profile}\nAI folder: ${aiDir}\ntest page: ${fixture.url}`);
 const browser = spawn(binary, flags, { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, ANUS_AI_DIR: aiDir } });
   reap(browser);
 process.on('exit', () => has('--keep') || browser.kill());
@@ -80,7 +80,7 @@ if (has('--dev-host')) {
   // checkout's instead.
   const manifest = path.join(profile, 'NativeMessagingHosts/dev.oprimo.anus.host.json');
   await until(async () => fs.existsSync(manifest), "the app's native host registration", 60000).catch(() => undefined);
-  // Its copy goes in a temporary folder: not your own Uranus Browser folder, and not under ~/Desktop
+  // Its copy goes in a temporary folder: not your own UrAnus Browser folder, and not under ~/Desktop
   // or ~/Documents, which macOS keeps from a host Chromium starts.
   execFileSync(path.join(repo, 'chromium/scripts/install-native-host.sh'), ['--only', profile], {
     stdio: 'ignore',

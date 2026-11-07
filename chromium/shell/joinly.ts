@@ -180,7 +180,7 @@ export function registerJoinly(ctx: JoinlyContext) {
       }
       hostKnows = false;
       const wasIn = view.status === 'joined' || !!view.phase;
-      setView(helperView(settings, problem ?? 'Uranus Browser’s helper stopped.', wasIn ? 'Uranus Browser’s helper stopped, which ends the meeting: the bot leaves.' : undefined));
+      setView(helperView(settings, problem ?? 'UrAnus Browser’s helper stopped.', wasIn ? 'UrAnus Browser’s helper stopped, which ends the meeting: the bot leaves.' : undefined));
     },
     /** Whether the bot is in a meeting (or on its way in). */
     active: () => view.status === 'joined' || !!view.phase,

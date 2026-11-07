@@ -16,7 +16,7 @@
 +    if (profile.IsIncognitoProfile() &&
 +        security_principal.SchemeIs(extensions::kExtensionScheme) &&
 +        IsAnusShell(security_principal.GetHost())) {
-+      // Uranus Browser: the incognito shell's pages (the window frame, the new tab
++      // UrAnus Browser: the incognito shell's pages (the window frame, the new tab
 +      // page) are always dark, like Chromium's own incognito UI, so that an
 +      // incognito window never looks like a normal one.
 +      preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;
@@ -151,9 +151,9 @@
 +}
 +
  // Sends one of chrome.anusPrivate's events ("anusPrivate.onSomething") to
--// Uranus Browser's shell, and only to it. Header-only, like anus_shell_commands.h,
+-// UrAnus Browser's shell, and only to it. Header-only, like anus_shell_commands.h,
 -// so that any browser code can send one without a new dependency.
-+// Uranus Browser's shell, and only to it: the shell of `profile`'s windows (see
++// UrAnus Browser's shell, and only to it: the shell of `profile`'s windows (see
 +// AnusShellProfile). Header-only, like anus_shell_commands.h, so that any
 +// browser code can send one without a new dependency.
  inline void DispatchAnusShellEvent(Profile* profile,
@@ -211,7 +211,7 @@
  //
 -// Incognito and guest windows keep Chromium's tab strip and toolbar: the shell
 -// doesn't run in off-the-record profiles, so nothing else would show the URL.
-+// Incognito windows are Uranus Browser windows too: the shell runs in split incognito
++// Incognito windows are UrAnus Browser windows too: the shell runs in split incognito
 +// mode, so a second shell runs in the incognito profile and draws their frame.
 +// Guest windows and other off-the-record profiles keep Chromium's tab strip
 +// and toolbar: no shell runs there, so nothing else would show the URL.
@@ -231,7 +231,7 @@
      // The open AnusMinis' window ids.
      static void getAnusMinis(WindowIdsCallback callback);
 +
-+    // For the incognito shell: runs one of Uranus Browser's commands in the regular
++    // For the incognito shell: runs one of UrAnus Browser's commands in the regular
 +    // profile's shell, which gets it as onShortcut(command, -1). Settings keep
 +    // one state, the regular profile's, so the incognito windows open them
 +    // there.

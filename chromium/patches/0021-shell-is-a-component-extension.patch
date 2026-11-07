@@ -12,7 +12,7 @@
  #if !BUILDFLAG(IS_ANDROID)
        extension_misc::kIndigoExtensionId,
        extension_misc::kDictationConnectorExtensionId,
-+      // Uranus Browser's shell (chromium/shell), a component extension so that it
++      // UrAnus Browser's shell (chromium/shell), a component extension so that it
 +      // can't be removed or turned off (component_loader.cc).
 +      kAnusShellExtensionId,
  #endif  // !BUILDFLAG(IS_ANDROID)
@@ -63,7 +63,7 @@
 +            std::optional<base::DictValue> manifest =
 +                file_util::LoadManifest(dir, &error);
 +            if (!manifest) {
-+              LOG(ERROR) << "Uranus Browser's shell couldn't load from " << dir << ": "
++              LOG(ERROR) << "UrAnus Browser's shell couldn't load from " << dir << ": "
 +                         << error;
 +            }
 +            return manifest;
@@ -82,7 +82,7 @@
 +  const ExtensionId id =
 +      Add(std::move(*manifest), dir, /*skip_allowlist=*/false);
 +  if (id != kAnusShellExtensionId) {
-+    LOG(ERROR) << "Uranus Browser's shell at " << dir << " has the id " << id
++    LOG(ERROR) << "UrAnus Browser's shell at " << dir << " has the id " << id
 +               << "; its manifest key must give " << kAnusShellExtensionId;
 +  }
  }
@@ -105,7 +105,7 @@
  
    void AddContextualTasksExtension();
 +
-+  // Uranus Browser: Uranus Browser's shell (chromium/shell), from --anus-shell-dir=<dir>
++  // UrAnus Browser: UrAnus Browser's shell (chromium/shell), from --anus-shell-dir=<dir>
 +  // (dev: chromium/shell/dist, so shell changes need no C++ build) or else
 +  // the app's Resources/anus-shell. As a component extension it can't be
 +  // removed, turned off or seen in chrome://extensions.

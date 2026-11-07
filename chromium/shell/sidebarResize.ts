@@ -2,7 +2,7 @@
  * The sidebar's right edge drags to make it wider or narrower (200–480 px), as in Arc.
  * While dragging, the window is laid out at the new width every frame (anusApi.ts sends it
  * to setFrame, patch 0044); letting go saves it, and a double-click goes back to 260.
- * Only in Uranus Browser's own browser, and only while the sidebar is shown (docked or floating).
+ * Only in UrAnus Browser's own browser, and only while the sidebar is shown (docked or floating).
  */
 import { previewSidebarWidth, sidebarResizable } from './anusApi';
 

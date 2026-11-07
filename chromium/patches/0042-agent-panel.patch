@@ -4,7 +4,7 @@
                     std::max(0, page.height() - 72));
  }
  
-+// Uranus Browser: the Agent panel (the shell's agent.html) beside the page area, its
++// UrAnus Browser: the Agent panel (the shell's agent.html) beside the page area, its
 +// margins included, between these widths (and at most half the window).
 +inline constexpr int kAnusAgentPanelMinWidth = 280;
 +inline constexpr int kAnusAgentPanelMaxWidth = 800;
@@ -16,26 +16,26 @@
    virtual void SetFrameState(const AnusFrameState& state) = 0;
    virtual void FocusFrame() = 0;
    virtual void FocusPage() = 0;
-+  // Uranus Browser: shows or hides the Agent panel beside the page area, on its left
++  // UrAnus Browser: shows or hides the Agent panel beside the page area, on its left
 +  // (between the sidebar and the page) or its right, `width` px wide; `focus`
 +  // moves keyboard focus into it. The page area shrinks to make room.
 +  virtual void SetAgentPanel(bool open, bool left, int width, bool focus) = 0;
    // Takes the keys in Shortcuts() from now on, and lets go of any others.
    virtual void UpdateShortcuts() = 0;
-   // Whether the window is a AnusMini, Uranus Browser's small window for one page.
+   // Whether the window is a AnusMini, UrAnus Browser's small window for one page.
 --- a/chrome/common/extensions/api/anus_private.idl
 +++ b/chrome/common/extensions/api/anus_private.idl
 @@ -43,6 +43,24 @@
      DOMString background;
    };
  
-+  // Uranus Browser: which side of the page the Agent panel is on.
++  // UrAnus Browser: which side of the page the Agent panel is on.
 +  enum AgentPanelSide {
 +    left,
 +    right
 +  };
 +
-+  // Uranus Browser: the Agent panel (the shell's agent.html?window=<id>) beside the
++  // UrAnus Browser: the Agent panel (the shell's agent.html?window=<id>) beside the
 +  // page area, which shrinks to make room for it.
 +  dictionary AgentPanelState {
 +    boolean open;
@@ -61,8 +61,8 @@
 +        optional long windowId,
 +        optional DoneCallback callback);
 +
-     // Uranus Browser's keyboard shortcuts: <code>shortcuts</code> maps Electron
-     // accelerators ("CmdOrCtrl+Shift+T") to the shell's command ids. Uranus Browser
+     // UrAnus Browser's keyboard shortcuts: <code>shortcuts</code> maps Electron
+     // accelerators ("CmdOrCtrl+Shift+T") to the shell's command ids. UrAnus Browser
      // windows take these keys before the page and before Chromium's own
 --- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
 +++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
@@ -152,7 +152,7 @@
    // Peek's card (a web view above the frame), hidden unless a Peek is open.
    views::View* peek_view() { return peek_view_.view(); }
  
-+  // Uranus Browser: the Agent panel (a web view below the frame, beside the page
++  // UrAnus Browser: the Agent panel (a web view below the frame, beside the page
 +  // area), hidden unless it is open.
 +  views::View* agent_panel_view() { return agent_panel_view_.view(); }
 +
@@ -238,7 +238,7 @@
  BEGIN_METADATA(AnusPeekWebView)
  END_METADATA
  
-+// Uranus Browser: the Agent panel's view. Its preferred width is the strip it takes
++// UrAnus Browser: the Agent panel's view. Its preferred width is the strip it takes
 +// beside the page area; the layout puts it on whichever side the page area
 +// left room on (BrowserViewTabbedLayoutImpl).
 +class AnusAgentPanelWebView : public views::WebView {
@@ -272,7 +272,7 @@
 +
  }  // namespace
  
-+// Uranus Browser: the Agent panel's page, the shell's agent.html?window=<id>. Like the
++// UrAnus Browser: the Agent panel's page, the shell's agent.html?window=<id>. Like the
 +// frame page it is the shell's own (an extension view), keeps the window's
 +// shortcuts working while focused, and sends links it opens to tabs.
 +class AnusFrameView::AgentPanel : public content::WebContentsDelegate {
@@ -344,7 +344,7 @@
    }
    AnusFrameView* frame = browser_view->AddChildView(
        std::make_unique<AnusFrameView>(browser_view));
-+  // Uranus Browser: the Agent panel, just below the frame, so the frame's overlays
++  // UrAnus Browser: the Agent panel, just below the frame, so the frame's overlays
 +  // (command bar, menus, Peek's backdrop) go over it.
 +  frame->agent_panel_view_.SetView(browser_view->AddChildViewAt(
 +      std::make_unique<AnusAgentPanelWebView>(
@@ -462,7 +462,7 @@
        peek && peek->GetVisible() && peek->bounds().Contains(point)) {
      return HTCLIENT;
    }
-+  // Uranus Browser: the Agent panel takes its own clicks (unless the frame covers it),
++  // UrAnus Browser: the Agent panel takes its own clicks (unless the frame covers it),
 +  // rather than moving the window as the background around the page would.
 +  if (const views::View* panel = agent_panel_view_.view();
 +      panel && panel->GetVisible() && panel->bounds().Contains(point) &&
@@ -495,7 +495,7 @@
  }
  
  void AnusFrameView::ApplyState() {
-+  // Uranus Browser: room for the Agent panel beside the page area. On the right its
++  // UrAnus Browser: room for the Agent panel beside the page area. On the right its
 +  // strip replaces the gap there; on the left it sits after the sidebar.
 +  gfx::Insets insets = state_.PageInsets();
 +  applied_agent_panel_width_ = AgentPanelWidth();
@@ -520,10 +520,10 @@
 --- a/chrome/browser/ui/views/frame/layout/browser_view_layout.h
 +++ b/chrome/browser/ui/views/frame/layout/browser_view_layout.h
 @@ -101,6 +101,9 @@
-   // Uranus Browser: Peek's card, above the frame, in AnusPeekBounds() of the page
+   // UrAnus Browser: Peek's card, above the frame, in AnusPeekBounds() of the page
    // area while it is visible.
    raw_ptr<views::View> anus_peek = nullptr;
-+  // Uranus Browser: the Agent panel, beside the page area while it is visible, as
++  // UrAnus Browser: the Agent panel, beside the page area while it is visible, as
 +  // wide as its preferred width (anus_frame_view.h).
 +  raw_ptr<views::View> anus_agent_panel = nullptr;
  };
@@ -545,7 +545,7 @@
                      gfx::Rect(window.x(), window.y(), frame_width,
                                frame_height));
  
-+    // Uranus Browser: the Agent panel fills the strip the page area left it, on the
++    // UrAnus Browser: the Agent panel fills the strip the page area left it, on the
 +    // right (where the page's inset is the panel's width) or else on the left,
 +    // just before the page.
 +    if (IsParentedToAndVisible(views().anus_agent_panel,

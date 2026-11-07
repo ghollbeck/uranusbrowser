@@ -1,6 +1,6 @@
 #!/bin/bash
-# Puts Uranus Browser's branding and patches on the Chromium checkout, then builds the
-# dev (component) app at out/Dev/Uranus Browser.app. Extra arguments go to autoninja.
+# Puts UrAnus Browser's branding and patches on the Chromium checkout, then builds the
+# dev (component) app at out/Dev/UrAnus Browser.app. Extra arguments go to autoninja.
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=env.sh

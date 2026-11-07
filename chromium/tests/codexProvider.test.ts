@@ -1,5 +1,5 @@
 // The ChatGPT provider (native-host/ai/codex.ts) against a fake `codex app-server`
-// (fakeCodexServer.mjs) replaying the real one's JSON-RPC: sign-in without Uranus Browser touching a
+// (fakeCodexServer.mjs) replaying the real one's JSON-RPC: sign-in without UrAnus Browser touching a
 // token, a locked-down thread, browser tools through the chat's own approval gate, streamed
 // text, and clean errors (a usage limit, a server that goes quiet, one that dies).
 import assert from 'node:assert/strict';
@@ -25,7 +25,7 @@ function setup(scenario = 'tool', signedIn = true, extra: Partial<ConstructorPar
     home: path.join(dir, 'home'),
     workspace: path.join(dir, 'workspace'),
     launch: { command: process.execPath, args: [FAKE] },
-    // An API key in Uranus Browser's environment must not reach Codex.
+    // An API key in UrAnus Browser's environment must not reach Codex.
     env: { ...process.env, OPENAI_API_KEY: 'sk-should-not-reach-codex-1234567890' } as NodeJS.ProcessEnv,
     extraEnv: { FAKE_CODEX_LOG: logFile, FAKE_CODEX_SCENARIO: scenario, FAKE_CODEX_SIGNED_IN: signedIn ? '1' : '0', ...fakeEnv },
     onChange: (e) => changes.push(e),
@@ -77,7 +77,7 @@ test('findCodex prefers the native binary inside the npm package over its Node s
   assert.equal(findCodex({ PATH: '/nonexistent', HOME: dir }, () => false), undefined);
 });
 
-test('sign-in: Codex hands Uranus Browser a page to open and says when it is done; no token ever comes back', async () => {
+test('sign-in: Codex hands UrAnus Browser a page to open and says when it is done; no token ever comes back', async () => {
   const { codex, seen, changes } = setup('text', false);
   try {
     const before = await codex.status();
@@ -145,12 +145,12 @@ test('a browser tool from Codex runs through the chat loop: checked, logged, run
     assert.deepEqual(answers, ['I’ll open it.', 'The title is Example Domain.']);
     // It streamed: an earlier snapshot had part of an answer.
     assert.ok(published.some((s) => s.entries.some((e) => e.kind === 'assistant' && e.text !== 'I’ll open it.' && 'I’ll open it.'.startsWith(e.text))));
-    // The thread was locked down and given Uranus Browser's tools.
+    // The thread was locked down and given UrAnus Browser's tools.
     const start = seen().find((e) => e.in?.method === 'thread/start').in.params;
     assert.equal(start.sandbox, 'read-only');
     assert.equal(start.approvalPolicy, 'never');
     assert.equal(start.ephemeral, true);
-    assert.match(start.baseInstructions, /Uranus Browser's browser agent/);
+    assert.match(start.baseInstructions, /UrAnus Browser's browser agent/);
     assert.ok(start.dynamicTools.some((t: { name: string; inputSchema: object }) => t.name === 'navigate' && t.inputSchema));
     // The tool's output went back to Codex fenced as page data.
     const results = seen().find((e) => e.toolResults)?.toolResults;

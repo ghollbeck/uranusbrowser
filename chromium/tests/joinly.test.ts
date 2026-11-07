@@ -386,7 +386,7 @@ test('transcript: speaker names kept, adjacent same-speaker segments merged, tim
 });
 
 test('transcript: the assistant’s own words are marked as such; unknown speakers get a label', () => {
-  const shaped = shapeTranscript([seg('Hello from the bot.', 5, 'Uranus Browser AI assistant', 'assistant'), seg('who is this', 9, null)]);
+  const shaped = shapeTranscript([seg('Hello from the bot.', 5, 'UrAnus Browser AI assistant', 'assistant'), seg('who is this', 9, null)]);
   assert.equal(shaped.turns[0].self, true);
   const text = formatTranscript(shaped);
   assert.match(text, /\[00:05\] \[you\]: Hello from the bot\./);
@@ -527,7 +527,7 @@ test('participants as joinly sends them: its own entry is marked, and told apart
   assert.deepEqual(shapeParticipants(raw), ['Anna Keller', 'Jordan Example (the bot)']);
   assert.equal(botDisplayName(raw), 'Jordan Example');
   assert.equal(botDisplayName({ result: [{ name: 'Anna Keller', infos: [] }] }), undefined);
-  assert.equal(botDisplayName({ result: [{ name: 'Uranus Browser Bot', infos: ['you'] }] }), 'Uranus Browser Bot');
+  assert.equal(botDisplayName({ result: [{ name: 'UrAnus Browser Bot', infos: ['you'] }] }), 'UrAnus Browser Bot');
   assert.deepEqual(shapeParticipants(['A', 'B']), ['A', 'B'], 'bare lists of names still work');
   assert.equal(botDisplayName({ result: [{ name: 'x\u202e<b>', infos: ['You'] }] })?.includes('\u202e'), false);
 });

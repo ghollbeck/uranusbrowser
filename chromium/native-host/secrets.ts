@@ -8,14 +8,14 @@
  *     chromium/scripts/set-openai-key.sh); a key still under LEGACY_KEYCHAIN_SERVICE is
  *     copied to the new service on first use, and left where it is;
  *  2. OPENAI_API_KEY in the host's environment, for development (Chromium starts the host
- *     with the app's environment, so this needs Uranus Browser launched from that shell).
+ *     with the app's environment, so this needs UrAnus Browser launched from that shell).
  */
 import { execFile } from 'node:child_process';
 import { OPENAI_KEY_PATTERN } from '../shared/aiProtocol';
 
 export const KEYCHAIN_SERVICE = 'dev.oprimo.anus.agent.openai';
 export const KEYCHAIN_ACCOUNT = 'api-key';
-/** The service the key was stored under before the app became Uranus Browser; read once and moved. */
+/** The service the key was stored under before the app became UrAnus Browser; read once and moved. */
 export const LEGACY_KEYCHAIN_SERVICE = 'dev.oprimo.flecha.agent.openai';
 
 export type KeySource = 'keychain' | 'environment';
@@ -58,7 +58,7 @@ export const systemSecrets: SecretStore = {
     const clean = key.trim();
     // Checked twice (the shell checks too): the key goes inside quotes on a command line.
     if (!OPENAI_KEY_PATTERN.test(clean)) throw new Error('That doesn’t look like an OpenAI API key (sk-…).');
-    await securityStdin(`add-generic-password -U -s ${KEYCHAIN_SERVICE} -a ${KEYCHAIN_ACCOUNT} -l "Uranus Browser OpenAI API key" -w "${clean}"`);
+    await securityStdin(`add-generic-password -U -s ${KEYCHAIN_SERVICE} -a ${KEYCHAIN_ACCOUNT} -l "UrAnus Browser OpenAI API key" -w "${clean}"`);
   },
   async removeOpenaiKey() {
     if (process.platform !== 'darwin') return;

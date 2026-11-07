@@ -112,7 +112,7 @@
    }
  #endif  // BUILDFLAG(IS_MAC)
 +
-+  // Uranus Browser: the shell's frame page draws the window. Its -webkit-app-region:
++  // UrAnus Browser: the shell's frame page draws the window. Its -webkit-app-region:
 +  // drag areas and the window background around the page move the window.
 +  if (AnusFrameView* anus_frame = AnusFrameView::From(this)) {
 +    gfx::Point point_in_browser_view(point);

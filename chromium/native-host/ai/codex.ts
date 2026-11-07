@@ -1,16 +1,16 @@
 /**
  * A ChatGPT account as one of the registry's providers, through the official Codex app-server
  * (`codex app-server`, JSON-RPC over stdio). Codex owns the whole sign-in: the OAuth flow, the
- * tokens and their refresh. Uranus Browser never sees or stores a ChatGPT token; it only asks Codex who
+ * tokens and their refresh. UrAnus Browser never sees or stores a ChatGPT token; it only asks Codex who
  * is signed in, which models the plan offers, and for answers.
  *
- * Locked down to a chat brain with Uranus Browser's tools only:
- *  - its own CODEX_HOME under Uranus Browser's app data, so the user's own Codex setup (MCP servers,
+ * Locked down to a chat brain with UrAnus Browser's tools only:
+ *  - its own CODEX_HOME under UrAnus Browser's app data, so the user's own Codex setup (MCP servers,
  *    skills, AGENTS.md, plugins, another sign-in) never comes in, and signing out here doesn't
  *    sign the Codex CLI out; Codex's bundled skills are off too;
  *  - every thread ephemeral, in an empty folder, sandbox read-only, approvals never, and the
  *    shell, apps, plugins, web search, browser and computer tools switched off;
- *  - the browser tools go in as dynamic tools: Codex asks Uranus Browser to run them (item/tool/call)
+ *  - the browser tools go in as dynamic tools: Codex asks UrAnus Browser to run them (item/tool/call)
  *    and the chat loop (agentChat.ts) checks each one against the same approval rules as any
  *    other provider's, before the shell may run it.
  *
@@ -35,16 +35,16 @@ const SILENCE_MS = 150_000;
 const LIMITS_TTL_MS = 60_000;
 
 /**
- * Codex features a browser agent has no use for; with them off, the model sees only Uranus Browser's tools.
+ * Codex features a browser agent has no use for; with them off, the model sees only UrAnus Browser's tools.
  *
  * `code_mode_host` stays ON: the plan's current models are `tool_mode: "code_mode_only"` in
- * Codex's catalog, so they reach every tool, Uranus Browser's dynamic tools included, through `exec`
+ * Codex's catalog, so they reach every tool, UrAnus Browser's dynamic tools included, through `exec`
  * code. With the host off they can't call a tool at all. The code runs in a bare JS isolate
  * (checked live on 0.164: no fetch, filesystem, process, require or sockets; only the tools),
- * and each tool call it makes still comes to Uranus Browser as item/tool/call, so it passes the same
+ * and each tool call it makes still comes to UrAnus Browser as item/tool/call, so it passes the same
  * approval gate. What else it can see fails closed: apply_patch (read-only sandbox, approvals
  * never), spawn_agent (ephemeral threads have no rollout; a helper's tool calls would arrive for
- * a thread Uranus Browser doesn't know and are refused), request_user_input (refused below).
+ * a thread UrAnus Browser doesn't know and are refused), request_user_input (refused below).
  */
 const DISABLED_FEATURES = [
   'shell_tool',
@@ -71,14 +71,14 @@ const DISABLED_FEATURES = [
 ];
 
 const CONFIG = [
-  // Keychain when there is one; Codex's own choice of file otherwise (in Uranus Browser's CODEX_HOME).
+  // Keychain when there is one; Codex's own choice of file otherwise (in UrAnus Browser's CODEX_HOME).
   'cli_auth_credentials_store="auto"',
   'web_search="disabled"',
   'history.persistence="none"',
   'project_doc_max_bytes=0',
   // Codex's own bundled skills (imagegen, openai-docs, skill-creator, skill-installer,
   // review-agent) are off: their tools are switched off above, so the model would offer what it
-  // can't do ("I can generate images"), and Uranus Browser's companions bring their own skills.
+  // can't do ("I can generate images"), and UrAnus Browser's companions bring their own skills.
   // Checked on 0.164: with this, skills/list is empty even where .system skills are on disk.
   'skills.bundled.enabled=false',
   'skills.include_instructions=false',
@@ -91,7 +91,7 @@ export interface CodexLaunch {
 
 /**
  * Where the Codex CLI is. The npm package's `codex` is a Node script that starts a native
- * binary, so the binary inside the package is used directly when it is there (Uranus Browser's host
+ * binary, so the binary inside the package is used directly when it is there (UrAnus Browser's host
  * may not have a `node` on its PATH); otherwise the script runs under this host's own Node.
  */
 export function findCodex(env: NodeJS.ProcessEnv = process.env, exists: (file: string) => boolean = fs.existsSync): CodexLaunch | undefined {
@@ -178,7 +178,7 @@ class AppServer {
     child.on('exit', (code, signal) => this.die(new ProviderError(`Codex stopped (${signal ?? `exit ${code}`}). Try again.`, 'codex')));
     child.stdin.on('error', () => undefined);
     this.ready = this.request('initialize', {
-      clientInfo: { name: 'anus', title: 'Uranus Browser', version },
+      clientInfo: { name: 'anus', title: 'UrAnus Browser', version },
       capabilities: {
         experimentalApi: true,
         requestAttestation: false,
@@ -407,7 +407,7 @@ class CodexChat implements ChatProvider {
 // ---- the provider -------------------------------------------------------------------------------
 
 export interface CodexOptions {
-  /** Uranus Browser's own Codex home: its sign-in and nothing else. */
+  /** UrAnus Browser's own Codex home: its sign-in and nothing else. */
   home: string;
   /** The empty folder every thread works in. */
   workspace: string;
@@ -455,7 +455,7 @@ export class CodexProvider implements AiProvider {
       return this.server;
     }
     const launch = this.findLaunch();
-    if (!launch) throw new ProviderError('Codex isn’t installed, so Uranus Browser can’t sign in with ChatGPT.', 'codex');
+    if (!launch) throw new ProviderError('Codex isn’t installed, so UrAnus Browser can’t sign in with ChatGPT.', 'codex');
     fs.mkdirSync(this.options.home, { recursive: true, mode: 0o700 });
     fs.mkdirSync(this.options.workspace, { recursive: true, mode: 0o700 });
     const base = this.options.env ?? process.env;
@@ -550,7 +550,7 @@ export class CodexProvider implements AiProvider {
     this.log(`codex: declined ${method}`);
     if (method === 'item/commandExecution/requestApproval' || method === 'item/fileChange/requestApproval') return server.respond(id, { decision: 'decline' });
     if (method === 'execCommandApproval' || method === 'applyPatchApproval') return server.respond(id, { decision: 'denied' });
-    server.respondError(id, 'Uranus Browser doesn’t support this request.');
+    server.respondError(id, 'UrAnus Browser doesn’t support this request.');
   }
 
   // ---- account ----------------------------------------------------------------------------------

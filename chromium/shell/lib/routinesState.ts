@@ -106,7 +106,7 @@ export function resume(state: RoutinesState, now: number, launch: boolean, meeti
   let next: RoutinesState = {
     ...state,
     records: state.records.map((r) =>
-      r.status === 'running' ? { ...r, status: 'failed' as RunStatus, finishedAt: now, reason: 'Uranus Browser closed before the run finished.' } : r,
+      r.status === 'running' ? { ...r, status: 'failed' as RunStatus, finishedAt: now, reason: 'UrAnus Browser closed before the run finished.' } : r,
     ),
   };
   next = {

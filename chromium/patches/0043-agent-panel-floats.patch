@@ -12,10 +12,10 @@
  // margins included, between these widths (and at most half the window).
  inline constexpr int kAnusAgentPanelMinWidth = 280;
  inline constexpr int kAnusAgentPanelMaxWidth = 800;
-+// Uranus Browser: a floating Agent panel is at least this tall.
++// UrAnus Browser: a floating Agent panel is at least this tall.
 +inline constexpr int kAnusAgentPanelMinHeight = 240;
  
-+// Uranus Browser: set on the Agent panel's view while it floats over the page: where,
++// UrAnus Browser: set on the Agent panel's view while it floats over the page: where,
 +// in the browser view's coordinates (anus_frame_view.cc defines it; the
 +// layout reads it).
 +extern const ui::ClassProperty<gfx::Rect*>* const kAnusFloatingAgentPanelKey;
@@ -24,7 +24,7 @@
  // across the top, and the page sits under it, kAnusGap from the other edges.
  inline constexpr int kAnusMiniToolbarHeight = 44;
 @@ -211,7 +219,13 @@
-   // Uranus Browser: shows or hides the Agent panel beside the page area, on its left
+   // UrAnus Browser: shows or hides the Agent panel beside the page area, on its left
    // (between the sidebar and the page) or its right, `width` px wide; `focus`
    // moves keyboard focus into it. The page area shrinks to make room.
 -  virtual void SetAgentPanel(bool open, bool left, int width, bool focus) = 0;
@@ -37,7 +37,7 @@
 +                             const std::optional<gfx::Rect>& floating) = 0;
    // Takes the keys in Shortcuts() from now on, and lets go of any others.
    virtual void UpdateShortcuts() = 0;
-   // Whether the window is a AnusMini, Uranus Browser's small window for one page.
+   // Whether the window is a AnusMini, UrAnus Browser's small window for one page.
 --- a/chrome/common/extensions/api/anus_private.idl
 +++ b/chrome/common/extensions/api/anus_private.idl
 @@ -47,6 +47,15 @@
@@ -46,7 +46,7 @@
      right
 +  };
 +
-+  // Uranus Browser: where a floating Agent panel sits, in the window's coordinates
++  // UrAnus Browser: where a floating Agent panel sits, in the window's coordinates
 +  // (px from its top left corner); kept inside the window.
 +  dictionary AgentPanelFloat {
 +    long x;
@@ -55,7 +55,7 @@
 +    long height;
    };
  
-   // Uranus Browser: the Agent panel (the shell's agent.html?window=<id>) beside the
+   // UrAnus Browser: the Agent panel (the shell's agent.html?window=<id>) beside the
 @@ -59,6 +68,9 @@
      long width;
      // Moves keyboard focus into the panel; otherwise focus stays put.
@@ -184,7 +184,7 @@
    SetAnusTrafficLights(GetWidget(), IsActive() ? &state_ : nullptr);
  }
  
-+// Uranus Browser: where a floating Agent panel sits (anus_frame_host.h).
++// UrAnus Browser: where a floating Agent panel sits (anus_frame_host.h).
 +DEFINE_OWNED_UI_CLASS_PROPERTY_KEY(gfx::Rect, kAnusFloatingAgentPanelKey)
 +
  BEGIN_METADATA(AnusFrameView)

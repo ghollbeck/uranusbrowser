@@ -1,4 +1,4 @@
-// End-to-end test of companions, their knowledge, skills and memory, in a real Uranus Browser
+// End-to-end test of companions, their knowledge, skills and memory, in a real UrAnus Browser
 // (no OpenAI calls):
 //   - the composer's selector shows who the agent works as and opens the companions sheet
 //     ("Companions, skills and files…"); the sheet lists the built-in companions;
@@ -11,7 +11,7 @@
 //   - Escape steps back a screen, then closes the sheet, before the panel;
 //   - after quitting and reopening with the same profile, all of it is still there.
 //
-//   node chromium/tests/e2e-companions.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>]
+//   node chromium/tests/e2e-companions.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>]
 // With --shots, the panel's own pictures (through DevTools, so no Screen Recording permission) are saved there.
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -24,7 +24,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shots = arg('--shots');
 const shellDir = arg('--shell-dir');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -39,7 +39,7 @@ async function launch() {
   fs.mkdirSync(profile, { recursive: true });
   fs.rmSync(path.join(profile, 'DevToolsActivePort'), { force: true });
   const browser = spawn(
-    path.join(app, 'Contents/MacOS/Uranus Browser'),
+    path.join(app, 'Contents/MacOS/UrAnus Browser'),
     [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', '--window-position=60,40', ...(shellDir ? [`--anus-shell-dir=${path.resolve(shellDir)}`] : [])],
     { stdio: 'ignore' },
   );

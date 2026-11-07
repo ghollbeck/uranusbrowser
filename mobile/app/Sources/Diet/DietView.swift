@@ -153,7 +153,7 @@ struct DietView: View {
                 .background(LinearGradient(colors: [NutriGrade.a.color, NutriGrade.c.color], startPoint: .topLeading, endPoint: .bottomTrailing), in: .circle)
                 .padding(.top, 40)
             Text("You are what you browse").font(.title2.weight(.bold))
-            Text("Pages and videos you open in Uranus Browser are sorted into a diet and scored A to E, all on this device. Private tabs are never recorded.")
+            Text("Pages and videos you open in UrAnus Browser are sorted into a diet and scored A to E, all on this device. Private tabs are never recorded.")
                 .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
             Button { engine.isPresented = false } label: {
                 Label("Start browsing", systemImage: "globe")
@@ -362,7 +362,7 @@ struct DietView: View {
     }
 
     private var footer: some View {
-        Text("Analysis stays local. Pages opened here are recorded and classified automatically; private tabs are excluded. Separate apps and Home Screen web apps cannot be monitored. Open their links here with the Open in Uranus Browser Shortcuts action to include them. Video topics come from available page text, not hidden video content.")
+        Text("Analysis stays local. Pages opened here are recorded and classified automatically; private tabs are excluded. Separate apps and Home Screen web apps cannot be monitored. Open their links here with the Open in UrAnus Browser Shortcuts action to include them. Video topics come from available page text, not hidden video content.")
             .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
             .padding(.top, Layout.gap)
     }

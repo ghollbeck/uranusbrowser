@@ -76,7 +76,7 @@ export function statusLine(state: JoinlyState, checking: boolean): { tone: 'ok' 
   if (view.status === 'ready') return { tone: 'ok', title: 'joinly is running', detail: `Reachable at ${where}. Nothing is joined until you ask.` };
   switch (view.reason) {
     case 'helper':
-      return { tone: 'warn', title: 'Uranus Browser’s helper isn’t answering', detail: view.detail ?? '' };
+      return { tone: 'warn', title: 'UrAnus Browser’s helper isn’t answering', detail: view.detail ?? '' };
     case 'not-joinly':
       return { tone: 'warn', title: 'That isn’t joinly', detail: view.detail ?? '' };
     case 'lost':
@@ -223,7 +223,7 @@ export function setupMeetings(hooks: MeetingsHooks) {
       if (!state || !(state.view.status === 'unavailable' && state.view.reason !== 'helper' && !busy())) return [];
       return [
         h('h3', { class: 'jn-title' }, 'Start joinly on this Mac'),
-        h('p', { class: 'sheet-hint' }, 'Uranus Browser is only a client: joinly (the meeting bot) runs on your computer, in Docker, and you start it yourself. Nothing is started for you. In Terminal, run:'),
+        h('p', { class: 'sheet-hint' }, 'UrAnus Browser is only a client: joinly (the meeting bot) runs on your computer, in Docker, and you start it yourself. Nothing is started for you. In Terminal, run:'),
         h(
           'div',
           { class: 'jn-code-row' },
@@ -771,7 +771,7 @@ export function setupMeetings(hooks: MeetingsHooks) {
       state = first;
       paint();
     })
-    .catch((err) => console.error('Uranus Browser agent panel: no meetings state yet', err));
+    .catch((err) => console.error('UrAnus Browser agent panel: no meetings state yet', err));
 
   return {
     isOpen,

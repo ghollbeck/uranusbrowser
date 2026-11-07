@@ -41,7 +41,7 @@
 +    if (page.IsEmpty() || page == view->GetLocalBounds()) {
 +      return;
 +    }
-+    // Light: a close, crisp shadow and a wide, faint one, both of Uranus Browser's
++    // Light: a close, crisp shadow and a wide, faint one, both of UrAnus Browser's
 +    // ink. Dark (a dark Space colour): stronger, on black.
 +    const bool dark = color_utils::IsDark(state_.background);
 +    const SkColor ink = dark ? SK_ColorBLACK : SkColorSetRGB(0x0b, 0x25, 0x45);

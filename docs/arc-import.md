@@ -27,7 +27,7 @@ Cached page bytes, cookies, active sign-ins and passkeys are not transferred. Pa
 
 Shell/host changes require no native Chromium compile. Reuse the installed browser's native bundle via the existing `chromium/scripts/package-release.sh`, with `ANUS_APP_IN` pointing at that bundle, `ANUS_NODE` pointing at its bundled Node, and `ANUS_RELEASE_DIR` set to the guarded managed output. Use the build environment from `~/flecha-chromium/run-build.sh`. Move the resulting single app to the managed output root, and move signing receipts outside the managed output. Run `agent-storage run --producer codex --session <actual-session> --kind macos-app --integrated-into mine/dev` with explicit `codesign --verify --deep --strict` verification.
 
-Acquire a `use` lease before copying a managed app for installation. Keep source changes and release receipts. Back up the installed bundle before replacing `/Applications/Uranus Browser.app`, retain two verified previous browser bundles in the existing canonical backup root, update the Dock path, and reopen/verify the installed copy. Never launch the sealed managed export itself: Chromium writes generated extension metadata into a running bundle.
+Acquire a `use` lease before copying a managed app for installation. Keep source changes and release receipts. Back up the installed bundle before replacing `/Applications/UrAnus Browser.app`, retain two verified previous browser bundles in the existing canonical backup root, update the Dock path, and reopen/verify the installed copy. Never launch the sealed managed export itself: Chromium writes generated extension metadata into a running bundle.
 
 ## Replay setup safely
 

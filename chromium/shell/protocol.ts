@@ -1,4 +1,4 @@
-/** What Uranus Browser pages and the shell's background say to each other over the "anus" port. */
+/** What UrAnus Browser pages and the shell's background say to each other over the "anus" port. */
 export type Message =
   | { type: 'cmd'; name: string; args: unknown[] }
   | { type: 'invoke'; id: number; name: string; args: unknown[] }

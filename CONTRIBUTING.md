@@ -1,10 +1,10 @@
-# Contributing to Uranus Browser
+# Contributing to UrAnus Browser
 
-Thanks for looking. Uranus Browser is a young project with a strong opinion about how it should look and feel, so it helps to read this before sending anything.
+Thanks for looking. UrAnus Browser is a young project with a strong opinion about how it should look and feel, so it helps to read this before sending anything.
 
 ## Reporting bugs
 
-Open an issue with: what you did, what you expected, what happened, your macOS version and the Uranus Browser version. A screenshot or a short screen recording helps a lot for anything visual. For a crash, describe the action using a public example. Remove personal tabs, meeting links, API keys, and account information from attachments; use a clean profile to reproduce bugs.
+Open an issue with: what you did, what you expected, what happened, your macOS version and the UrAnus Browser version. A screenshot or a short screen recording helps a lot for anything visual. For a crash, describe the action using a public example. Remove personal tabs, meeting links, API keys, and account information from attachments; use a clean profile to reproduce bugs.
 
 ## Setup
 
@@ -34,7 +34,7 @@ chromium/scripts/run.sh                # relaunch the dev build with the new she
 4. Run `chromium/scripts/apply.sh` again on its own: it resets every file it touches, then applies all patches in order, so it proves the set still applies cleanly.
 5. Build with `chromium/scripts/build.sh` and try it.
 
-Keep a patch small and about one thing. Put a comment at the top of new files, and `// Uranus Browser:` comments at the edits inside Chromium's files, saying why. New code goes in new files where possible, so Chromium upgrades hurt less. Packaging patches are numbered from 0050.
+Keep a patch small and about one thing. Put a comment at the top of new files, and `// UrAnus Browser:` comments at the edits inside Chromium's files, saying why. New code goes in new files where possible, so Chromium upgrades hurt less. Packaging patches are numbered from 0050.
 
 ## Style
 
@@ -45,7 +45,7 @@ Keep a patch small and about one thing. Put a comment at the top of new files, a
 
 ## Design
 
-Uranus Browser's interface has to feel polished, at the level of Arc itself. Spacing, alignment, motion, dark mode and corner radii are part of correctness here. If you change something visible, check it in light and dark, and attach a screenshot to the pull request.
+UrAnus Browser's interface has to feel polished, at the level of Arc itself. Spacing, alignment, motion, dark mode and corner radii are part of correctness here. If you change something visible, check it in light and dark, and attach a screenshot to the pull request.
 
 ## Commits
 

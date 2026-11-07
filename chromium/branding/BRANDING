@@ -1,10 +1,10 @@
-COMPANY_FULLNAME=Uranus Browser
-COMPANY_SHORTNAME=Uranus Browser
-PRODUCT_FULLNAME=Uranus Browser
-PRODUCT_SHORTNAME=Uranus Browser
-PRODUCT_INSTALLER_FULLNAME=Uranus Browser Installer
-PRODUCT_INSTALLER_SHORTNAME=Uranus Browser Installer
-COPYRIGHT=Copyright @LASTCHANGE_YEAR@ Uranus Browser. Built on Chromium, copyright The Chromium Authors.
+COMPANY_FULLNAME=UrAnus Browser
+COMPANY_SHORTNAME=UrAnus Browser
+PRODUCT_FULLNAME=UrAnus Browser
+PRODUCT_SHORTNAME=UrAnus Browser
+PRODUCT_INSTALLER_FULLNAME=UrAnus Browser Installer
+PRODUCT_INSTALLER_SHORTNAME=UrAnus Browser Installer
+COPYRIGHT=Copyright @LASTCHANGE_YEAR@ UrAnus Browser. Built on Chromium, copyright The Chromium Authors.
 MAC_BUNDLE_ID=dev.oprimo.anus.browser
 MAC_CREATOR_CODE=Flch
 MAC_TEAM_ID=

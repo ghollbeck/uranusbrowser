@@ -1,10 +1,10 @@
 /**
- * The shell's background: Uranus Browser's Store, kept in step with real Chromium tabs.
+ * The shell's background: UrAnus Browser's Store, kept in step with real Chromium tabs.
  *
- * The Store is the source of truth, as in Electron. A Uranus Browser tab only gets a Chromium tab
+ * The Store is the source of truth, as in Electron. A UrAnus Browser tab only gets a Chromium tab
  * once it is opened (like Electron only made a view for it then), so a sidebar of a hundred
  * pinned tabs costs nothing until you use them. Chromium tabs that pages open themselves
- * (links to a new tab, window.open) become Uranus Browser tabs.
+ * (links to a new tab, window.open) become UrAnus Browser tabs.
  */
 import { Store, type StatePersistence } from '../shared/store';
 import { resolveInput, searchEngine } from './lib/url';
@@ -34,7 +34,7 @@ import { schemeChanged } from './serverThemedTabs';
 import { followedPreferences, incognito, incognitoState, sessionKey } from './incognito';
 
 const STATE_KEY = 'state';
-/** Uranus Browser tab id ↔ Chromium tab id, for the tabs that are open. Kept across background restarts. */
+/** UrAnus Browser tab id ↔ Chromium tab id, for the tabs that are open. Kept across background restarts. */
 const LIVE_KEY = 'live';
 const ARCHIVE_ALARM = 'archive-stale';
 
@@ -45,7 +45,7 @@ const ours = new Set<number>();
 /** Tabs we're creating right now: Chromium may announce them before create() returns their id. */
 let creating = 0;
 /**
- * Blank tabs, by window, that keep a window open while Uranus Browser has no tab open in it (or
+ * Blank tabs, by window, that keep a window open while UrAnus Browser has no tab open in it (or
  * while its tab is on screen in another window: the new tab page then says so).
  */
 const placeholders = new Map<number, number>();
@@ -142,8 +142,8 @@ async function start() {
       await chrome.storage.session.remove([sessionKey(STATE_KEY), sessionKey(LIVE_KEY)]);
     });
   }
-  // Tabs Chromium opened before we were running: its start page shows the active Uranus Browser tab
-  // (closing it would close the window), anything else becomes a Uranus Browser tab.
+  // Tabs Chromium opened before we were running: its start page shows the active UrAnus Browser tab
+  // (closing it would close the window), anything else becomes a UrAnus Browser tab.
   for (const tab of await chrome.tabs.query({})) {
     if ([...live.values()].includes(tab.id!) || isPlaceholder(tab.id) || isShellPage(tab)) continue;
     const active = store.activeTab;
@@ -160,7 +160,7 @@ async function start() {
     } else live.set(addTab(url(tab), { activate: tab.active }).id, tab.id!);
   }
 
-  /** A Uranus Browser tab for an address; the new tab page and empty addresses make a blank "New Tab". */
+  /** A UrAnus Browser tab for an address; the new tab page and empty addresses make a blank "New Tab". */
   function addTab(address: string, opts: Parameters<Store['addTab']>[1]) {
     const blank = !address || address === 'about:blank' || isStartPage({ url: address } as chrome.tabs.Tab);
     const tab = store.addTab(blank ? 'about:blank' : address, opts);
@@ -253,7 +253,7 @@ async function start() {
       }
       rememberWindows();
       store.showView(view.spaceId, view.tabId);
-    }).catch((err) => console.error('Uranus Browser shell: switching windows failed', err));
+    }).catch((err) => console.error('UrAnus Browser shell: switching windows failed', err));
     return syncing;
   }
 
@@ -328,12 +328,12 @@ async function start() {
   // rest again) is closed and reopens in the right one, as the spike destroys its view.
 
   const canIsolate = typeof chrome.anusPrivate?.createTab === 'function';
-  /** The partition a Uranus Browser tab belongs in: its Space's id if that Space is isolated, else "". */
+  /** The partition a UrAnus Browser tab belongs in: its Space's id if that Space is isolated, else "". */
   function partitionFor(id: string) {
     const space = store.locate(id)?.space;
     return canIsolate && space?.isolated ? space.id : '';
   }
-  /** The partition each open Chromium tab is in, by Uranus Browser tab, once known. */
+  /** The partition each open Chromium tab is in, by UrAnus Browser tab, once known. */
   const livePartition = new Map<string, string>();
   async function learnPartition(id: string, chromeId: number) {
     if (!canIsolate) return livePartition.set(id, '');
@@ -358,7 +358,7 @@ async function start() {
   /**
    * Closes these tabs' Chromium tabs, which are in the wrong partition. Those on screen get
    * their new one first: closing the active tab first would have Chromium activate another,
-   * which Uranus Browser would take as you picking it.
+   * which UrAnus Browser would take as you picking it.
    */
   async function reopenInPartition(ids: string[]) {
     const shown = new Set(store.visibleTabIds());
@@ -380,9 +380,9 @@ async function start() {
   const partitionsKnown = Promise.all([...live].map(([id, chromeId]) => learnPartition(id, chromeId)));
 
   /**
-   * Closes the Chromium tabs of Uranus Browser tabs that were closed or unloaded. Chromium closes a
+   * Closes the Chromium tabs of UrAnus Browser tabs that were closed or unloaded. Chromium closes a
    * window with its last tab, so when none would be left a blank placeholder takes its place
-   * (Uranus Browser shows its empty state over it), until a Uranus Browser tab opens again.
+   * (UrAnus Browser shows its empty state over it), until a UrAnus Browser tab opens again.
    */
   async function unload(ids: string[]) {
     const closing = ids.map((id) => live.get(id)).filter((c): c is number => c !== undefined);
@@ -444,7 +444,7 @@ async function start() {
       parked.set(tab.windowId, { tabId: id, at: Date.now() });
       await showPlaceholder(tab.windowId);
     }
-    await chrome.tabs.move(chromeId, { windowId, index: -1 }).catch((err) => console.warn('Uranus Browser shell: moving a tab failed', err));
+    await chrome.tabs.move(chromeId, { windowId, index: -1 }).catch((err) => console.warn('UrAnus Browser shell: moving a tab failed', err));
     rememberWindows();
     sendStateSoon();
   }
@@ -458,7 +458,7 @@ async function start() {
     return !!tab && tab.windowId !== windowId;
   }
 
-  /** Shows the active Uranus Browser tab, opening its Chromium tab if it has none yet. */
+  /** Shows the active UrAnus Browser tab, opening its Chromium tab if it has none yet. */
   function sync() {
     syncing = syncing
       .then(async () => {
@@ -492,7 +492,7 @@ async function start() {
         if (!shown || shown.windowId === windowId) dropPlaceholder(windowId);
         await refreshNav();
       })
-      .catch((err) => console.error('Uranus Browser shell: sync failed', err));
+      .catch((err) => console.error('UrAnus Browser shell: sync failed', err));
   }
 
   // ---- split view: the Store's splits as Chromium's own split view ---------------
@@ -538,7 +538,7 @@ async function start() {
       await chrome.tabs.createSplit([left, right]).catch((err) => {
         ourSplits.delete(left);
         ourSplits.delete(right);
-        console.warn('Uranus Browser shell: split failed', err);
+        console.warn('UrAnus Browser shell: split failed', err);
       });
     }
   }
@@ -606,11 +606,11 @@ async function start() {
     wantFavicons();
   });
 
-  // ---- Chromium → Uranus Browser ----------------------------------------------------
+  // ---- Chromium → UrAnus Browser ----------------------------------------------------
 
   async function onCreated(tab: chrome.tabs.Tab) {
     if (creating || anusIdFor(tab.id!) || isPlaceholder(tab.id) || isShellPage(tab)) return;
-    // A AnusMini's page isn't one of Uranus Browser's tabs. Asked of the browser: a new AnusMini's
+    // A AnusMini's page isn't one of UrAnus Browser's tabs. Asked of the browser: a new AnusMini's
     // first tab arrives before openAnusMini() has told us its window.
     if (await isAnusMiniWindow(tab.windowId)) return;
     const opener = tab.openerTabId !== undefined ? anusIdFor(tab.openerTabId) : undefined;
@@ -634,7 +634,7 @@ async function start() {
     const id = anusIdFor(chromeId);
     if (!id) return;
     const patch: Parameters<Store['updateTab']>[1] = {};
-    // Chromium's new tab page is Uranus Browser's empty state: the tab is still a blank one.
+    // Chromium's new tab page is UrAnus Browser's empty state: the tab is still a blank one.
     if (info.url) patch.url = isStartPage({ url: info.url } as chrome.tabs.Tab) ? 'about:blank' : info.url;
     // A blank tab keeps its "New Tab" name: the new tab page's own title and icon aren't its.
     const blank = (patch.url ?? store.state.tabs[id]?.url) === 'about:blank';
@@ -708,7 +708,7 @@ async function start() {
     sendStateSoon();
   }
 
-  // ---- commands from Uranus Browser pages -------------------------------------------
+  // ---- commands from UrAnus Browser pages -------------------------------------------
 
   const activeChromeId = () => (store.activeTab ? live.get(store.activeTab.id) : undefined);
   const onActive = (fn: (chromeId: number) => unknown) => () => {
@@ -992,7 +992,7 @@ async function start() {
       }
       // The tab ids change, so every open Chromium tab is closed and reopens on demand.
       const open = [...live.keys()];
-      if (!state || !store.replaceState(state)) return broadcast('flash', 'That isn’t a Uranus Browser state file');
+      if (!state || !store.replaceState(state)) return broadcast('flash', 'That isn’t a UrAnus Browser state file');
       void unload(open);
       const tabs = Object.keys(state.tabs).length;
       broadcast('flash', `Imported ${state.spaces.length} Spaces and ${tabs} tabs`);
@@ -1043,7 +1043,7 @@ async function start() {
     reload: () => call('reload'),
     hardReload: onActive((id) => chrome.tabs.reload(id, { bypassCache: true })),
     // TODO(chromium): Chromium's own find bar does find in page; when a native patch routes ⌘F
-    // here instead, whatever module draws Uranus Browser's find bar handles this command.
+    // here instead, whatever module draws UrAnus Browser's find bar handles this command.
     find: () => call('find'),
     toggleSidebar: () => call('toggleSidebar'),
     toggleAgentPanel: () => call('toggleAgentPanel'),
@@ -1126,7 +1126,7 @@ async function start() {
       return true;
     }
     if (!Object.hasOwn(commands, id)) return false;
-    void Promise.resolve(commands[id as keyof typeof commands]()).catch((err) => console.error(`Uranus Browser shell: "${id}" failed`, err));
+    void Promise.resolve(commands[id as keyof typeof commands]()).catch((err) => console.error(`UrAnus Browser shell: "${id}" failed`, err));
     return true;
   }
   handle({ run: (id: string, n?: number) => runCommand(String(id), n) });
@@ -1168,7 +1168,7 @@ async function start() {
           joinlyConfig: joinly.config,
           models: async () => nativeHost?.callHost('agentModels'),
           extractText: async (request) => {
-            if (!nativeHost) throw new Error('Uranus Browser’s helper isn’t running.');
+            if (!nativeHost) throw new Error('UrAnus Browser’s helper isn’t running.');
             return nativeHost.callHost('extractText', request);
           },
         },
@@ -1201,7 +1201,7 @@ async function start() {
         },
   );
 
-  // Imports and the coding-agent bridge, through Uranus Browser's native messaging host. Both are
+  // Imports and the coding-agent bridge, through UrAnus Browser's native messaging host. Both are
   // about your regular Spaces, so incognito windows have neither.
   if (!incognito) nativeHost = registerNativeHost({
     store,
@@ -1273,7 +1273,7 @@ async function start() {
         onMeetings: (snapshot) => void routines.onCalendar(snapshot),
         // The reminder's buttons: notes on the meeting's tab, and the AI assistant (joinly) if switched on.
         assistantAvailable: () => joinly.available(),
-        startRecording: async (host) => (meetingsApi ? meetingsApi.startFor(host) : { error: 'Meeting notes need Uranus Browser’s helper.' }),
+        startRecording: async (host) => (meetingsApi ? meetingsApi.startFor(host) : { error: 'Meeting notes need UrAnus Browser’s helper.' }),
         stopRecording: () => meetingsApi?.stopNow(),
         sendAssistant: (url) => joinly.joinFor(url),
         // The reminder as a floating panel on the pointer's display, above every app.
@@ -1292,7 +1292,7 @@ async function start() {
     });
   });
 
-  // Uranus Browser's keyboard shortcuts, taken by the browser before the page (patch 0016).
+  // UrAnus Browser's keyboard shortcuts, taken by the browser before the page (patch 0016).
   registerNative({
     store,
     chromeTabId: (id) => live.get(id),
@@ -1316,7 +1316,7 @@ async function start() {
       rememberLive();
       store.closeTab(id, false);
     },
-    // Back from a AnusMini ("Open in Uranus Browser"): an active Today tab in the current Space.
+    // Back from a AnusMini ("Open in UrAnus Browser"): an active Today tab in the current Space.
     adoptTab: (chromeId) => {
       void chrome.tabs.get(chromeId).then((tab) => {
         if (anusIdFor(chromeId)) return;
@@ -1343,9 +1343,9 @@ async function start() {
 }
 
 const url = (tab: chrome.tabs.Tab) => tab.pendingUrl || tab.url || '';
-/** Uranus Browser's own pages (the sidebar opened in a tab while debugging, say) aren't browsing tabs. */
+/** UrAnus Browser's own pages (the sidebar opened in a tab while debugging, say) aren't browsing tabs. */
 const isShellPage = (tab: chrome.tabs.Tab) => url(tab).startsWith(chrome.runtime.getURL(''));
-/** Sites worth suggesting: not Uranus Browser's or Chromium's own pages. */
+/** Sites worth suggesting: not UrAnus Browser's or Chromium's own pages. */
 const isWebPage = (address = '') => /^https?:/.test(address);
 /**
  * What pages send without you acting in their window (on load, on a system appearance change,
@@ -1360,7 +1360,7 @@ const ready = start();
 listen(ready);
 
 /**
- * Runs a Uranus Browser command by id (lib/shortcuts.ts, plus tab1…tab9 and space1…space9), as
+ * Runs a UrAnus Browser command by id (lib/shortcuts.ts, plus tab1…tab9 and space1…space9), as
  * the Electron spike's menu accelerators did: for keyboard shortcuts from the browser
  * (chrome.anusPrivate.onShortcut). Resolves to whether the id is a command. The same is the
  * hub command "run", for pages.

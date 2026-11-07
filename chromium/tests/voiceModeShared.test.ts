@@ -82,7 +82,7 @@ test('talk: only new words by other people count; the bot’s own lines and old 
   assert.deepEqual(watcher.fresh([seg('old question', 1)]), []);
   assert.deepEqual(watcher.fresh([seg('old question', 1), seg('new question', 5)]).map((s) => s.text), ['new question']);
   assert.deepEqual(watcher.fresh([seg('old question', 1), seg('new question', 5)]), [], 'seen once');
-  assert.deepEqual(watcher.fresh([seg('I say things', 9, 'Uranus Browser AI assistant')]).map((s) => s.text), ['I say things'], 'a name proves nothing: the owner may share it');
+  assert.deepEqual(watcher.fresh([seg('I say things', 9, 'UrAnus Browser AI assistant')]).map((s) => s.text), ['I say things'], 'a name proves nothing: the owner may share it');
   assert.deepEqual(watcher.fresh([seg('I say things', 11, 'Jordan', 'assistant')]), [], 'by role');
   assert.deepEqual(watcher.fresh([seg('stray words', 13, null)]).map((s) => s.text), ['stray words'], 'an unnamed speaker is a person');
   assert.deepEqual(watcher.fresh([seg('new question and more', 5)]).map((s) => s.text), ['new question and more'], 'a segment that grew is new talk');
@@ -177,7 +177,7 @@ test('who is talking is decided by role, never by name: the bot may carry the ow
   assert.equal(watcher.fresh([seg('What is two plus two?', 1, 'Jordan Example')]).length, 1, 'the owner is answered');
   assert.equal(new TalkWatcher().fresh([seg('Four.', 5, 'Jordan Example', 'assistant')]).length, 0, 'the bot is not');
   // Whatever the name, a participant line is a participant line.
-  assert.equal(new TalkWatcher().fresh([seg('Hello there friend', 1, 'Uranus Browser AI assistant')]).length, 1);
+  assert.equal(new TalkWatcher().fresh([seg('Hello there friend', 1, 'UrAnus Browser AI assistant')]).length, 1);
   assert.equal(new TalkWatcher().fresh([seg('Hello there friend', 1, null)]).length, 1);
 });
 

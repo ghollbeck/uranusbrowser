@@ -414,7 +414,7 @@ export function setupCompanions(hooks: SheetHooks) {
     const room = MAX_FILES - (view!.files[c.id]?.length ?? 0);
     const usable = picked.filter((f) => kindOf(f.name));
     const problems: string[] = [];
-    if (usable.length < picked.length) problems.push(`Skipped ${plural(picked.length - usable.length, 'file')} Uranus Browser can’t read.`);
+    if (usable.length < picked.length) problems.push(`Skipped ${plural(picked.length - usable.length, 'file')} UrAnus Browser can’t read.`);
     if (usable.length > room) problems.push(`Only ${plural(room, 'more file')} fit${room === 1 ? 's' : ''}.`);
     const queue = usable.slice(0, Math.max(0, room));
     reading = queue.map((f) => f.name);
@@ -674,7 +674,7 @@ export function setupCompanions(hooks: SheetHooks) {
       paintHeader();
       paint();
     })
-    .catch((err) => console.error('Uranus Browser agent panel: no companions yet', err));
+    .catch((err) => console.error('UrAnus Browser agent panel: no companions yet', err));
 
   return {
     isOpen,

@@ -1,5 +1,5 @@
 /**
- * chrome.anusPrivate: what Uranus Browser's browser (the native patches) gives the shell, and only
+ * chrome.anusPrivate: what UrAnus Browser's browser (the native patches) gives the shell, and only
  * the shell. It is how the shell draws the whole window like the Electron spike did: the
  * frame page (window.html) is a transparent view over the window, and the browser lays the
  * page area and the traffic lights out around it.
@@ -41,9 +41,9 @@ declare namespace chrome.anusPrivate {
   function getWindowId(): Promise<number>;
 
   /**
-   * Uranus Browser's keyboard shortcuts (patch 0016): `shortcuts` maps Electron accelerators
+   * UrAnus Browser's keyboard shortcuts (patch 0016): `shortcuts` maps Electron accelerators
    * ("CmdOrCtrl+Shift+T", "Alt+CmdOrCtrl+Left", "Ctrl+Tab", "CmdOrCtrl+[") to command ids.
-   * Uranus Browser windows take these keys before the page and before Chromium's own shortcuts and
+   * UrAnus Browser windows take these keys before the page and before Chromium's own shortcuts and
    * menu items (so ⌘S no longer opens Save Page), and send them to onShortcut. Each call
    * replaces the whole map; keys left out go back to Chromium (⌘C, ⌘V, ⌘P…).
    *
@@ -63,7 +63,7 @@ declare namespace chrome.anusPrivate {
   function setTheme(theme: 'system' | 'light' | 'dark'): Promise<void>;
 
   /**
-   * Split views (patch 0019). In Uranus Browser windows Chromium's split has none of its own chrome:
+   * Split views (patch 0019). In UrAnus Browser windows Chromium's split has none of its own chrome:
    * the panes sit straight in the page area, 8px apart (the spike's GAP, which is also the
    * drag handle), each with 10px round corners; no inset, padding, outline or mini toolbar.
    * The left pane is round((width − 8) × ratio) wide, as in Electron's layout().
@@ -77,14 +77,14 @@ declare namespace chrome.anusPrivate {
   const onSplitRatioChanged: chrome.events.Event<(tabId: number, ratio: number) => void>;
 
   /**
-   * AnusMini (patch 0023), Uranus Browser's small window for one page, as the Electron version had:
+   * AnusMini (patch 0023), UrAnus Browser's small window for one page, as the Electron version had:
    * a normal Chromium window (900×700 at most, centred on the display under the pointer, each
    * new one a step down and right) whose frame page is window.html?window=<id>&kind=anusmini.
    * The frame draws a toolbar ANUSMINI_TOOLBAR (44) tall across the whole width; the page
    * sits under it at x 8, y 44, to 8 from the right and bottom (round corners). Traffic lights
    * at (16, 16). setFrame() with overlay: true makes the frame cover the whole window (for
    * menus); its sidebar mode is ignored. -webkit-app-region: drag moves the window.
-   * Links the page opens in new tabs (target=_blank, ⌘-click) open in Uranus Browser's main window;
+   * Links the page opens in new tabs (target=_blank, ⌘-click) open in UrAnus Browser's main window;
    * real popups stay popups. Not restored with the session.
    *
    * openAnusMini({ url }) opens a page (default: the new tab page); openAnusMini({ tabId })
@@ -93,7 +93,7 @@ declare namespace chrome.anusPrivate {
   function openAnusMini(options?: { url?: string; tabId?: number }): Promise<number>;
 
   /**
-   * "Open in Uranus Browser": moves the AnusMini's page into Uranus Browser's main window (the last active
+   * "Open in UrAnus Browser": moves the AnusMini's page into UrAnus Browser's main window (the last active
    * window that isn't a AnusMini), activates it there and brings that window to the front;
    * the emptied AnusMini closes. Resolves with the tab id (Chromium fires tabs.onDetached /
    * onAttached for it, not onCreated).
@@ -101,9 +101,9 @@ declare namespace chrome.anusPrivate {
   function openInAnus(windowId: number): Promise<number>;
 
   /**
-   * Whether links from other apps (Uranus Browser as the default browser) open in a new AnusMini,
-   * like the spike's state.openLinksInAnusMini. On by default; applies once a Uranus Browser window
-   * is up (a link that launches Uranus Browser opens as a normal tab).
+   * Whether links from other apps (UrAnus Browser as the default browser) open in a new AnusMini,
+   * like the spike's state.openLinksInAnusMini. On by default; applies once a UrAnus Browser window
+   * is up (a link that launches UrAnus Browser opens as a normal tab).
    */
   function setOpenLinksInAnusMini(enabled: boolean): Promise<void>;
 
@@ -139,7 +139,7 @@ declare namespace chrome.anusPrivate {
    * Cookies and Site Data…"); its pages keep running, so reload them.
    */
   interface CreateTabOptions {
-    /** Default: Uranus Browser's main window. */
+    /** Default: UrAnus Browser's main window. */
     windowId?: number;
     /** Default: the new tab page. */
     url?: string;
@@ -194,13 +194,13 @@ declare namespace chrome.anusPrivate {
    */
   function showFindBar(windowId?: number): Promise<void>;
 
-  /** Whether Uranus Browser is the default browser, and whether it can make itself so (patch 0027). */
+  /** Whether UrAnus Browser is the default browser, and whether it can make itself so (patch 0027). */
   interface DefaultBrowserState {
     isDefault: boolean;
     canSet: boolean;
   }
   function isDefaultBrowser(): Promise<DefaultBrowserState>;
-  /** Asks macOS to make Uranus Browser the default browser (macOS confirms), then reports the result. */
+  /** Asks macOS to make UrAnus Browser the default browser (macOS confirms), then reports the result. */
   function makeDefaultBrowser(): Promise<DefaultBrowserState>;
 
   /**

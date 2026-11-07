@@ -524,7 +524,7 @@ export function setupMeetings(hooks: MeetingsHooks) {
       { class: 'mt-meeting' },
       title,
       h('p', { class: 'mt-meta' }, meta),
-      r.endedBy && r.endedBy !== 'user' ? h('p', { class: 'mt-notice' }, { 'tab-closed': 'Recording ended because the meeting tab was closed.', limit: 'Recording ended at the time limit.', lost: 'Recording ended because Uranus Browser’s helper stopped.', error: 'Recording ended unexpectedly.', recovered: 'Uranus Browser closed while this was recording; what was captured is kept.' }[r.endedBy]) : null,
+      r.endedBy && r.endedBy !== 'user' ? h('p', { class: 'mt-notice' }, { 'tab-closed': 'Recording ended because the meeting tab was closed.', limit: 'Recording ended at the time limit.', lost: 'Recording ended because UrAnus Browser’s helper stopped.', error: 'Recording ended unexpectedly.', recovered: 'UrAnus Browser closed while this was recording; what was captured is kept.' }[r.endedBy]) : null,
       r.othersCaptured === false ? h('p', { class: 'mt-notice' }, 'The meeting tab’s sound was not added, so only your microphone was recorded. Other people appear only if your speakers carried them to the microphone, and then as “Me”.') : null,
       h(
         'div',

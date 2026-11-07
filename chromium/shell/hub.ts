@@ -1,5 +1,5 @@
 /**
- * The background side of the shell's messaging. Every Uranus Browser page (sidebar, Settings, …)
+ * The background side of the shell's messaging. Every UrAnus Browser page (sidebar, Settings, …)
  * connects a port named "anus"; commands are fire-and-forget, invokes get a reply, and
  * events go out to every connected page. Feature modules register their own handlers, so
  * they never need to touch one shared switch.
@@ -22,7 +22,7 @@ export function beforeWindowCommand(fn: (windowId: number, name: string) => unkn
 /** Adds handlers by name; a name registered twice is a bug, so it throws. */
 export function handle(handlers: Record<string, Handler>) {
   for (const [name, fn] of Object.entries(handlers)) {
-    if (commands.has(name)) throw new Error(`Uranus Browser shell: "${name}" is handled twice`);
+    if (commands.has(name)) throw new Error(`UrAnus Browser shell: "${name}" is handled twice`);
     commands.set(name, fn);
   }
 }
@@ -33,7 +33,7 @@ export function handle(handlers: Record<string, Handler>) {
  */
 export function call(name: string, ...args: unknown[]): unknown {
   const fn = commands.get(name);
-  if (!fn) return void console.warn(`Uranus Browser shell: "${name}" isn't in the Chromium build yet`);
+  if (!fn) return void console.warn(`UrAnus Browser shell: "${name}" isn't in the Chromium build yet`);
   return fn(...args);
 }
 
@@ -46,11 +46,11 @@ export function run(name: string, ...args: unknown[]) {
   if (!fn) return false;
   void Promise.resolve()
     .then(() => fn(...args))
-    .catch((err) => console.error(`Uranus Browser shell: "${name}" failed`, err));
+    .catch((err) => console.error(`UrAnus Browser shell: "${name}" failed`, err));
   return true;
 }
 
-/** Sends an event to every open Uranus Browser page. */
+/** Sends an event to every open UrAnus Browser page. */
 export function broadcast(name: string, ...args: unknown[]) {
   const message: Message = { type: 'event', name, args };
   for (const port of ports) port.postMessage(message);
@@ -66,7 +66,7 @@ export function onConnect(fn: (port: chrome.runtime.Port) => void) {
 export function listen(ready: Promise<unknown>) {
   chrome.runtime.onConnect.addListener(async (port) => {
     if (port.name !== 'anus') return;
-    // Only Uranus Browser's own pages: not content scripts in web pages (whose origin is the site's),
+    // Only UrAnus Browser's own pages: not content scripts in web pages (whose origin is the site's),
     // since this port runs commands, the Agent panel's approvals among them.
     if (port.sender?.origin && port.sender.origin !== new URL(chrome.runtime.getURL('')).origin) {
       port.disconnect();
@@ -88,7 +88,7 @@ export function listen(ready: Promise<unknown>) {
       if (windowId !== undefined) await Promise.resolve(beforeCommand?.(windowId, message.name)).catch(() => undefined);
       const fn = commands.get(message.name);
       if (!fn) {
-        console.warn(`Uranus Browser shell: "${message.name}" isn't in the Chromium build yet`);
+        console.warn(`UrAnus Browser shell: "${message.name}" isn't in the Chromium build yet`);
         if (message.type === 'invoke') port.postMessage({ type: 'result', id: message.id, value: undefined } satisfies Message);
         return;
       }
@@ -96,7 +96,7 @@ export function listen(ready: Promise<unknown>) {
         const value = await fn(...message.args);
         if (message.type === 'invoke') port.postMessage({ type: 'result', id: message.id, value } satisfies Message);
       } catch (err) {
-        console.error(`Uranus Browser shell: "${message.name}" failed`, err);
+        console.error(`UrAnus Browser shell: "${message.name}" failed`, err);
         if (message.type === 'invoke') port.postMessage({ type: 'result', id: message.id, error: String(err) } satisfies Message);
       }
     };

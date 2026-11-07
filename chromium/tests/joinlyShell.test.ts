@@ -106,7 +106,7 @@ test('the Meetings settings, the opt-in, and what the host is asked', async () =
   assert.equal((storage.get('joinly') as any).enabled, false);
 
   // The host going away ends the meeting; the panel is told so.
-  joinly.onView(undefined, 'Uranus Browser’s helper stopped: exit 1');
+  joinly.onView(undefined, 'UrAnus Browser’s helper stopped: exit 1');
   const gone = (await get()).view;
   assert.equal(gone.reason, 'helper');
   assert.match(gone.error ?? '', /the bot leaves/);

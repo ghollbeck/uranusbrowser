@@ -256,7 +256,7 @@ export class TabManager {
     return [
       ...(context && single
         ? [
-            { label: 'Open in Uranus Browser', run: { show: tabIds[0] } },
+            { label: 'Open in UrAnus Browser', run: { show: tabIds[0] } },
             SEPARATOR,
             { label: 'Rename', run: { answer: 'rename' as const } },
             { label: 'Edit Address…', run: { answer: 'edit' as const } },

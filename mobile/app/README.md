@@ -1,4 +1,4 @@
-# Uranus Browser for iPhone
+# UrAnus Browser for iPhone
 
 Native SwiftUI browser on `WKWebView`, requiring iOS 26 and Xcode 26.
 Install [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).

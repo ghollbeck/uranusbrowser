@@ -1,6 +1,6 @@
 /**
  * The meeting reminder as a small floating panel on the display the pointer is on, above every
- * app (Uranus Browser in front or not), drawn by macOS itself: AppKit through `osascript -l
+ * app (UrAnus Browser in front or not), drawn by macOS itself: AppKit through `osascript -l
  * JavaScript`, so no Chromium change and nothing extra to sign in the app.
  *
  * The shell says what to show (`show(spec)`) or that nothing is due (`show(undefined)`). The panel
@@ -112,7 +112,7 @@ function run(argv) {
       'tick:': {
         types: ['void', ['id']],
         implementation: function () {
-          // The host is gone (Uranus Browser quit or crashed): so is the reminder.
+          // The host is gone (UrAnus Browser quit or crashed): so is the reminder.
           if (parent && $.kill(parent, 0) !== 0) $.exit(0);
           if (Date.now() >= spec.end) { say('ended'); $.exit(0); }
           update();

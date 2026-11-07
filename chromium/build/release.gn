@@ -1,4 +1,4 @@
-# Uranus Browser release build: one framework, what we ship. chromium/scripts/build-release.sh
+# UrAnus Browser release build: one framework, what we ship. chromium/scripts/build-release.sh
 # writes this to out/Release/args.gn (ANUS_OFFICIAL=1 adds is_official_build).
 is_debug = false
 is_component_build = false
@@ -11,7 +11,7 @@ target_cpu = "arm64"
 proprietary_codecs = false
 use_remoteexec = false
 # Builds that aren't official take Google's experiments from fieldtrial_testing_config.json,
-# Omnibox Everywhere's "search with Chromium from anywhere" among them; Uranus Browser ships without.
+# Omnibox Everywhere's "search with Chromium from anywhere" among them; UrAnus Browser ships without.
 disable_fieldtrial_testing_config = true
 # Our patches shouldn't fail a 3-6 hour build over a warning.
 treat_warnings_as_errors = false

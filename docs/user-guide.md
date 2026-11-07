@@ -1,4 +1,4 @@
-# Uranus Browser Agent panel: user guide
+# UrAnus Browser Agent panel: user guide
 
 This guide covers what the Agent panel can do beyond plain chat: companions (their knowledge, skills and memory), artifacts, routines, meeting notes, and the agent joining a meeting. Every statement here was checked against the code in this repository (the file names are in brackets where that helps). The base setup (OpenAI key, how the agent works on pages) is in the [README](../README.md#agent-panel).
 
@@ -34,7 +34,7 @@ Instructions, context and skills can change focus, tone and habits. They cannot 
 **Files:** Add files (or drop them on the box) to give a companion documents to work from: PDF, Word (`.doc`, `.docx`), RTF, OpenDocument, HTML, Markdown, CSV, JSON and other plain text, up to 15 MB each and 10 per companion. [`native-host/fileText.ts`]
 
 - Only the **text** is kept, in this profile (up to 200,000 characters a file; a longer one is cut and marked "(cut)"). The original file isn't copied.
-- PDFs and documents are read **on this Mac** by Uranus Browser's helper, with macOS's own PDFKit and `textutil`. Nothing is uploaded to read them. A scanned PDF with no text layer is refused ("has no text that can be read").
+- PDFs and documents are read **on this Mac** by UrAnus Browser's helper, with macOS's own PDFKit and `textutil`. Nothing is uploaded to read them. A scanned PDF with no text layer is refused ("has no text that can be read").
 - The agent sees each file's name and size with every message and reads a file (24,000 characters at a time) with its `read_file` tool when it could help. That shows as a step ("Read “Brief.pdf”") and the part it read goes to OpenAI with the conversation.
 - A file's text is handled like a web page: the agent uses what it says and never follows instructions in it.
 - Click a file to see its first lines; the trash button removes it (and its text).
@@ -119,21 +119,21 @@ With a calendar connected (Meeting notes › Connect a calendar…), a routine c
 - The run's message is the routine's instructions plus the meeting's title, time and platform, fenced as untrusted data: whoever sent the invitation wrote the title, so a title that sounds like an order is only a title.
 - **After** a meeting, if you recorded it with Meeting notes (a recording started from 15 minutes before it until its end), its notes and as much of the transcript as fits (about 5,000 characters) go along, fenced the same way.
 - A meeting that moves or is cancelled moves or drops the run (the calendar is read every 10 minutes). Without a calendar, or with no matching meeting coming up, the routine stays on and waits. **Run now** uses the matching meeting nearest to now.
-- The same rules as any routine: only while Uranus Browser is open, missed runs wait for you as overdue, and every approval card still asks. Nothing joins or records a meeting by itself.
+- The same rules as any routine: only while UrAnus Browser is open, missed runs wait for you as overdue, and every approval card still asks. Nothing joins or records a meeting by itself.
 
 ### What a run is
 
 A run is an ordinary conversation started for you: the panel opens, it switches to the routine's companion, starts a new conversation and sends the instructions as your message. It meets the same approval cards as anything else. **Nothing is ever approved automatically.** If an approval card sits unanswered for 10 minutes, the run is stopped, the card counts as declined, nothing is done, and the record says "Needed you". A new card starts a new 10-minute clock.
 
-### Only while Uranus Browser is open
+### Only while UrAnus Browser is open
 
-Routines do not run when Uranus Browser is closed. What happens at a due time:
+Routines do not run when UrAnus Browser is closed. What happens at a due time:
 
-- **Uranus Browser open, agent free:** it starts at once.
-- **Uranus Browser open, agent busy:** it waits its turn (shown as "Waiting for the agent to finish"). If the wait passes 30 minutes it becomes overdue. One run at a time; a routine whose next time arrives while it is still running skips that time.
-- **Overdue:** the time passed while Uranus Browser was closed, the Mac slept (more than 5 minutes late), or the wait ran long. Nothing runs late on its own. A card above the conversation and a badge on the clock button show it, with **Run now** and **Skip**. Skip keeps a "Skipped" record.
+- **UrAnus Browser open, agent free:** it starts at once.
+- **UrAnus Browser open, agent busy:** it waits its turn (shown as "Waiting for the agent to finish"). If the wait passes 30 minutes it becomes overdue. One run at a time; a routine whose next time arrives while it is still running skips that time.
+- **Overdue:** the time passed while UrAnus Browser was closed, the Mac slept (more than 5 minutes late), or the wait ran long. Nothing runs late on its own. A card above the conversation and a badge on the clock button show it, with **Run now** and **Skip**. Skip keeps a "Skipped" record.
 
-If Uranus Browser closes mid-run, that run is recorded as failed ("Uranus Browser closed before the run finished"). If the routine's companion was deleted, the run fails with a message; edit the routine and pick another.
+If UrAnus Browser closes mid-run, that run is recorded as failed ("UrAnus Browser closed before the run finished"). If the routine's companion was deleted, the run fails with a message; edit the routine and pick another.
 
 ### Run records
 
@@ -141,13 +141,13 @@ Each routine has a History: status (Running, Done, Stopped, Needed you, Failed, 
 
 ## Meeting notes
 
-Uranus Browser can record a meeting you are in, show a live transcript, and write notes when you stop. Open it with the microphone button. It starts only when you click **Start recording**, on the tab you are looking at, and a recording bar stays visible until it stops. The card reminds you to tell the other people that you are recording; check what applies where you are. It can also remind you from your calendar and offer to record when a tab is a meeting (below), but those only bring you to the same Start button. [`docs/meeting-notes.md` has the technical detail]
+UrAnus Browser can record a meeting you are in, show a live transcript, and write notes when you stop. Open it with the microphone button. It starts only when you click **Start recording**, on the tab you are looking at, and a recording bar stays visible until it stops. The card reminds you to tell the other people that you are recording; check what applies where you are. It can also remind you from your calendar and offer to record when a tab is a meeting (below), but those only bring you to the same Start button. [`docs/meeting-notes.md` has the technical detail]
 
 ### Start and stop
 
 1. Open the meeting in a tab and keep it as the current tab.
 2. Choose the transcription engine and microphone (below).
-3. Press **Start recording**. If Uranus Browser has no microphone permission yet, it says so and offers "Allow the microphone..." (see [First-run permissions](#first-run-permissions)).
+3. Press **Start recording**. If UrAnus Browser has no microphone permission yet, it says so and offers "Allow the microphone..." (see [First-run permissions](#first-run-permissions)).
 4. Words appear a few seconds after they are spoken. Audio is cut into 10-second pieces, quiet pieces are dropped, and the audio itself is never saved.
 5. Press **Stop**. Stop always works and never waits on the helper. The transcript is saved, and notes are written.
 
@@ -155,19 +155,19 @@ A recording also ends if the meeting tab closes, the helper stops, the recorder 
 
 ### Calendar reminders
 
-Connect your calendar and Uranus Browser reminds you about two minutes before a meeting that has a Google Meet, Zoom or Teams link. There is no sign-in: it reads the calendar's private iCal address. [`shell/calendar.ts`, `shared/calendar.ts`]
+Connect your calendar and UrAnus Browser reminds you about two minutes before a meeting that has a Google Meet, Zoom or Teams link. There is no sign-in: it reads the calendar's private iCal address. [`shell/calendar.ts`, `shared/calendar.ts`]
 
 **Set it up:** microphone button › **Upcoming today** › **Connect a calendar…** (or the calendar icon beside "Upcoming today"). Paste the address, press **Test** to see what it finds, then **Save**.
 
 - **Google Calendar:** on the web, Settings › click your calendar under "Settings for my calendars" › Integrate calendar › **Secret address in iCal format**.
 - **Outlook:** Settings › Calendar › Shared calendars › Publish a calendar, then copy the ICS link.
-- **iCloud:** a calendar shared as a public calendar gives a `webcal://` link; it works too (Uranus Browser reads it over https).
+- **iCloud:** a calendar shared as a public calendar gives a `webcal://` link; it works too (UrAnus Browser reads it over https).
 
 Only https and `webcal://` addresses are accepted. Save reads the calendar first and refuses an address that doesn't work.
 
-**The address is a secret.** Anyone who has it can read your calendar. Uranus Browser keeps it only in this profile, under its own key, shows it as the host and an ellipsis (`calendar.google.com…`), never logs it, reads it without your cookies, and never gives it, or any event, to the AI model. Event titles are shown as plain text only. To stop, press **Remove** on the Calendar screen; the address and the meetings read from it are deleted. If Google says the address was reset, copy the new one and use **Use another address**.
+**The address is a secret.** Anyone who has it can read your calendar. UrAnus Browser keeps it only in this profile, under its own key, shows it as the host and an ellipsis (`calendar.google.com…`), never logs it, reads it without your cookies, and never gives it, or any event, to the AI model. Event titles are shown as plain text only. To stop, press **Remove** on the Calendar screen; the address and the meetings read from it are deleted. If Google says the address was reset, copy the new one and use **Use another address**.
 
-**When it reads:** when Uranus Browser starts, every 10 minutes, and when you press **Check now**. It looks at the next 36 hours and expands repeating events (daily, weekly, monthly, yearly, with exceptions and moved occurrences). All-day events and events without a meeting link are left out.
+**When it reads:** when UrAnus Browser starts, every 10 minutes, and when you press **Check now**. It looks at the next 36 hours and expands repeating events (daily, weekly, monthly, yearly, with exceptions and moved occurrences). All-day events and events without a meeting link are left out.
 
 **What you see:**
 
@@ -181,7 +181,7 @@ Only https and `webcal://` addresses are accepted. Save reads the calendar first
 - **Upcoming today** in the Meetings sheet: the next three meetings today with their time, title, platform, **Join** (just opens the link) and **Open & record**.
 - Within 5 minutes of a start, a small strip above the conversation with **Open & record** and a dismiss button.
 
-macOS has to allow notifications for Uranus Browser (System Settings › Notifications); if it doesn't, the panel's strip and the Upcoming card still work.
+macOS has to allow notifications for UrAnus Browser (System Settings › Notifications); if it doesn't, the panel's strip and the Upcoming card still work.
 
 ### When the tab is a meeting
 
@@ -194,13 +194,13 @@ Without any calendar: when the tab you are on is a live Google Meet (`meet.googl
 | Audio to text | each 10-second piece goes to OpenAI with your key | a local `whisper-server` on 127.0.0.1; audio never leaves the Mac |
 | Notes written at Stop | by an OpenAI model | a no-model "quick digest" |
 
-The setting is Automatic (OpenAI if available, else local), OpenAI, or On this Mac; an option that isn't available is greyed out with the reason. The local engine only works if a `whisper-server` and a ggml model are already installed (`ANUS_WHISPER_SERVER`, `ANUS_WHISPER_MODEL`, or the ones OpenWhisper keeps). Uranus Browser never downloads or installs them. The model names can be changed with `ANUS_MEETING_TRANSCRIBE_MODEL` (default `gpt-4o-mini-transcribe`) and `ANUS_MEETING_SUMMARY_MODEL` in the helper's environment.
+The setting is Automatic (OpenAI if available, else local), OpenAI, or On this Mac; an option that isn't available is greyed out with the reason. The local engine only works if a `whisper-server` and a ggml model are already installed (`ANUS_WHISPER_SERVER`, `ANUS_WHISPER_MODEL`, or the ones OpenWhisper keeps). UrAnus Browser never downloads or installs them. The model names can be changed with `ANUS_MEETING_TRANSCRIBE_MODEL` (default `gpt-4o-mini-transcribe`) and `ANUS_MEETING_SUMMARY_MODEL` in the helper's environment.
 
 ### Microphone picker
 
 The card has a **Microphone** menu:
 
-- **This Mac's microphone (recommended)**: the default. Uranus Browser looks for the Mac's own input (names like MacBook, iMac or built-in) and uses it instead of an iPhone, AirPods, display or USB device that happens to be the system default. If it finds no built-in one, it keeps the system default.
+- **This Mac's microphone (recommended)**: the default. UrAnus Browser looks for the Mac's own input (names like MacBook, iMac or built-in) and uses it instead of an iPhone, AirPods, display or USB device that happens to be the system default. If it finds no built-in one, it keeps the system default.
 - **System default**: whatever macOS has selected.
 - **Any input by name**: the list fills in a moment after the card opens. A saved device that is unplugged shows as "(not connected)" and falls back to the system default.
 
@@ -209,13 +209,13 @@ The card has a **Microphone** menu:
 Your microphone is "Me". The other participants are the meeting tab's sound, "Others", and Chromium only allows capturing a tab after a gesture on an extension's own UI. So Start begins with the microphone alone, and the card says "Remote participants' audio isn't being captured yet". Add the tab's sound while recording, in either of two ways:
 
 - Click the meeting tab, then press **⇧⌘Y**. This works wherever the focus is. (The panel shows the key Chromium actually assigned, and leaves it out if none was.)
-- Right-click inside the meeting page (not the sidebar) and choose **Uranus Browser: add this tab's audio to the meeting notes**. The item exists only while a recording runs.
+- Right-click inside the meeting page (not the sidebar) and choose **UrAnus Browser: add this tab's audio to the meeting notes**. The item exists only while a recording runs.
 
 Once it works the card names the site and an "Others" meter appears; the tab keeps playing out loud. If you skip this, only your microphone is recorded, and other people appear only if your speakers carry them to the microphone, as "Me". A second press on the same tab changes nothing; a press on a different tab replaces the first.
 
 ### Speaker names
 
-On Google Meet, Zoom and Microsoft Teams (web), Uranus Browser reads the highlighted speaker tile once a second while recording and puts that name on the "Others" lines. It does this on demand, adds nothing to the page and clicks nothing. It fails soft: if a page changes or a name can't be read, the lines stay "Others". The names it reads depend on the page's own layout and, in places, English labels, so another interface language may give fewer names. If someone says "I'm Alice" or "ich bin Alice", the meeting view only suggests a label for you to accept.
+On Google Meet, Zoom and Microsoft Teams (web), UrAnus Browser reads the highlighted speaker tile once a second while recording and puts that name on the "Others" lines. It does this on demand, adds nothing to the page and clicks nothing. It fails soft: if a page changes or a name can't be read, the lines stay "Others". The names it reads depend on the page's own layout and, in places, English labels, so another interface language may give fewer names. If someone says "I'm Alice" or "ich bin Alice", the meeting view only suggests a label for you to accept.
 
 ### Notes, storage, delete
 
@@ -224,7 +224,7 @@ Notes have four parts: Overview, Decisions, Action items, Open questions. For th
 From a saved meeting you can rename it, **Copy as Markdown**, **Discuss in chat**, or delete it.
 
 - **Discuss in chat** sends the notes and up to 20,000 characters of the transcript to the agent as your own message, fenced as untrusted data. That goes to OpenAI like any message. It is refused while the agent is working.
-- **Delete** removes one meeting, notes and transcript, for good. "Delete all" removes every meeting. Up to 500 meetings are kept; Uranus Browser asks you to delete some before recording another.
+- **Delete** removes one meeting, notes and transcript, for good. "Delete all" removes every meeting. Up to 500 meetings are kept; UrAnus Browser asks you to delete some before recording another.
 - Meetings are stored only in this browser profile (`chrome.storage.local`). Transcripts are never logged.
 
 ### Write notes with OpenAI, or on this Mac
@@ -239,7 +239,7 @@ Underdog needs, already installed: OpenWhisper's `llm_mlx_server.py`, its Python
 
 ### Language limits as they stand
 
-- **Transcription:** Uranus Browser doesn't set a language. OpenAI detects it; the local engine runs with automatic language. Mixed-language calls are up to the engine.
+- **Transcription:** UrAnus Browser doesn't set a language. OpenAI detects it; the local engine runs with automatic language. Mixed-language calls are up to the engine.
 - **Quick digest:** it recognises explicit phrasing mainly in English and German, with some French, Spanish and Italian. In other languages it will find little.
 - **Self-introduction suggestions:** English and German only.
 - **Titles (OpenAI):** written in the language of the meeting.
@@ -247,7 +247,7 @@ Underdog needs, already installed: OpenWhisper's `llm_mlx_server.py`, its Python
 
 ## Agent in a meeting
 
-This is different from meeting notes. Here the **agent itself joins** a Google Meet, Zoom or Microsoft Teams meeting as a visible participant, through **joinly**, a meeting-bot server that you run yourself on this Mac (Docker). Uranus Browser is only a client of it; it never starts joinly for you and ships none of it. [`shared/joinly.ts`, `native-host/joinlyClient.ts`]
+This is different from meeting notes. Here the **agent itself joins** a Google Meet, Zoom or Microsoft Teams meeting as a visible participant, through **joinly**, a meeting-bot server that you run yourself on this Mac (Docker). UrAnus Browser is only a client of it; it never starts joinly for you and ships none of it. [`shared/joinly.ts`, `native-host/joinlyClient.ts`]
 
 ### Opt-in and consent
 
@@ -278,7 +278,7 @@ cd /path/to/your/joinly-playground
 ./scripts/playground.sh start
 ```
 
-Then press **Check again** in the sheet. Uranus Browser looks for it at `http://127.0.0.1:18765/mcp/`. Only this computer is accepted as the address (127.0.0.1, localhost or [::1]); you can change the port in the sheet. The sheet says if nothing answers, if something answers that isn't joinly, or if the connection is lost.
+Then press **Check again** in the sheet. UrAnus Browser looks for it at `http://127.0.0.1:18765/mcp/`. Only this computer is accepted as the address (127.0.0.1, localhost or [::1]); you can change the port in the sheet. The sheet says if nothing answers, if something answers that isn't joinly, or if the connection is lost.
 
 ### Joining
 
@@ -287,7 +287,7 @@ Two ways, both need your yes:
 - **In the sheet:** pick the meeting (no pasting: **This tab** when the tab you're on is a meeting, and today's meetings from your connected calendar), or paste a link; the link is filled in for you when the sheet opens. Pick a bot name, press Join, then confirm "Join this meeting?". Only https links on meet.google.com, zoom.us, teams.microsoft.com or teams.live.com are accepted.
 - **In the chat:** ask ("join this meeting ..."). An **approval card** shows the platform, the host and the bot name before anything happens.
 
-Pick a name that makes clear it's an AI assistant (the default is "Uranus Browser AI assistant"). Joining can wait for minutes while someone lets the bot in; Cancel joining is there. One meeting at a time.
+Pick a name that makes clear it's an AI assistant (the default is "UrAnus Browser AI assistant"). Joining can wait for minutes while someone lets the bot in; Cancel joining is there. One meeting at a time.
 
 ### Speaking and chat need a card each time
 
@@ -307,7 +307,7 @@ The agent leaves when you press **Leave meeting** in the sheet, when you press *
 - Joining as an anonymous guest on Google Meet failed in testing with HTTP 403 (see [When something goes wrong](#when-something-goes-wrong)). The route that worked used a separate signed-in Google profile inside joinly.
 - Zoom and Teams controllers exist but have not been tested against live meetings.
 - What the agent hears is automatic speech recognition by joinly: it can be wrong, and speaker names can be missing.
-- The agent's voice and who hears it are not something Uranus Browser can take back. Check the card.
+- The agent's voice and who hears it are not something UrAnus Browser can take back. Check the card.
 
 ## First-run permissions
 
@@ -315,7 +315,7 @@ The welcome tour has a **Permissions** step with three optional buttons:
 
 - **Microphone**: used by meeting notes only after you press Start; the audio isn't kept.
 - **Camera**: video calls ask for it themselves. Allowing it now means macOS asks once, here, not in the middle of a call.
-- **App Management**: macOS can block Uranus Browser from changing app files, for example when it updates. This opens the right System Settings pane, since macOS has no prompt for it.
+- **App Management**: macOS can block UrAnus Browser from changing app files, for example when it updates. This opens the right System Settings pane, since macOS has no prompt for it.
 
 For the microphone and camera, a small tab opens: choose "Allow while visiting the site" there, then Allow when macOS asks. The row shows "Allowed" once it is granted. You can change any of them later in System Settings > Privacy & Security.
 
@@ -339,22 +339,22 @@ The panel can also be docked by dragging its grip.
 ## Where your data lives
 
 - **On this Mac, per profile (`chrome.storage.local`):** companions and their notes, project context, the text of attached files, skills, routines and run records, saved meetings (notes and transcripts), the meeting settings, the calendar's private address (its own key) and the next day and a half of meetings read from it (titles, times, links; no descriptions), joinly's settings, and the panel's side and width. Another profile has its own.
-- **The conversation** lives in Uranus Browser's helper process while it runs. Uranus Browser doesn't write it to disk. A new conversation, or the helper stopping, ends it.
+- **The conversation** lives in UrAnus Browser's helper process while it runs. UrAnus Browser doesn't write it to disk. A new conversation, or the helper stopping, ends it.
 - **The OpenAI API key** stays in the macOS Keychain, read only by the helper. The panel, the shell and web pages never see it.
 - **What leaves the Mac:** your messages and what the agent reads on pages (to the selected cloud provider; see [privacy and data flows](privacy.md)); the active companion's project context, file names and skills, and the parts of files it reads; meeting audio pieces and transcript text if you use the OpenAI engine or OpenAI notes; what the agent reads from a meeting it joined. The calendar address is fetched from the calendar's own server (Google, Microsoft, Apple), without cookies, and nothing from it goes anywhere else. Everything else stays: the local engine, the quick digest and Underdog never send anything. The joinly connection is loopback only.
 - **Algorithm Diet** (the 🍴 button in the sidebar's toolbar): the pages you read (address, title, description, a visible excerpt, time and video playback) and imported history are kept in the shell's own IndexedDB on this Mac, per profile; incognito windows are never recorded. Its model is always Underdog on this Mac; Erase Diet Data (⋯ menu) deletes all of it.
-- **Audio** is never saved by Uranus Browser.
-- Uranus Browser doesn't log meeting text, page text or your key; its diagnostics are names, counts and timings.
+- **Audio** is never saved by UrAnus Browser.
+- UrAnus Browser doesn't log meeting text, page text or your key; its diagnostics are names, counts and timings.
 
 ## When something goes wrong
 
-**The Agent button shows but does nothing, or the chat button is dead after an update.** Chromium keeps an extension's old background worker until the extension's version changes, so a profile can run the old script beside the new pages. Builds now version the shell by its built files so this is fixed for new builds, but a profile that is already stuck may need a clean restart: quit Uranus Browser (⌘Q), wait about 10 seconds, reopen it. [commit 5f63873]
+**The Agent button shows but does nothing, or the chat button is dead after an update.** Chromium keeps an extension's old background worker until the extension's version changes, so a profile can run the old script beside the new pages. Builds now version the shell by its built files so this is fixed for new builds, but a profile that is already stuck may need a clean restart: quit UrAnus Browser (⌘Q), wait about 10 seconds, reopen it. [commit 5f63873]
 
-**"Uranus Browser's helper is older than meeting notes" (or similar).** The native helper hasn't been refreshed after an update. Quit and reopen Uranus Browser so it registers the new one. The same applies to "helper isn't registered" messages in Settings.
+**"UrAnus Browser's helper is older than meeting notes" (or similar).** The native helper hasn't been refreshed after an update. Quit and reopen UrAnus Browser so it registers the new one. The same applies to "helper isn't registered" messages in Settings.
 
 **The microphone drops out mid-meeting (iPhone, AirPods, Bluetooth).** When the input disappears, the recorder reopens it and carries on from the same clock. If the chosen device keeps vanishing (more than 3 times) the recording ends with a message and keeps what was captured. Fix: set the microphone menu to **This Mac's microphone** (the default) and avoid having a phone or headset as the system input.
 
-**"Uranus Browser may need your permission first" when you press Start.** Press "Allow the microphone..." in the card; it opens a tab where Chromium can ask. Then press Start again. If macOS had said no earlier, turn Uranus Browser on in System Settings > Privacy & Security > Microphone.
+**"UrAnus Browser may need your permission first" when you press Start.** Press "Allow the microphone..." in the card; it opens a tab where Chromium can ask. Then press Start again. If macOS had said no earlier, turn UrAnus Browser on in System Settings > Privacy & Security > Microphone.
 
 **Only my side of the call was recorded.** You didn't add the tab's audio. During the recording, click the meeting tab and press ⇧⌘Y, or use the item in the page's own right-click menu (not the sidebar tab menu).
 
@@ -362,13 +362,13 @@ The panel can also be docked by dragging its grip.
 
 **"joinly isn't running" or "That isn't joinly".** Start the playground (Docker Desktop must be running) and press Check again, or fix the address in the sheet. It must be a loopback address.
 
-**A routine didn't run.** Uranus Browser was closed, the Mac slept, or the agent was busy for too long, so it is overdue: use Run now or Skip. If "The agent didn't start", check that the OpenAI key is set up.
+**A routine didn't run.** UrAnus Browser was closed, the Mac slept, or the agent was busy for too long, so it is overdue: use Run now or Skip. If "The agent didn't start", check that the OpenAI key is set up.
 
 **macOS permission notices.** Microphone, camera and App Management are all optional and can be granted or removed any time in System Settings > Privacy & Security. Meeting notes need the microphone; updates may need App Management.
 
-**A PDF or document won't attach ("needs Uranus Browser's helper").** Reading PDFs and documents happens in the helper: quit and reopen Uranus Browser so the new helper is registered. Plain-text files attach without it. A PDF that is only scanned images has no text to read; export it with text recognition (Preview › Export as PDF doesn't add it; a scanner app's OCR does) and attach that.
+**A PDF or document won't attach ("needs UrAnus Browser's helper").** Reading PDFs and documents happens in the helper: quit and reopen UrAnus Browser so the new helper is registered. Plain-text files attach without it. A PDF that is only scanned images has no text to read; export it with text recognition (Preview › Export as PDF doesn't add it; a scanner app's OCR does) and attach that.
 
-**No meeting reminder came.** Check the Calendar screen: it says when the calendar was last read and how many meetings with a link it found. A meeting needs a Google Meet, Zoom or Teams link in its location, description or conference field, and a start time (all-day events are skipped). macOS must allow notifications for Uranus Browser; without them the panel's strip still shows. Reminders only come while Uranus Browser is open.
+**No meeting reminder came.** Check the Calendar screen: it says when the calendar was last read and how many meetings with a link it found. A meeting needs a Google Meet, Zoom or Teams link in its location, description or conference field, and a start time (all-day events are skipped). macOS must allow notifications for UrAnus Browser; without them the panel's strip still shows. Reminders only come while UrAnus Browser is open.
 
 **"The calendar address was refused".** The secret address was reset or mistyped. Copy it again and use **Use another address** on the Calendar screen.
 
@@ -376,4 +376,4 @@ The panel can also be docked by dragging its grip.
 
 ## Not built yet
 
-Routine event triggers on a page or a message (calendar meetings are done); running routines while Uranus Browser is closed; Zoom and Teams live testing for joinly and for speaker names; joinly anonymous guest entry on Google Meet; signing in with an OpenAI account instead of a key; adding the meeting tab's audio automatically at Start (today it takes the shortcut or the menu item; a Chromium patch is the fallback if those ever fail).
+Routine event triggers on a page or a message (calendar meetings are done); running routines while UrAnus Browser is closed; Zoom and Teams live testing for joinly and for speaker names; joinly anonymous guest entry on Google Meet; signing in with an OpenAI account instead of a key; adding the meeting tab's audio automatically at Start (today it takes the shortcut or the menu item; a Chromium patch is the fallback if those ever fail).

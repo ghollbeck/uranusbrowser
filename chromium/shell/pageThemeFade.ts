@@ -1,5 +1,5 @@
 /**
- * Web pages fade between light and dark too, on the same one-second curve as Uranus Browser's own
+ * Web pages fade between light and dark too, on the same one-second curve as UrAnus Browser's own
  * pages (lib/themeFade.ts). A page recolours itself when its prefers-color-scheme flips; to
  * fade that, each visible tab starts a View Transition just before the switch: the browser
  * keeps a picture of the page as it was, the scheme flips underneath, and the old picture
@@ -7,7 +7,7 @@
  * timeout) before it switches the theme.
  *
  * Only the tabs on screen (each window's active tab) and only when the scheme really changes.
- * Pages Uranus Browser can't script (chrome://, other extensions, the Web Store) just switch at once.
+ * Pages UrAnus Browser can't script (chrome://, other extensions, the Web Store) just switch at once.
  * Tabs a server themed reload instead, and fade that way (serverThemedTabs.ts).
  */
 

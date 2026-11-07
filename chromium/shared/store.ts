@@ -720,7 +720,7 @@ export class Store {
     return space;
   }
 
-  /** Takes over another Uranus Browser's whole state (its Spaces, tabs and settings), as if it had been loaded. */
+  /** Takes over another UrAnus Browser's whole state (its Spaces, tabs and settings), as if it had been loaded. */
   replaceState(state: BrowserState): boolean {
     if (!state?.spaces?.length || !state.tabs) return false;
     this.state = state;

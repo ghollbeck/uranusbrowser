@@ -1,42 +1,42 @@
-# Uranus Browser
+# UrAnus Browser
 
 An Arc-style browser for developers, built on a Chromium fork. Arc's interface ideas are rebuilt from scratch; no Arc code is used.
 
 **Docs:** [User guide](docs/user-guide.md) · [Privacy and data flows](docs/privacy.md) · [iPhone build](mobile/app/README.md)
 
-The [product website](https://ab.gaborhollbeck.com/) has interactive demos.
+The [product website](https://uranus-browser.gaborhollbeck.com/) has interactive demos.
 
-> **Disclaimer:** Uranus Browser is early release software provided “as is,” without warranty, under the [MIT License](LICENSE). Back up important data. Cloud AI can send page or meeting content to a provider; get everyone’s permission before recording. See [the full safety notice](#before-you-use-uranus-browser).
+> **Disclaimer:** UrAnus Browser is early release software provided “as is,” without warranty, under the [MIT License](LICENSE). Back up important data. Cloud AI can send page or meeting content to a provider; get everyone’s permission before recording. See [the full safety notice](#before-you-use-uranus-browser).
 
 ## Launch videos
 
 The previews play silently. Click one to watch the full video.
 
-### Uranus Browser for Mac
+### UrAnus Browser for Mac
 
-[![Animated preview of the Uranus Browser Mac demo](https://ab.gaborhollbeck.com/assets/uranus-browser-desktop-preview.webp)](https://ab.gaborhollbeck.com/launch-videos.html#desktop)
+[![Animated preview of the UrAnus Browser Mac demo](https://uranus-browser.gaborhollbeck.com/assets/uranus-browser-desktop-preview.webp)](https://uranus-browser.gaborhollbeck.com/launch-videos.html#desktop)
 
-### Uranus Browser for Mac · animated promo
+### UrAnus Browser for Mac · animated promo
 
-[![Animated preview of the Uranus Browser Mac promo](docs/videos/uranus-browser-desktop-promo-preview.webp)](docs/videos/uranus-browser-desktop-promo.mp4)
+[![Animated preview of the UrAnus Browser Mac promo](docs/videos/uranus-browser-desktop-promo-preview.webp)](docs/videos/uranus-browser-desktop-promo.mp4)
 
 Companions, the agent's approvals, meeting notes, Algorithm Diet and Arc import, as motion graphics. People, messages and numbers are examples.
 
 ### Website hero tour
 
-[![Animated preview of the Uranus Browser website hero](docs/videos/uranus-browser-website-hero-preview.webp)](docs/videos/uranus-browser-website-hero.mp4)
+[![Animated preview of the UrAnus Browser website hero](docs/videos/uranus-browser-website-hero-preview.webp)](docs/videos/uranus-browser-website-hero.mp4)
 
 A recording of the website's hero demos: Meet joins, Flight agent, Sidebar and Dark mode. It has no sound. The meeting and the flight are illustrative.
 
-### Uranus Browser for iPhone
+### UrAnus Browser for iPhone
 
-[![Animated preview of the Uranus Browser iPhone tour](https://ab.gaborhollbeck.com/assets/uranus-browser-iphone-preview.webp)](https://ab.gaborhollbeck.com/launch-videos.html#iphone)
+[![Animated preview of the UrAnus Browser iPhone tour](https://uranus-browser.gaborhollbeck.com/assets/uranus-browser-iphone-preview.webp)](https://uranus-browser.gaborhollbeck.com/launch-videos.html#iphone)
 
 ## Why
 
-Arc's vertical sidebar, Spaces and Peek are hard to give up, and Arc is no longer where the work is happening. Uranus Browser is a replacement that keeps those ideas and adds tools for the people who build websites.
+Arc's vertical sidebar, Spaces and Peek are hard to give up, and Arc is no longer where the work is happening. UrAnus Browser is a replacement that keeps those ideas and adds tools for the people who build websites.
 
-It is a Chromium 158 fork rather than an Electron app because Google blocks sign-in in Electron. Uranus Browser is real Chromium, so Google sign-in, Chrome Web Store extensions and the rest of the web platform work as they do in Chrome.
+It is a Chromium 158 fork rather than an Electron app because Google blocks sign-in in Electron. UrAnus Browser is real Chromium, so Google sign-in, Chrome Web Store extensions and the rest of the web platform work as they do in Chrome.
 
 ## Features
 
@@ -61,13 +61,13 @@ It is a Chromium 158 fork rather than an Electron app because Google blocks sign
 - Paste a JWT or a Unix timestamp to decode it in place
 - Type `boost` to open the Boosts page
 
-**Peek, split view and Uranus Mini**
+**Peek, split view and UrAnus Mini**
 - Peek: links that open a new tab from a pinned tab or favourite show in a floating preview; any link's right-click menu offers it too. Esc or a click outside closes it, Open turns it into a tab
 - Split view: right-click a tab, Open in Split View, or ⌃⇧= to split with a new tab (⌃⇧- exits)
-- Uranus Mini: a small standalone window for a quick page (⌥⌘N), which can be sent back into the main window
+- UrAnus Mini: a small standalone window for a quick page (⌥⌘N), which can be sent back into the main window
 
 **Boosts**
-- Per-site TypeScript and CSS (`github.com.ts`, `github.com.css`, `all.css`), kept in Uranus Browser and edited on the Boosts page. CSS applies live; scripts reload the page. ⌥⌘B edits the current site's boost
+- Per-site TypeScript and CSS (`github.com.ts`, `github.com.css`, `all.css`), kept in UrAnus Browser and edited on the Boosts page. CSS applies live; scripts reload the page. ⌥⌘B edits the current site's boost
 
 **For developers**
 - Console error badge: local tabs show how many console errors they have; clicking it opens the Console
@@ -81,17 +81,17 @@ It is a Chromium 158 fork rather than an Electron app because Google blocks sign
 **Privacy and the rest of the browser**
 
 - Built-in ad and tracker blocking (EasyList and EasyPrivacy as declarativeNetRequest rules, plus element hiding), toggled in Settings
-- Incognito windows get the same Uranus Browser frame, with one in-memory Space that is forgotten when the last incognito window closes
+- Incognito windows get the same UrAnus Browser frame, with one in-memory Space that is forgotten when the last incognito window closes
 - Import bookmarks and history from other browsers and from Arc's sidebar (needs the native host)
 - Chrome extensions: install from the Chrome Web Store; their buttons appear under the address bar
-- Light, dark or system theme; Uranus Browser's shortcuts can be re-recorded in Settings (except a few Chromium keeps, like ⌘T and ⌘W) (⌘/ lists them)
+- Light, dark or system theme; UrAnus Browser's shortcuts can be re-recorded in Settings (except a few Chromium keeps, like ⌘T and ⌘W) (⌘/ lists them)
 - Settings (⌘,): importing from other browsers, search engine (Google, DuckDuckGo, Bing, Brave, Kagi, Ecosia), ad blocking, default browser, Peek behaviour, shortcuts, environments
 
 Not there yet in the Chromium build: choosing the downloads folder from Settings.
 
-## Before you use Uranus Browser
+## Before you use UrAnus Browser
 
-Uranus Browser is early release software, provided “as is” under the [MIT License](LICENSE). Bugs or security flaws can expose data or cause data loss. Keep a backup of important browser data and keep your existing browser and profile until you’ve checked the import.
+UrAnus Browser is early release software, provided “as is” under the [MIT License](LICENSE). Bugs or security flaws can expose data or cause data loss. Keep a backup of important browser data and keep your existing browser and profile until you’ve checked the import.
 
 - **Browser agent:** It can read pages and act in signed-in tabs. Keep it away from sensitive accounts and pages, and check what it is about to do before approving an action.
 - **Cloud AI:** When you use a cloud provider, the feature can send prompts, page content, parts of files, or meeting audio and transcripts to that provider. Use on-device options where available for sensitive material. See [AI providers](docs/ai-providers.md) and [what leaves your Mac](docs/user-guide.md#where-your-data-lives).
@@ -101,10 +101,10 @@ You can reread this notice in **Settings → Privacy**. See [Privacy and data fl
 
 ## Install
 
-1. [Download Uranus Browser for Mac](https://ab.gaborhollbeck.com/download/macos/arm64) (Apple silicon).
-2. Open the disk image and drag Uranus Browser into Applications.
+1. [Download UrAnus Browser for Mac](https://uranus-browser.gaborhollbeck.com/download/macos/arm64) (Apple silicon).
+2. Open the disk image and drag UrAnus Browser into Applications.
 
-<p align="center"><img src="docs/screenshots/installer.png" alt="Drag the Uranus Browser icon into the Applications folder" width="560"></p>
+<p align="center"><img src="docs/screenshots/installer.png" alt="Drag the UrAnus Browser icon into the Applications folder" width="560"></p>
 
 This repository distributes source. See [Build from source](#build-from-source) for a local macOS build,
 or the [iPhone guide](mobile/app/README.md) for a simulator build.
@@ -125,7 +125,7 @@ chromium/scripts/set-openai-key.sh --status        # or --delete
 
 How a request flows: the panel page (`shell/ui/agent.ts`) sends your message to the shell's background, which passes it to the native host over native messaging. The host (`native-host/agentChat.ts`) asks the model for the next step; for each tool call it has the shell inspect the target, applies the rules in `shared/browserAgent.ts` (run, ask you, or refuse), shows an approval card when needed, and only then has the shell act. The shell reads pages in Chromium's isolated world and clicks and types with real input events; it refuses to act if the page changed since you approved. Page text goes to the model marked as untrusted data, and the panel shows only a short log of each step. The agent has no JavaScript tool.
 
-Tests: `npm test` (tool schemas, approval rules, the chat loop, key isolation, panel layout, the AI registry, and the ChatGPT provider against a fake Codex app-server), and against a running build `node chromium/tests/e2e.mjs --app <Uranus Browser.app>` (the agent on a local test page, with your key) and `node chromium/tests/e2e-layout.mjs --app <Uranus Browser.app>` (docking, resizing and persistence).
+Tests: `npm test` (tool schemas, approval rules, the chat loop, key isolation, panel layout, the AI registry, and the ChatGPT provider against a fake Codex app-server), and against a running build `node chromium/tests/e2e.mjs --app <UrAnus Browser.app>` (the agent on a local test page, with your key) and `node chromium/tests/e2e-layout.mjs --app <UrAnus Browser.app>` (docking, resizing and persistence).
 
 For companions and memory, artifacts, routines, meeting notes, the agent joining meetings and the permissions step, see the [Agent panel user guide](docs/user-guide.md) (and the [feature log](docs/CHANGELOG-features.md)).
 
@@ -135,7 +135,7 @@ You need:
 
 - macOS on Apple Silicon, with Xcode (and its command line tools)
 - [depot_tools](https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html) on your `PATH`
-- a Chromium checkout at the version Uranus Browser targets (158), with plenty of disk (100 GB or more) and several hours for a first build
+- a Chromium checkout at the version UrAnus Browser targets (158), with plenty of disk (100 GB or more) and several hours for a first build
 - Node 24 and `npm ci` at the repo root
 - `librsvg` (`brew install librsvg`) to generate macOS branding resources
 
@@ -173,7 +173,7 @@ chromium/scripts/build-release.sh
 The script builds Chromium and packages an ad hoc signed app under the Chromium checkout's
 `out/Release/anus-release/` (use `ANUS_ARCH=x64` for Intel). This takes several hours on a fresh
 checkout. Sparkle updates are off by default. Running the packaged app uses the standard
-Uranus Browser profile unless you pass Chromium's `--user-data-dir` with a separate directory.
+UrAnus Browser profile unless you pass Chromium's `--user-data-dir` with a separate directory.
 See [release configuration](docs/release-configuration.md) if you maintain your own distribution.
 
 To check the TypeScript without Chromium, run `npm run typecheck`, `npm test`,
@@ -192,7 +192,7 @@ chromium/
   shell/         the MV3 component extension that draws the window
     background.ts   service worker: the Store, tabs, windows
     features/       ad blocking, boosts, console errors, local servers, responsive view
-    ui/             sidebar, command bar, settings and Uranus Mini pages
+    ui/             sidebar, command bar, settings and UrAnus Mini pages
     lib/            URLs, shortcuts, environments, settings rules, tab manager
   shared/        types and the sidebar model, used by the shell and the host
   native-host/   the native messaging host (Node): imports, MCP, the Agent panel's model provider
@@ -201,11 +201,11 @@ chromium/
 
 ## Architecture in brief
 
-Uranus Browser is Chromium plus two layers: a small set of patches, and an extension that draws the browser.
+UrAnus Browser is Chromium plus two layers: a small set of patches, and an extension that draws the browser.
 
 ```mermaid
 flowchart LR
-  subgraph Chromium["Chromium 158 + Uranus Browser patches"]
+  subgraph Chromium["Chromium 158 + UrAnus Browser patches"]
     Frame["Window frame view<br/>(hides tab strip and toolbar)"]
     API["chrome.anusPrivate"]
   end
@@ -220,15 +220,15 @@ flowchart LR
   BG <-- "native messaging" --> Host
 ```
 
-- **Patches** (`chromium/patches/`) change what only Chromium can: hide the tab strip and toolbar, draw Uranus Browser's own window frame and traffic lights, round the page area, add Peek, Uranus Mini windows, split ratio, a storage partition per Space, and so on.
+- **Patches** (`chromium/patches/`) change what only Chromium can: hide the tab strip and toolbar, draw UrAnus Browser's own window frame and traffic lights, round the page area, add Peek, UrAnus Mini windows, split ratio, a storage partition per Space, and so on.
 - **The shell** is a Manifest V3 extension loaded as a component extension, so it can't be removed or turned off. Its service worker (`background.ts`) owns the Store and the tabs; everything the user sees is shell HTML and TypeScript.
 - **The frame page** is a shell page that Chromium's frame view hosts around the web contents. It draws the sidebar and command bar, and its drag regions move the window.
-- **`chrome.anusPrivate`** (`shell/anusPrivate.d.ts`) is the private extension API the patches add, for what the standard APIs lack: frame state, shortcuts, theme, split ratio, Peek, Uranus Mini, partitions, DevTools, the find bar and default-browser. It is available to the shell only.
+- **`chrome.anusPrivate`** (`shell/anusPrivate.d.ts`) is the private extension API the patches add, for what the standard APIs lack: frame state, shortcuts, theme, split ratio, Peek, UrAnus Mini, partitions, DevTools, the find bar and default-browser. It is available to the shell only.
 - **The native host** does what an extension can't: read other browsers' bookmarks and history, and serve MCP to coding agents on 127.0.0.1.
 
 ## Status and roadmap
 
-Uranus Browser is early software, used daily by its author. Next:
+UrAnus Browser is early software, used daily by its author. Next:
 
 - Resizable split divider and 3 to 4 pane splits
 - Choosing the downloads folder in the Chromium build
@@ -239,7 +239,7 @@ Bug reports and patches are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) for 
 
 ## License
 
-The project code is under the [MIT license](LICENSE), with the original [Flecha Browser](https://github.com/lucianodiisouza/flecha-browser) notice preserved. Chromium and other components retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md). Uranus Browser is not affiliated with or endorsed by Google, Arc or The Browser Company.
+The project code is under the [MIT license](LICENSE), with the original [Flecha Browser](https://github.com/lucianodiisouza/flecha-browser) notice preserved. Chromium and other components retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md). UrAnus Browser is not affiliated with or endorsed by Google, Arc or The Browser Company.
 
 ## Marketing site
 

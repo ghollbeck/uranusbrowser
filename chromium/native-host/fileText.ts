@@ -35,7 +35,7 @@ const run: Run = (file, args, options) =>
 export async function extractText(request: ExtractRequest, exec: Run = run): Promise<ExtractReply> {
   const name = typeof request?.name === 'string' ? request.name : '';
   const kind = kindOf(name);
-  if (!kind) return { error: 'Uranus Browser can read PDFs, Word, RTF, OpenDocument, HTML and plain-text files.' };
+  if (!kind) return { error: 'UrAnus Browser can read PDFs, Word, RTF, OpenDocument, HTML and plain-text files.' };
   if (typeof request.data !== 'string') return { error: 'The file didn’t arrive.' };
   const bytes = Buffer.from(request.data, 'base64');
   if (!bytes.length) return { error: 'The file is empty.' };

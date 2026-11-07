@@ -3,7 +3,7 @@ import WebKit
 import Observation
 import AppIntents
 
-/// A website saved as an app ("Save as Web App" in the Share sheet). It runs full screen inside Uranus Browser, in the
+/// A website saved as an app ("Save as Web App" in the Share sheet). It runs full screen inside UrAnus Browser, in the
 /// cookie/storage container of the Space it was saved from, so logins carry over and the Algorithm Diet sees it.
 /// (A real iOS Home Screen web app runs in Safari's own container, which no other app can read.)
 struct WebApp: Codable, Identifiable, Hashable, Sendable {
@@ -226,7 +226,7 @@ enum WebAppManifestReader {
 
 // MARK: - Shortcuts / Spotlight / Home Screen
 
-/// Each saved web app as a Shortcuts entity, so "Open <app> in Uranus Browser" can be put on the Home Screen from the Shortcuts app.
+/// Each saved web app as a Shortcuts entity, so "Open <app> in UrAnus Browser" can be put on the Home Screen from the Shortcuts app.
 struct WebAppEntity: AppEntity {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Web App"
     static var defaultQuery = WebAppQuery()
@@ -247,7 +247,7 @@ struct WebAppQuery: EntityQuery {
 
 struct OpenWebAppIntent: AppIntent {
     static var title: LocalizedStringResource = "Open Web App"
-    static var description = IntentDescription("Open a web app you saved in Uranus Browser, full screen. Algorithm Diet tracks it like any page.")
+    static var description = IntentDescription("Open a web app you saved in UrAnus Browser, full screen. Algorithm Diet tracks it like any page.")
     static var openAppWhenRun = true
 
     @Parameter(title: "Web App") var app: WebAppEntity

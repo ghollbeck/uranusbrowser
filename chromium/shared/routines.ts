@@ -1,5 +1,5 @@
 /**
- * Routines: tasks the Agent panel does on a schedule, only while Uranus Browser is open. Pure data
+ * Routines: tasks the Agent panel does on a schedule, only while UrAnus Browser is open. Pure data
  * and functions (no Node, no chrome.*), shared by the shell (which keeps and schedules them
  * per profile), the native host (which labels a routine's conversation) and the tests.
  *
@@ -71,8 +71,8 @@ export interface Routine {
   /** When it next comes due; undefined when it never will (off, or a once-only that has gone). */
   nextAt?: number;
   /**
-   * A run that came due and hasn't happened. `waiting`: it came due while Uranus Browser was open and
-   * will start when the agent is free. `overdue`: it was missed (Uranus Browser was closed, the
+   * A run that came due and hasn't happened. `waiting`: it came due while UrAnus Browser was open and
+   * will start when the agent is free. `overdue`: it was missed (UrAnus Browser was closed, the
    * computer slept, the wait was long) and starts only if the user says so.
    */
   pending?: { since: number; state: 'waiting' | 'overdue'; meeting?: MeetingSlot };

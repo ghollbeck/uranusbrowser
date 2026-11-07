@@ -241,15 +241,15 @@ struct WebAppsList: View {
                 if WebAppStore.shared.apps.isEmpty {
                     Text("On any page: menu › Share › Save as Web App.")
                 } else {
-                    Text("Web apps open full screen inside Uranus Browser with the logins of the Space you saved them from, and the Algorithm Diet tracks them like the browser.")
+                    Text("Web apps open full screen inside UrAnus Browser with the logins of the Space you saved them from, and the Algorithm Diet tracks them like the browser.")
                 }
             }
             Section {
                 if WebAppHomeScreen.available {
-                    LabeledContent("Default browser", value: isDefault.map { $0 ? "Uranus Browser" : "Another app" } ?? "Unknown")
+                    LabeledContent("Default browser", value: isDefault.map { $0 ? "UrAnus Browser" : "Another app" } ?? "Unknown")
                     if isDefault != true {
                         Button { if let u = URL(string: UIApplication.openDefaultApplicationsSettingsURLString) { UIApplication.shared.open(u) } } label: {
-                            Label("Make Uranus Browser the Default Browser", systemImage: "safari")
+                            Label("Make UrAnus Browser the Default Browser", systemImage: "safari")
                         }
                     }
                 }
@@ -260,7 +260,7 @@ struct WebAppsList: View {
                 Text("Home Screen")
             } footer: {
                 if WebAppHomeScreen.available {
-                    Text("In a web app: … › Add to Home Screen. The icon opens the app full screen here, tracked by the Algorithm Diet, as long as Uranus Browser is your default browser.")
+                    Text("In a web app: … › Add to Home Screen. The icon opens the app full screen here, tracked by the Algorithm Diet, as long as UrAnus Browser is your default browser.")
                 } else {
                     Text("Home Screen icons like Safari's need Apple's browser permission (requested). Until then: Shortcuts › + › Open Web App › pick the app › Add to Home Screen.")
                 }

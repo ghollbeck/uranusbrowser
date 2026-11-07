@@ -1,5 +1,5 @@
 /**
- * The page side of the shell's messaging: what a Uranus Browser page uses in place of Electron's
+ * The page side of the shell's messaging: what a UrAnus Browser page uses in place of Electron's
  * ipcRenderer. cmd() fires a command, invoke() awaits a reply, on() listens for events.
  */
 import type { Message } from './protocol';

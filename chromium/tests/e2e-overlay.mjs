@@ -1,4 +1,4 @@
-// End-to-end check of the agent's page overlay (shell/agentOverlay.ts) in a real Uranus Browser: the
+// End-to-end check of the agent's page overlay (shell/agentOverlay.ts) in a real UrAnus Browser: the
 // glow, the "Controlled by" card and the agent's pointer, driven through the shell's real tool
 // runner (shell/browserAgentTools.ts) by a stand-in native host, so it runs without a model and
 // the same for every provider (the API key and ChatGPT both reach the page through that runner).
@@ -12,7 +12,7 @@
 //      each other and the straight edges, on a light and a dark page (screenshots compared);
 //   4. it fades away when the run ends.
 //
-//   node chromium/tests/e2e-overlay.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>] [--keep]
+//   node chromium/tests/e2e-overlay.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>] [--keep]
 //
 // The profile is a fresh one under tests/.scratch; the stand-in host is registered for that
 // profile alone (in a temporary folder, as macOS keeps a host Chromium starts out of ~/Desktop).
@@ -31,7 +31,7 @@ const arg = (name, fallback) => {
   return i > 0 ? process.argv[i + 1] : fallback;
 };
 const has = (name) => process.argv.includes(name);
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir', path.join(here, '../shell/dist'));
 const shots = arg('--shots');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -72,7 +72,7 @@ const server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const origin = `http://127.0.0.1:${server.address().port}`;
 
-// ---- the stand-in native host: relays between Uranus Browser and this script --------------------------
+// ---- the stand-in native host: relays between UrAnus Browser and this script --------------------------
 
 let hostSocket;
 const toolWaits = new Map();
@@ -138,14 +138,14 @@ process.stdin.on('end', () => process.exit(0));
 const launcher = path.join(hostDir, 'host');
 fs.writeFileSync(launcher, `#!/bin/sh\nexec "${process.execPath}" "${path.join(hostDir, 'host.mjs')}"\n`, { mode: 0o755 });
 const manifestFile = path.join(profile, 'NativeMessagingHosts/dev.oprimo.anus.host.json');
-const manifest = JSON.stringify({ name: 'dev.oprimo.anus.host', description: 'Uranus Browser overlay test stand-in', path: launcher, type: 'stdio', allowed_origins: [`chrome-extension://${SHELL_ID}/`] });
+const manifest = JSON.stringify({ name: 'dev.oprimo.anus.host', description: 'UrAnus Browser overlay test stand-in', path: launcher, type: 'stdio', allowed_origins: [`chrome-extension://${SHELL_ID}/`] });
 
 // ---- launch ----------------------------------------------------------------------------------
 
 fs.mkdirSync(path.dirname(manifestFile), { recursive: true });
 const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', `--anus-shell-dir=${path.resolve(shellDir)}`];
-console.log(`Uranus Browser: ${app}\nshell: ${shellDir}\nprofile: ${profile}`);
-const browser = spawn(path.join(app, 'Contents/MacOS/Uranus Browser'), flags, { stdio: 'ignore' });
+console.log(`UrAnus Browser: ${app}\nshell: ${shellDir}\nprofile: ${profile}`);
+const browser = spawn(path.join(app, 'Contents/MacOS/UrAnus Browser'), flags, { stdio: 'ignore' });
 reap(browser);
 const quit = () => has('--keep') || browser.kill();
 process.on('exit', quit);

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Stores the OpenAI API key for Uranus Browser's Agent panel in the macOS Keychain, where the native
+# Stores the OpenAI API key for UrAnus Browser's Agent panel in the macOS Keychain, where the native
 # host reads it (chromium/native-host/secrets.ts). The key never goes on a command line (other
 # processes could read it there): it comes from stdin, or from an env file, and reaches
 # `security` on its stdin. It isn't printed.
@@ -17,16 +17,16 @@ account="api-key"
 case "${1:-}" in
   --status)
     if security find-generic-password -s "$service" -a "$account" >/dev/null 2>&1; then
-      echo "An OpenAI API key for Uranus Browser is in the Keychain."
+      echo "An OpenAI API key for UrAnus Browser is in the Keychain."
     else
-      echo "No OpenAI API key for Uranus Browser in the Keychain."
+      echo "No OpenAI API key for UrAnus Browser in the Keychain."
       exit 1
     fi
     exit 0
     ;;
   --delete)
     security delete-generic-password -s "$service" -a "$account" >/dev/null
-    echo "Removed Uranus Browser's OpenAI API key from the Keychain."
+    echo "Removed UrAnus Browser's OpenAI API key from the Keychain."
     exit 0
     ;;
   --from-env-file)
@@ -55,6 +55,6 @@ if ! [[ "$key" =~ ^sk-[A-Za-z0-9_-]{20,}$ ]]; then
   echo "error: that doesn't look like an OpenAI API key (sk-...)" >&2
   exit 1
 fi
-printf 'add-generic-password -U -s %s -a %s -l "Uranus Browser Agent (OpenAI API key)" -w %s\n' "$service" "$account" "$key" | security -i >/dev/null
+printf 'add-generic-password -U -s %s -a %s -l "UrAnus Browser Agent (OpenAI API key)" -w %s\n' "$service" "$account" "$key" | security -i >/dev/null
 unset key
-echo "Stored Uranus Browser's OpenAI API key in the Keychain (service $service)."
+echo "Stored UrAnus Browser's OpenAI API key in the Keychain (service $service)."

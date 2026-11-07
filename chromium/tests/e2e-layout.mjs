@@ -1,13 +1,13 @@
-// End-to-end test of where the Agent panel sits, in a real Uranus Browser with the panel patch (0042):
+// End-to-end test of where the Agent panel sits, in a real UrAnus Browser with the panel patch (0042):
 //   - opening it from the shell docks it on the right, about 400 px wide, beside the page
 //     (the page area shrinks; the panel covers neither the page nor the sidebar);
 //   - dragging its dock handle across the window docks it on the left;
-//   - after quitting and reopening Uranus Browser with the same profile it is still on the left;
+//   - after quitting and reopening UrAnus Browser with the same profile it is still on the left;
 //   - dragging it back docks it right; Escape closes it.
 // Takes window screenshots of each layout with macOS screencapture (needs Screen Recording
 // permission for the terminal; without it the pictures show only the desktop).
 //
-//   node chromium/tests/e2e-layout.mjs [--app /Applications/Uranus Browser.app] [--shots <dir>] [--url <page>]
+//   node chromium/tests/e2e-layout.mjs [--app /Applications/UrAnus Browser.app] [--shots <dir>] [--url <page>]
 import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,7 +20,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shots = arg('--shots');
 const profile = path.join(here, '.scratch', `layout-profile-${Date.now()}`);
 const results = [];
@@ -32,12 +32,12 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
 const fixture = await startFixtureServer(0);
 const url = arg('--url', fixture.url);
 
-/** Starts Uranus Browser on the test profile; resolves with what the checks need. */
+/** Starts UrAnus Browser on the test profile; resolves with what the checks need. */
 async function launch() {
   fs.mkdirSync(profile, { recursive: true });
   fs.rmSync(path.join(profile, 'DevToolsActivePort'), { force: true });
   const browser = spawn(
-    path.join(app, 'Contents/MacOS/Uranus Browser'),
+    path.join(app, 'Contents/MacOS/UrAnus Browser'),
     [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', '--window-position=60,40'],
     { stdio: 'ignore' },
   );
@@ -144,7 +144,7 @@ await wait(1500);
 ({ browser, cdp, frame, hub } = await launch());
 await hub('agentPanel:toggle');
 panel = await panelOf(cdp);
-// The web page (not one of Uranus Browser's own internal pages, which are also page targets).
+// The web page (not one of UrAnus Browser's own internal pages, which are also page targets).
 const pageTarget = await cdp.waitTarget((t) => t.type === 'page' && /^https?:/.test(t.url));
 page = await cdp.session(pageTarget.targetId);
 await wait(800);

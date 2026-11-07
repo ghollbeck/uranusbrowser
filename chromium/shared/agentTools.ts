@@ -24,11 +24,11 @@ export const text = (value: unknown): AgentResult => ({
 });
 export const fail = (message: string): AgentResult => ({ content: [{ type: 'text', text: message }], isError: true });
 
-const tabId = z.string().optional().describe('Uranus Browser tab id from list_tabs; defaults to the active tab');
+const tabId = z.string().optional().describe('UrAnus Browser tab id from list_tabs; defaults to the active tab');
 
 /** Every tool a coding agent gets, by name. */
 export const AGENT_TOOLS = {
-  list_tabs: { description: 'List open tabs in Uranus Browser with their ids, titles, URLs, Space and whether they are active.' },
+  list_tabs: { description: 'List open tabs in UrAnus Browser with their ids, titles, URLs, Space and whether they are active.' },
   open_tab: {
     description: 'Open a URL in a new tab and return its id.',
     inputSchema: { url: z.string(), background: z.boolean().optional().describe('Open without switching to it') },

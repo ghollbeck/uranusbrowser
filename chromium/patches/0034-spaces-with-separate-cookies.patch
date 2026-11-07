@@ -1,4 +1,4 @@
-Uranus Browser: Spaces with separate cookies and logins.
+UrAnus Browser: Spaces with separate cookies and logins.
 
 The Electron spike gives such a Space its own persistent session partition
 (session.fromPartition("persist:space-<id>"), src/main/sessions.ts). The
@@ -9,7 +9,7 @@ chrome.anusPrivate.createTab({partition}).
 
 Why a storage partition and not a Profile per Space: a Profile has its own
 extension system, so the shell (and its one Store of Spaces), the window
-frame, Uranus Browser's shortcuts and every other Space would have to be split or
+frame, UrAnus Browser's shortcuts and every other Space would have to be split or
 bridged across profiles, and a Chromium window belongs to one profile, so a
 Space's tabs couldn't share the window with the others. A StoragePartition
 keeps everything else (the window, the shell, extensions, history, the
@@ -210,7 +210,7 @@ What this patch adds:
 --- /dev/null
 +++ b/chrome/browser/anus/anus_spaces.h
 @@ -0,0 +1,94 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -307,7 +307,7 @@ What this patch adds:
 --- a/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
 +++ b/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
 @@ -619,7 +619,7 @@
-   // Uranus Browser: like Arc, links leaving a pinned tab open in Peek.
+   // UrAnus Browser: like Arc, links leaving a pinned tab open in Peek.
    if (AnusFrameHost* peek =
            AnusPeekHostFor(*browser_, source, params.disposition)) {
 -    peek->OpenPeek(params.url);
@@ -329,7 +329,7 @@ What this patch adds:
        params.opener ? params.opener->GetSiteInstance()
                      : tab_util::GetSiteInstanceForNewTab(
                            params.browser->GetProfile(), url);
-+  // Uranus Browser: a tab a page opens (a link to a new tab, "Open Link in New Tab")
++  // UrAnus Browser: a tab a page opens (a link to a new tab, "Open Link in New Tab")
 +  // stays in the storage partition of that page's Space if it has its own
 +  // cookies and logins (anus_spaces.h). Asked of the frame that started the
 +  // navigation: source_contents is the window's active tab when the browser
@@ -401,7 +401,7 @@ What this patch adds:
    // Get all paths from Web App system.
    allowlist.merge(lock_->isolation_delegate().GetIsolatedStoragePaths());
  
-+  // Uranus Browser: the storage of Spaces with separate cookies and logins.
++  // UrAnus Browser: the storage of Spaces with separate cookies and logins.
 +  allowlist.insert(profile_->GetPath().Append(AnusSpacePartitionsPath()));
 +
    base::ListValue* debug_paths =
@@ -415,7 +415,7 @@ What this patch adds:
  
 +  // A new tab (createTab()).
 +  dictionary CreateTabOptions {
-+    // The window (default: Uranus Browser's main window).
++    // The window (default: UrAnus Browser's main window).
 +    long? windowId;
 +    // The page (default: the new tab page).
 +    DOMString? url;
@@ -458,7 +458,7 @@ What this patch adds:
        site_instance =
            SiteInstance::CreateForGuest(GetBrowserContext(), partition_config);
 +    } else if (source_site_instance->IsFixedStoragePartition()) {
-+      // Uranus Browser: likewise, a page in a fixed storage partition (a tab of a
++      // UrAnus Browser: likewise, a page in a fixed storage partition (a tab of a
 +      // Space with separate cookies and logins) keeps it in its noopener
 +      // windows.
 +      site_instance = SiteInstance::CreateForFixedStoragePartition(

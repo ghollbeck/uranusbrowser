@@ -1,14 +1,14 @@
-// End-to-end test of Routines in a real Uranus Browser, driving the panel with real mouse events:
+// End-to-end test of Routines in a real UrAnus Browser, driving the panel with real mouse events:
 //   - the header button and the empty state; creating a routine (with the form's validation
 //     messages), editing it and its trigger, switching it on and off;
 //   - the routines survive quitting and reopening with the same profile;
-//   - after a restart, what came due while Uranus Browser was closed is OVERDUE: shown with a badge
+//   - after a restart, what came due while UrAnus Browser was closed is OVERDUE: shown with a badge
 //     and a card, and not run; Skip drops one, Run now runs another for real (the local test
 //     page and one cheap OpenAI call through the native host);
 //   - the run leaves a record you can open, read and delete; deleting a routine asks first
 //     and clears its alarm; screenshots in light and dark, at 360 and 720 px.
 //
-//   node chromium/tests/e2e-routines.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist]
+//   node chromium/tests/e2e-routines.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist]
 //        [--shots <dir>] [--dev-host] [--no-openai]
 //
 // --dev-host points the profile at this checkout's native host (the app's bundled one predates
@@ -29,7 +29,7 @@ const arg = (name, fallback) => {
   return i > 0 ? process.argv[i + 1] : fallback;
 };
 const has = (name) => process.argv.includes(name);
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir');
 const shots = arg('--shots');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -48,7 +48,7 @@ async function launch() {
   fs.rmSync(path.join(profile, 'DevToolsActivePort'), { force: true });
   const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', '--window-position=60,40'];
   if (shellDir) flags.push(`--anus-shell-dir=${path.resolve(shellDir)}`);
-  const browser = spawn(path.join(app, 'Contents/MacOS/Uranus Browser'), flags, { stdio: ['ignore', 'pipe', 'pipe'] });
+  const browser = spawn(path.join(app, 'Contents/MacOS/UrAnus Browser'), flags, { stdio: ['ignore', 'pipe', 'pipe'] });
   reap(browser);
   browser.stdout.on('data', (d) => (browserLog += d));
   browser.stderr.on('data', (d) => (browserLog += d));
@@ -174,7 +174,7 @@ await until(() => sheetOpen(panel), 'the Routines sheet');
 check((await panel.eval(`document.getElementById('routines-open').getAttribute('aria-expanded')`)) === 'true', 'opening it sets aria-expanded');
 await until(() => panel.eval(`!!document.querySelector('.routines-empty')`), 'the empty state');
 const empty = await text(panel, '.routines-empty');
-check(/only while Uranus Browser is open/i.test(empty), `the empty state says routines run only while Uranus Browser is open: “${empty.replace(/\s+/g, ' ').slice(0, 120)}…”`);
+check(/only while UrAnus Browser is open/i.test(empty), `the empty state says routines run only while UrAnus Browser is open: “${empty.replace(/\s+/g, ' ').slice(0, 120)}…”`);
 check(/waits for you/i.test(empty), 'and that a missed one waits for you');
 check(await panel.eval(`document.activeElement?.id === 'routines-new'`), 'focus moves to “New routine”');
 await shot(panel, '1-empty');
@@ -298,7 +298,7 @@ check((await panel.eval(`document.activeElement?.id`)) === 'routines-open', 'foc
 
 // ---- restart: everything is still there -----------------------------------------------------
 
-// Make two of them overdue the way a closed Uranus Browser would: their time passes while it is quit.
+// Make two of them overdue the way a closed UrAnus Browser would: their time passes while it is quit.
 await frame.eval(`(async () => {
   const { routines } = await chrome.storage.local.get('routines');
   const past = Date.now() - 3 * 3600_000;

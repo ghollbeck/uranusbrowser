@@ -12,8 +12,8 @@
      return std::nullopt;
    }
  
-+  // Uranus Browser: the new tab page is the shell's own (chromium/shell), so there is
-+  // nothing to warn about, and "change it back" would disable Uranus Browser's UI.
++  // UrAnus Browser: the new tab page is the shell's own (chromium/shell), so there is
++  // nothing to warn about, and "change it back" would disable UrAnus Browser's UI.
 +  if (IsAnusShell(extension->id())) {
 +    return std::nullopt;
 +  }
@@ -35,7 +35,7 @@
      return false;
    }
  
-+  // Uranus Browser: the shell's new tab page is Uranus Browser's own, not one to attribute.
++  // UrAnus Browser: the shell's new tab page is UrAnus Browser's own, not one to attribute.
 +  if (IsAnusShell(url.host())) {
 +    return false;
 +  }

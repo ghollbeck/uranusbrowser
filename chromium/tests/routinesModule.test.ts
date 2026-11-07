@@ -284,13 +284,13 @@ test('a routine that comes due while the agent is busy waits its turn, and runs 
   assert.equal(r.snapshot()!.entries.some((e) => e.kind === 'user' && e.text === 'my own question'), false, 'the new conversation replaced the old one only after it had finished');
 });
 
-test('after Uranus Browser was closed, what came due is overdue: shown, and not run by itself', async () => {
+test('after UrAnus Browser was closed, what came due is overdue: shown, and not run by itself', async () => {
   const first = await rig();
   const daily = await save(first, { name: 'Morning', trigger: { kind: 'daily', time: '09:00', days: [0, 1, 2, 3, 4, 5, 6] } });
   const often = await save(first, { name: 'Often' });
   const once = await save(first, { name: 'Once', trigger: { kind: 'once', at: START + 30 * MIN } });
   assert.equal(first.alarms.size, 3);
-  // Uranus Browser is closed overnight: its alarms are gone, and it starts again at 11:00 the next day.
+  // UrAnus Browser is closed overnight: its alarms are gone, and it starts again at 11:00 the next day.
   first.clock.set(at(2026, 5, 13, 11, 0));
   first.alarms.clear();
   const r = await rig({ stored: first.stored, session: new Map(), clock: first.clock, alarms: first.alarms, companions: first.companions });
@@ -343,7 +343,7 @@ test('if only the background restarted, a run that just came due is still on tim
   const r = await rig({ stored: first.stored, session: first.session, clock: first.clock, alarms: first.alarms, companions: first.companions });
   r.provider.turns = [{ text: 'ok', calls: [] }];
   await r.settle();
-  assert.equal(r.beginCalls.length, 1, 'it was due moments ago, and Uranus Browser was open');
+  assert.equal(r.beginCalls.length, 1, 'it was due moments ago, and UrAnus Browser was open');
   assert.equal(r.beginCalls[0].routine.id, id);
   // But a computer that slept for hours is not "on time".
   const second = await rig();

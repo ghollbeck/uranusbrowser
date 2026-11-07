@@ -1,5 +1,5 @@
 #!/bin/bash
-# Renders every Uranus Browser logo file from the SVG masters, so changing the logo is: edit
+# Renders every UrAnus Browser logo file from the SVG masters, so changing the logo is: edit
 # anus-logo.svg (and anus-mark.svg to match), run this, commit what it wrote.
 #
 #   chromium/branding/logo/build-logo.sh
@@ -11,7 +11,7 @@
 #                                                                   (macOS 26 reads this before app.icns)
 #   chromium/shell/ui/logo.ts                                       the logo and the mark, inline, for the shell UI
 # Needs rsvg-convert (brew install librsvg), sips, iconutil, xcrun actool (Xcode) and node, all
-# already on the Mac that builds Uranus Browser. Nothing is installed or touched outside the repo.
+# already on the Mac that builds UrAnus Browser. Nothing is installed or touched outside the repo.
 #
 # Render the full SVG canvas at each size.
 # Assets.car embeds a timestamp, so it differs on every run; app.icns and the PNGs do not.

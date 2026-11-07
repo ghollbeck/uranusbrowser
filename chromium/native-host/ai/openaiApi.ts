@@ -1,6 +1,6 @@
 /**
  * The OpenAI API, with the user's API key from the macOS Keychain (secrets.ts). The only file in
- * Uranus Browser that talks to api.openai.com: the agent chat, text answers (meeting notes) and audio
+ * UrAnus Browser that talks to api.openai.com: the agent chat, text answers (meeting notes) and audio
  * transcription all come through here.
  *
  * Chat uses the Responses API (POST /v1/responses) with function tools, and store: false, so

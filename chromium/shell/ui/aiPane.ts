@@ -1,7 +1,7 @@
 /**
- * Settings › AI: how Uranus Browser reaches a model, and which model each AI feature uses.
+ * Settings › AI: how UrAnus Browser reaches a model, and which model each AI feature uses.
  *
- * - ChatGPT account: sign in (Codex opens a ChatGPT sign-in page in a Uranus Browser tab), sign out,
+ * - ChatGPT account: sign in (Codex opens a ChatGPT sign-in page in a UrAnus Browser tab), sign out,
  *   the plan and how much of its limits is used.
  * - OpenAI API key: pasted here, sent once to the native host, which stores it in the macOS
  *   Keychain. It is never sent back: the page only learns whether there is one.

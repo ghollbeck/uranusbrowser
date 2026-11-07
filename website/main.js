@@ -1,4 +1,4 @@
-// Uranus Browser — marketing site interactions.
+// UrAnus Browser — marketing site interactions.
 // The mobile product tour autoplays; desktop keeps its system motion preference.
 const reduceMotion = !matchMedia('(max-width: 640px)').matches && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (s, r = document) => r.querySelector(s);
@@ -122,7 +122,7 @@ onScrollFx();
   glow.className = 'glow-corners';
   $('.hero-flights-page', flight).prepend(glow);
   const log = $('.panel-log', panel);
-  log.innerHTML = '<div class="msg user">Find me the smoothest flight to Uranus. Rear seat, as close to the loo as possible.</div><div class="msg step done"><span class="st">✓</span><span>Read the page</span></div><div class="msg step done"><span class="st">✓</span><span>Type “Uranus” into To</span></div><div class="msg step run"><span class="st"></span><span>Pick 14 March</span></div><div class="msg answer">Cheeky Airways · 10:40 AM · €84. Rear seat, right by the loo. Booking waits for your Allow.</div>';
+  log.innerHTML = '<div class="msg user">Find me the smoothest flight to UrAnus. Rear seat, as close to the loo as possible.</div><div class="msg step done"><span class="st">✓</span><span>Read the page</span></div><div class="msg step done"><span class="st">✓</span><span>Type “UrAnus” into To</span></div><div class="msg step run"><span class="st"></span><span>Pick 14 March</span></div><div class="msg answer">Cheeky Airways · 10:40 AM · €84. Rear seat, right by the loo. Booking waits for your Allow.</div>';
   let current = 0, elapsed = 0, paused = reduceMotion, visible = false, lastStamp = null;
   const durations = [10500, 15000, 6500, 6500, 6500, 6500, 6500];
   const placeThumb = () => {
@@ -142,12 +142,12 @@ onScrollFx();
       const joined = t >= 5200;
       meet.dataset.joinPhase = joined ? 'joined' : joining ? 'joining' : 'ready';
       $('.hero-join-label', meet).textContent = joined ? 'Taking notes' : 'Joining';
-      $('.hero-join-status', meet).textContent = joined ? 'Assistant joined · recording meeting notes' : joining ? 'Uranus Browser assistant is joining the call…' : 'Your assistant will join in a moment.';
+      $('.hero-join-status', meet).textContent = joined ? 'Assistant joined · recording meeting notes' : joining ? 'UrAnus Browser assistant is joining the call…' : 'Your assistant will join in a moment.';
       $('.hero-meet-count', meet).textContent = joining ? '◉  4' : '◉  3';
     }
     if (current === 1) {
       const to = $('[data-type="to"]', flight), date = $('[data-type="date"]', flight);
-      to.textContent = 'Uranus'.slice(0, Math.max(0, Math.floor((t - 1800) / 160)));
+      to.textContent = 'UrAnus'.slice(0, Math.max(0, Math.floor((t - 1800) / 160)));
       date.textContent = 'Fri, Mar 14'.slice(0, Math.max(0, Math.floor((t - 4000) / 160)));
       $('[data-target="to"]', flight).classList.toggle('focus', t >= 1800 && t < 3500);
       $('[data-target="date"]', flight).classList.toggle('focus', t >= 4000 && t < 6500);
@@ -247,9 +247,9 @@ onScrollFx();
   const type = async (el, text) => { for (const ch of text) { el.textContent += ch; await wait(65 + Math.random() * 50); } };
 
   if (reduceMotion) {
-    fields.to.textContent = 'Uranus'; fields.date.textContent = 'Fri, Mar 14';
+    fields.to.textContent = 'UrAnus'; fields.date.textContent = 'Fri, Mar 14';
     results.classList.add('show'); $('.cheapest', demo).classList.add('hl');
-    add('Find me the smoothest flight to Uranus. Rear seat, as close to the loo as possible.', 'user');
+    add('Find me the smoothest flight to UrAnus. Rear seat, as close to the loo as possible.', 'user');
     add('Cheapest nonstop is <b>Cheeky Airways at 10:40 AM, €84</b>. Rear seat, right by the loo. Booking waits for your Allow.', 'answer');
     return;
   }
@@ -263,7 +263,7 @@ onScrollFx();
     cursor.style.setProperty('--cx', '70%'); cursor.style.setProperty('--cy', '85%');
     await wait(700);
 
-    add('Find me the smoothest flight to Uranus. Rear seat, as close to the loo as possible.', 'user');
+    add('Find me the smoothest flight to UrAnus. Rear seat, as close to the loo as possible.', 'user');
     await wait(800);
     const think = add('<i></i><i></i><i></i>', 'thinking');
     await wait(1100);
@@ -274,11 +274,11 @@ onScrollFx();
     let s = step('Read the page');
     await wait(900); s.done();
 
-    s = step('Type “Uranus” into To');
+    s = step('Type “UrAnus” into To');
     await moveTo(target('to'));
     click(); target('to').classList.add('focus');
     await wait(250);
-    await type(fields.to, 'Uranus');
+    await type(fields.to, 'UrAnus');
     target('to').classList.remove('focus'); s.done();
 
     s = step('Pick 14 March');
@@ -312,7 +312,7 @@ onScrollFx();
 
     demo.classList.remove('working'); state.textContent = 'Done';
     cursor.classList.remove('on');
-    add('Cheapest nonstop is <b>Cheeky Airways at 10:40 AM</b>. Rear seat, right by the loo. One-way to Uranus.<div class="result"><span>Cheeky Airways · ZRH → URA · Fri, Mar 14</span><em>€84</em></div>', 'answer');
+    add('Cheapest nonstop is <b>Cheeky Airways at 10:40 AM</b>. Rear seat, right by the loo. One-way to UrAnus.<div class="result"><span>Cheeky Airways · ZRH → URA · Fri, Mar 14</span><em>€84</em></div>', 'answer');
     await wait(6500);
   }
 })();
@@ -585,7 +585,7 @@ $$('.qa').forEach((d) => {
         phase = next; windowEl.dataset.phase = next;
         const joined = next === 'joined' || next === 'helping';
         setText($('#joinParticipantCount'), joined ? '4 people' : '3 people');
-        setText($('#joinStatus'), { ready: 'Your assistant is ready when you are.', joining: 'Uranus Browser assistant is joining…', joined: 'Your assistant joined the meeting.', helping: 'Following the conversation, alongside you.' }[next]);
+        setText($('#joinStatus'), { ready: 'Your assistant is ready when you are.', joining: 'UrAnus Browser assistant is joining…', joined: 'Your assistant joined the meeting.', helping: 'Following the conversation, alongside you.' }[next]);
         setText($('#joinInviteAction'), { ready: 'Invite to call →', joining: 'Joining…', joined: 'In the meeting ✓', helping: 'In the meeting ✓' }[next]);
         setText($('#joinInviteDetail'), joined ? 'Everyone can see it’s here' : 'Visible to everyone in the call');
         setText($('#joinAnimationCaption'), joined ? 'A visible participant. Invited by you.' : 'You choose when it joins.');

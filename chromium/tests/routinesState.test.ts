@@ -205,7 +205,7 @@ test('resume at launch: waiting and missed become overdue; nothing is left to ru
   state = make(state, { name: 'Often', trigger: { kind: 'interval', minutes: 30 } }).state;
   state = make(state, { name: 'Once', trigger: { kind: 'once', at: NOW + 20 * MIN } }).state;
   state = make(state, { name: 'Off', enabled: false }).state;
-  // Uranus Browser was waiting on one (on time), then quit; the next day it is started again.
+  // UrAnus Browser was waiting on one (on time), then quit; the next day it is started again.
   const waiting = s.markDue(state, NOW + 31 * MIN);
   assert.ok(waiting.routines.some((r) => r.pending?.state === 'waiting'));
   const launch = s.resume(waiting, NOW + 26 * 60 * MIN, true);

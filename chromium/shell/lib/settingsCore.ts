@@ -17,7 +17,7 @@ export interface SettingsEnvironment {
   downloadsFolder: string;
   defaultBrowser: SettingsView['defaultBrowser'];
   agentEndpoint?: string;
-  /** Why Uranus Browser's native host last failed to start or stopped. */
+  /** Why UrAnus Browser's native host last failed to start or stopped. */
   hostError?: string;
 }
 

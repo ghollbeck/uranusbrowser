@@ -1,5 +1,5 @@
 /**
- * The shell's side of Uranus Browser's native messaging host (chromium/native-host): importing from
+ * The shell's side of UrAnus Browser's native messaging host (chromium/native-host): importing from
  * other browsers, reading the Electron spike's state, and the agent bridge for coding agents.
  *
  * The host reads files and serves MCP on 127.0.0.1; this side adds imports to the Store and
@@ -28,9 +28,9 @@ export interface NativeHostContext {
   /** Sends every page the new state (the sidebar shows what an agent is doing). */
   broadcastState(): void;
   tabs: {
-    /** Opens an address in a new Uranus Browser tab, as the command bar does; returns its id. */
+    /** Opens an address in a new UrAnus Browser tab, as the command bar does; returns its id. */
     open(url: string, background: boolean): string;
-    /** The Chromium tab showing a Uranus Browser tab, opened (in the background) if it has none yet. */
+    /** The Chromium tab showing a UrAnus Browser tab, opened (in the background) if it has none yet. */
     chromeTab(tabId: string): Promise<number | undefined>;
     activate(tabId: string): void;
     close(tabId: string): void;
@@ -52,7 +52,7 @@ export interface NativeHostContext {
 }
 
 const NOT_INSTALLED =
-  'Uranus Browser’s helper isn’t registered, so it can’t import from other browsers or run the agent bridge. Quit and reopen Uranus Browser to register it. Building Uranus Browser yourself? Run chromium/scripts/install-native-host.sh.';
+  'UrAnus Browser’s helper isn’t registered, so it can’t import from other browsers or run the agent bridge. Quit and reopen UrAnus Browser to register it. Building UrAnus Browser yourself? Run chromium/scripts/install-native-host.sh.';
 const IDLE_CLOSE = 60_000;
 /** How long the agent bridge waits before starting the host again, doubling up to a minute. */
 const RETRY_FIRST = 2_000;
@@ -111,8 +111,8 @@ export function registerNativeHost(ctx: NativeHostContext) {
       for (const call of calls.values()) call.reject(new Error(reason));
       calls.clear();
       chunks.clear();
-      console.warn('Uranus Browser shell: native host disconnected:', reason);
-      hostError = isMissing(reason) ? NOT_INSTALLED : `Uranus Browser’s helper stopped: ${reason}`;
+      console.warn('UrAnus Browser shell: native host disconnected:', reason);
+      hostError = isMissing(reason) ? NOT_INSTALLED : `UrAnus Browser’s helper stopped: ${reason}`;
       // A meeting ended with the host (joinly ends it when its connection does).
       if (joinlyView) {
         joinlyView = undefined;
@@ -190,7 +190,7 @@ export function registerNativeHost(ctx: NativeHostContext) {
     } else if (message.type === 'agent') {
       endpoint = message.endpoint;
       hostError = message.error ? `The agent bridge couldn’t start: ${message.error}` : undefined;
-      if (message.error) console.error('Uranus Browser shell: agent bridge failed:', message.error);
+      if (message.error) console.error('UrAnus Browser shell: agent bridge failed:', message.error);
       changed();
     } else if (message.type === 'ai') {
       aiChanged(message.view);
@@ -224,7 +224,7 @@ export function registerNativeHost(ctx: NativeHostContext) {
       post({ type: 'reminder', show: spec });
       sentReminder = key;
     } catch (err) {
-      console.warn('Uranus Browser shell: the reminder panel couldn’t be shown:', err);
+      console.warn('UrAnus Browser shell: the reminder panel couldn’t be shown:', err);
     }
   }
 
@@ -252,7 +252,7 @@ export function registerNativeHost(ctx: NativeHostContext) {
         return await call('detectBrowsers');
       } catch (err) {
         // Settings › Import says why from hostError; the tour just shows none.
-        console.warn('Uranus Browser shell: no browsers to import from:', err);
+        console.warn('UrAnus Browser shell: no browsers to import from:', err);
         return [];
       }
     },
@@ -324,7 +324,7 @@ export function registerNativeHost(ctx: NativeHostContext) {
     try {
       post({ type: 'agent', enabled: !!agent?.enabled, token: agent?.token ?? '' });
     } catch (err) {
-      console.warn('Uranus Browser shell: no agent bridge:', err);
+      console.warn('UrAnus Browser shell: no agent bridge:', err);
       setHostError(NOT_INSTALLED);
     }
   }
@@ -612,7 +612,7 @@ export function registerNativeHost(ctx: NativeHostContext) {
   handle({
     'ai:request': async (request: AiRequest) => {
       const reply = await call('ai', request);
-      // The sign-in page opens in a Uranus Browser tab, in front, so the user sees it.
+      // The sign-in page opens in a UrAnus Browser tab, in front, so the user sees it.
       if (reply.authUrl && /^https:\/\//.test(reply.authUrl)) loginTab = ctx.tabs.open(reply.authUrl, false);
       aiChanged(reply.view);
       return reply.view;
@@ -638,7 +638,7 @@ export function registerNativeHost(ctx: NativeHostContext) {
     try {
       post(message);
     } catch (err) {
-      console.warn('Uranus Browser shell: no helper for meetings:', err);
+      console.warn('UrAnus Browser shell: no helper for meetings:', err);
       setHostError(NOT_INSTALLED);
       ctx.onJoinly?.(undefined, NOT_INSTALLED);
     }
@@ -671,7 +671,7 @@ export function registerNativeHost(ctx: NativeHostContext) {
       post({ type: 'chat', ...action });
       if (action.action === 'hello' && chat) ctx.onChat(chat);
     } catch (err) {
-      console.warn('Uranus Browser shell: no helper for the Agent panel:', err);
+      console.warn('UrAnus Browser shell: no helper for the Agent panel:', err);
       setHostError(NOT_INSTALLED);
       ctx.onChat(undefined, NOT_INSTALLED);
     }

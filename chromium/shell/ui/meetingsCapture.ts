@@ -107,7 +107,7 @@ class Recording {
         : await this.openMic();
     } catch (err) {
       const name = err instanceof DOMException ? err.name : '';
-      if (name === 'NotAllowedError' || name === 'SecurityError') throw new CaptureFailure('mic-permission', 'Uranus Browser doesn’t have permission to use the microphone yet.');
+      if (name === 'NotAllowedError' || name === 'SecurityError') throw new CaptureFailure('mic-permission', 'UrAnus Browser doesn’t have permission to use the microphone yet.');
       if (name === 'NotFoundError' || name === 'NotReadableError' || name === 'OverconstrainedError') throw new CaptureFailure('mic-unavailable', 'No usable microphone was found.');
       throw new CaptureFailure('failed', 'The microphone couldn’t be started.');
     }
@@ -293,10 +293,10 @@ function permissionPage() {
   const page = document.getElementById('permission')!;
   const query = new URLSearchParams(location.search);
   const camera = query.get('kind') === 'camera';
-  // The same page asks for either; macOS shows its own prompt for Uranus Browser the first time.
+  // The same page asks for either; macOS shows its own prompt for UrAnus Browser the first time.
   document.title = camera ? 'Allow camera' : 'Allow microphone';
   if (camera) {
-    page.querySelector('h1')!.textContent = 'Allow Uranus Browser to use your camera';
+    page.querySelector('h1')!.textContent = 'Allow UrAnus Browser to use your camera';
     page.querySelector('p')!.textContent = 'Websites you open (a video call, say) ask for the camera themselves. Allowing it here lets macOS ask once, now, so it does not interrupt you later. Nothing is recorded.';
     document.getElementById('allow')!.textContent = 'Allow camera';
   }
@@ -315,7 +315,7 @@ function permissionPage() {
       const tab = await chrome.tabs.getCurrent();
       if (tab?.id !== undefined) setTimeout(() => void chrome.tabs.remove(tab.id!).catch(() => undefined), 800);
     } catch {
-      result.textContent = `The ${camera ? 'camera' : 'microphone'} is still blocked. Allow it for Uranus Browser in System Settings › Privacy & Security, or in the site settings for this page.`;
+      result.textContent = `The ${camera ? 'camera' : 'microphone'} is still blocked. Allow it for UrAnus Browser in System Settings › Privacy & Security, or in the site settings for this page.`;
       asking = false;
     }
   };

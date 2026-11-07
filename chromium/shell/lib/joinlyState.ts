@@ -30,7 +30,7 @@ export function helperView(settings: JoinlySettings, detail: string, error?: str
 }
 
 export const HELPER_SILENT =
-  'Uranus Browser’s helper didn’t answer. If you just updated Uranus Browser, quit and reopen it so the new helper starts; a helper from before meetings existed can’t talk to joinly.';
+  'UrAnus Browser’s helper didn’t answer. If you just updated UrAnus Browser, quit and reopen it so the new helper starts; a helper from before meetings existed can’t talk to joinly.';
 export const NOT_IN_PRIVATE = 'Meetings aren’t available in private windows.';
 
 export { DEFAULT_SETTINGS };

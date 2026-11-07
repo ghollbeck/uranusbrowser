@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fetches Sparkle, Uranus Browser's auto-updater, from its official GitHub release, checks it against
+# Fetches Sparkle, UrAnus Browser's auto-updater, from its official GitHub release, checks it against
 # the pinned SHA-256 and unpacks it. Prints the folder it is in. Safe to run again: a folder
 # already unpacked and checked is reused.
 #

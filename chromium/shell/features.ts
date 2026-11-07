@@ -1,5 +1,5 @@
 /**
- * Uranus Browser's developer features in the Chromium shell: Boosts, Environments, local dev servers,
+ * UrAnus Browser's developer features in the Chromium shell: Boosts, Environments, local dev servers,
  * the responsive view and console error badges, and the ad blocker. Each lives in
  * features/*.ts; this wires them to the Store and the hub.
  *
@@ -21,9 +21,9 @@ export interface FeaturesContext {
   store: Store;
   /** Sends every page the new state. */
   broadcastState(): void;
-  /** The Chromium tab showing a Uranus Browser tab, if it is open. */
+  /** The Chromium tab showing a UrAnus Browser tab, if it is open. */
   liveTabId(anusTabId: string): number | undefined;
-  /** The Chromium tab of the active Uranus Browser tab. */
+  /** The Chromium tab of the active UrAnus Browser tab. */
   activeChromeTabId(): number | undefined;
 }
 

@@ -3,7 +3,7 @@
  * switch the way a page with prefers-color-scheme CSS does: the page they sent stays as it was.
  * They ask for the Sec-CH-Prefers-Color-Scheme client hint, so the browser tells them the scheme
  * on every request to them; this notes, per tab, which scheme its page was made for, and when
- * the scheme flips (Uranus Browser's Appearance setting, or macOS when that is followed) reloads just
+ * the scheme flips (UrAnus Browser's Appearance setting, or macOS when that is followed) reloads just
  * the tabs made for the other one. Every other tab is left alone.
  *
  * A tab you are looking at doesn't just reload: its new page cross-fades in on the theme-fade
@@ -11,7 +11,7 @@
  * Transition, so the tab navigates to its own address instead (a replace; scroll is carried over
  * by hand), after the old page and, through a one-shot content script, the new one opted in.
  *
- * Chromium tells a brand-new tab's first page request macOS's scheme, not Uranus Browser's (the
+ * Chromium tells a brand-new tab's first page request macOS's scheme, not UrAnus Browser's (the
  * Appearance setting reaches the tab only after that), so a new Google tab came out in the wrong
  * one. While the setting is Light or Dark, a session rule sets the hint to it on every page request
  * to the origins that ask for it (useScheme()); with System, Chromium's own value is right.
@@ -47,7 +47,7 @@ function update(fn: (notes: Record<string, Scheme>) => void) {
     const notes = await load();
     fn(notes);
     await chrome.storage.session.set({ [KEY]: notes });
-  }).catch((err) => console.error('Uranus Browser shell: server-themed tabs', err));
+  }).catch((err) => console.error('UrAnus Browser shell: server-themed tabs', err));
   return queue;
 }
 
@@ -110,7 +110,7 @@ function refreshHintRule() {
           : undefined;
       await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: [HINT_RULE], addRules: rule ? [rule] : [] });
     })
-    .catch((err) => console.error('Uranus Browser shell: colour scheme hint rule', err));
+    .catch((err) => console.error('UrAnus Browser shell: colour scheme hint rule', err));
   return ruleQueue;
 }
 

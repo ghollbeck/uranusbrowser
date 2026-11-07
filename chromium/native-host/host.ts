@@ -1,10 +1,10 @@
 /**
- * Uranus Browser's native messaging host: the parts of the Electron spike that need Node, for the
+ * UrAnus Browser's native messaging host: the parts of the Electron spike that need Node, for the
  * Chromium build's shell extension, which can't read files or listen on a port.
  *
  * - Importing from other browsers (browserImport.ts), or from a bookmarks file one exported:
  *   the host reads, the shell adds.
- * - The Electron spike's own saved state, for "import from Uranus Browser".
+ * - The Electron spike's own saved state, for "import from UrAnus Browser".
  * - The agent bridge (agentServer.ts): an MCP server on 127.0.0.1 whose tool calls
  *   go to the shell, which runs them with chrome.tabs, chrome.scripting and chrome.debugger.
  * - The Agent panel's conversation (agentChat.ts): the approval rules every browser action
@@ -110,7 +110,7 @@ async function shutdown() {
 
 // ---- the central AI provider ----------------------------------------------------------------
 
-/** Uranus Browser's own AI files: the saved model choices (no secrets). ANUS_AI_DIR moves it (tests). */
+/** UrAnus Browser's own AI files: the saved model choices (no secrets). ANUS_AI_DIR moves it (tests). */
 const AI_DIR = process.env.ANUS_AI_DIR?.trim() || path.join(os.homedir(), 'Library', 'Application Support', 'Anus Browser', 'ai');
 // The on-device Underdog model: available on request, started only by the first prompt, never the default.
 const underdog = new UnderdogLlm();
@@ -285,7 +285,7 @@ function runInShell(name: string, args: Record<string, unknown> = {}) {
   return new Promise<AgentResult>((resolve) => {
     const id = nextTool++;
     const wait = TOOL_TIMEOUT + (typeof args.timeoutMs === 'number' ? args.timeoutMs : 0);
-    const timer = setTimeout(() => finish(fail(`Uranus Browser didn’t answer ${name} within ${wait / 1000}s`)), wait);
+    const timer = setTimeout(() => finish(fail(`UrAnus Browser didn’t answer ${name} within ${wait / 1000}s`)), wait);
     const finish = (result: AgentResult) => {
       clearTimeout(timer);
       tools.delete(id);

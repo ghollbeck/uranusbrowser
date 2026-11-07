@@ -18,7 +18,7 @@
  
  // The spike's layout constants.
  inline constexpr int kAnusSidebarWidth = 260;
-+// Uranus Browser: the sidebar's width is the user's (dragging its right edge), between
++// UrAnus Browser: the sidebar's width is the user's (dragging its right edge), between
 +// these.
 +inline constexpr int kAnusSidebarMinWidth = 200;
 +inline constexpr int kAnusSidebarMaxWidth = 480;
@@ -79,4 +79,4 @@
 +    long? sidebarWidth;
    };
  
-   // Uranus Browser: which side of the page the Agent panel is on.
+   // UrAnus Browser: which side of the page the Agent panel is on.

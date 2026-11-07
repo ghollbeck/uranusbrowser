@@ -1,7 +1,7 @@
 --- /dev/null
 +++ b/chrome/browser/anus/anus_shell.h
 @@ -0,0 +1,21 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -10,7 +10,7 @@
 +
 +#include <string_view>
 +
-+// Uranus Browser's shell extension (chromium/shell in the Uranus Browser repo): the window
++// UrAnus Browser's shell extension (chromium/shell in the UrAnus Browser repo): the window
 +// frame, the new tab page and Settings. Its ID is fixed by the "key" in
 +// chromium/shell/manifest.json, so it stays the same wherever the unpacked
 +// extension is loaded from. Change both together.

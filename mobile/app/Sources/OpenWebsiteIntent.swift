@@ -20,8 +20,8 @@ final class IncomingWebsites {
 }
 
 struct OpenWebsiteIntent: AppIntent {
-    static var title: LocalizedStringResource = "Open in Uranus Browser"
-    static var description = IntentDescription("Open a shared website in Uranus Browser. Algorithm Diet tracks it while you browse; it cannot read the app you shared it from.")
+    static var title: LocalizedStringResource = "Open in UrAnus Browser"
+    static var description = IntentDescription("Open a shared website in UrAnus Browser. Algorithm Diet tracks it while you browse; it cannot read the app you shared it from.")
     static var openAppWhenRun = true
 
     @Parameter(title: "Website URL") var url: URL

@@ -5,7 +5,7 @@
  
  void RegisterLocalState(PrefRegistrySimple* registry) {
 -  registry->RegisterBooleanPref(prefs::kConfirmToQuitEnabled, true);
-+  // Uranus Browser: ⌘Q quits at once. "Warn Before Quitting" in the app menu turns
++  // UrAnus Browser: ⌘Q quits at once. "Warn Before Quitting" in the app menu turns
 +  // the hold-to-quit back on.
 +  registry->RegisterBooleanPref(prefs::kConfirmToQuitEnabled, false);
  }

@@ -1,4 +1,4 @@
-// End-to-end test of calendar reminders for meeting notes, in a real Uranus Browser with a
+// End-to-end test of calendar reminders for meeting notes, in a real UrAnus Browser with a
 // throwaway profile (no network: the calendar's last reading is put in the profile's storage,
 // as the background keeps it, so no iCal address is fetched):
 //   - after a restart the background reads it, notifies about a meeting starting in under two
@@ -8,7 +8,7 @@
 //     without starting a recording; a dismissed meeting doesn't come back;
 //   - a Meet tab in front gets "Record this meeting?", and Not now hides it.
 //
-//   node chromium/tests/e2e-calendar.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>] [--live]
+//   node chromium/tests/e2e-calendar.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>] [--live]
 // --live also reads a real Google calendar over the network (Google's public holiday calendar,
 // no secret): the fetch from the extension, the redirect, Google's ICS and the parser.
 import { spawn } from 'node:child_process';
@@ -23,7 +23,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shots = arg('--shots');
 const shellDir = arg('--shell-dir');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -38,7 +38,7 @@ async function launch() {
   fs.mkdirSync(profile, { recursive: true });
   fs.rmSync(path.join(profile, 'DevToolsActivePort'), { force: true });
   const browser = spawn(
-    path.join(app, 'Contents/MacOS/Uranus Browser'),
+    path.join(app, 'Contents/MacOS/UrAnus Browser'),
     [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', '--window-position=60,40', ...(shellDir ? [`--anus-shell-dir=${path.resolve(shellDir)}`] : [])],
     { stdio: 'ignore' },
   );

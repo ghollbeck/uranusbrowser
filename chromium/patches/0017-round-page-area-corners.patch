@@ -24,7 +24,7 @@
    // especially obvious in split view, where turning the separator off provides
    // the required top padding.
    const auto& separator_info = layout_data_->separator_info;
-+  // Uranus Browser: no line across the top of the round page area while the shell's
++  // UrAnus Browser: no line across the top of the round page area while the shell's
 +  // frame draws the window.
    views().multi_contents_view->SetShouldShowTopSeparator(
 -      separator_info.multi_contents_separator);
@@ -39,7 +39,7 @@
      views().multi_contents_view->SetBackgroundRadii(content_corners);
 +  }
 +
-+  // Uranus Browser: while the shell's frame draws the window, the page area has round
++  // UrAnus Browser: while the shell's frame draws the window, the page area has round
 +  // corners, like the window and the shell's page-shaped card. Each pane of a
 +  // split rounds its own (MultiContentsView::kSplitViewContentCornerRadius).
 +  if (views().anus_frame) {
@@ -59,7 +59,7 @@
  
    static constexpr int kSplitViewContentInset = 8;
 -  static constexpr float kSplitViewContentCornerRadius = 6;
-+  // Uranus Browser: 10 (was 6), the page area's radius (kAnusPageCornerRadius), so
++  // UrAnus Browser: 10 (was 6), the page area's radius (kAnusPageCornerRadius), so
 +  // each pane of a split rounds like a single page.
 +  static constexpr float kSplitViewContentCornerRadius = 10;
    static constexpr gfx::RoundedCornersF kSplitViewContentRoundedCorners{
@@ -79,7 +79,7 @@
    // Return the NativeWidgetMacNSWindowHost for this hosted view.
    NativeWidgetMacNSWindowHost* GetNSWindowHost() const;
  
-+  // Uranus Browser: rounds the hosted NSView's own layer with `corner_radii_`. The
++  // UrAnus Browser: rounds the hosted NSView's own layer with `corner_radii_`. The
 +  // views layer's radii don't reach it: a hosted NSView (a WebContents) draws
 +  // in its own CALayers, so without this web pages stay square.
 +  void ApplyCornerRadiiToNativeView();

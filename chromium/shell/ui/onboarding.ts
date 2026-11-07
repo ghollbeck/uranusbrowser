@@ -4,9 +4,9 @@ import { browserDetail, importSummary, ARC_MAPPING, ARC_LIMITS, ARC_PASSWORDS } 
 import { LOGO_TILE } from './logo.js';
 
 /**
- * The first-run tour, full window: steps on the left, a live miniature Uranus Browser on the right
+ * The first-run tour, full window: steps on the left, a live miniature UrAnus Browser on the right
  * that reacts to what you choose and to the real shortcuts you press. Your first Space is
- * set up for real as you go. It comes back from Help → Welcome to Uranus Browser.
+ * set up for real as you go. It comes back from Help → Welcome to UrAnus Browser.
  */
 
 type H = (tag: string, props?: Record<string, unknown>, ...children: Array<Node | string | null | undefined>) => HTMLElement;
@@ -25,7 +25,7 @@ const CHALLENGES: Array<{ id: string; label: string; done: string }> = [
   { id: 'splitNew', label: 'Split the view', done: 'Or drag any tab onto the page.' },
 ];
 
-/** Where Uranus Browser looks for each browser's app icon, by the name the importer reports. */
+/** Where UrAnus Browser looks for each browser's app icon, by the name the importer reports. */
 const APP_NAMES: Record<string, string> = {
   Chrome: 'Google Chrome',
   'Google Chrome': 'Google Chrome',
@@ -173,7 +173,7 @@ export function setupOnboarding(api: AnusApi, h: H, icon: (name: IconName) => SV
         'p',
         { class: 'tour-lead' },
         state?.onboardingReplay
-          ? 'Welcome back. Walk through Uranus Browser again without resetting your tabs, Spaces, passwords or settings. Imports and other changes happen only when you choose them.'
+          ? 'Welcome back. Walk through UrAnus Browser again without resetting your tabs, Spaces, passwords or settings. Imports and other changes happen only when you choose them.'
           : 'Keep tabs tidy in Spaces, find anything from the command bar, and use tools built for developers.',
       ),
       h(
@@ -294,7 +294,7 @@ export function setupOnboarding(api: AnusApi, h: H, icon: (name: IconName) => SV
     return h(
       'div',
       { class: 'tour-step' },
-      heading('Muscle memory', 'Try it for real', 'Press the keys. The preview on the right does what Uranus Browser does. (You can change every shortcut in Settings.)'),
+      heading('Muscle memory', 'Try it for real', 'Press the keys. The preview on the right does what UrAnus Browser does. (You can change every shortcut in Settings.)'),
       h(
         'div',
         { class: 'tour-challenges' },
@@ -317,12 +317,12 @@ export function setupOnboarding(api: AnusApi, h: H, icon: (name: IconName) => SV
     return h(
       'div',
       { class: 'tour-step' },
-      heading('For developers', 'Built for the web you build', servers.length ? `Uranus Browser already found ${servers.length} dev server${servers.length === 1 ? '' : 's'} running on this Mac. They live at the top of the sidebar.` : 'Start a dev server and it shows up at the top of the sidebar, with its console errors.'),
+      heading('For developers', 'Built for the web you build', servers.length ? `UrAnus Browser already found ${servers.length} dev server${servers.length === 1 ? '' : 's'} running on this Mac. They live at the top of the sidebar.` : 'Start a dev server and it shows up at the top of the sidebar, with its console errors.'),
       h(
         'div',
         { class: 'tour-features' },
         feature('sparkle', 'Coding agents', 'Claude Code and Cursor can read, click and debug your tabs over MCP.', h('button', { class: 'tour-ghost', onclick: () => api.openSettings('agents') }, 'Connect')),
-        feature('zap', 'Boosts', 'Your own TypeScript and CSS for any site, edited right in Uranus Browser.', h('kbd', {}, keys('editBoost'))),
+        feature('zap', 'Boosts', 'Your own TypeScript and CSS for any site, edited right in UrAnus Browser.', h('kbd', {}, keys('editBoost'))),
         feature('phone', 'Responsive view', 'Desktop and phone side by side, following each other.', h('kbd', {}, keys('responsive'))),
         feature('code', 'Environments', 'Local → staging → prod for the same page, with a badge so prod never looks safe.', h('kbd', {}, keys('nextEnvironment'))),
       ),
@@ -396,7 +396,7 @@ export function setupOnboarding(api: AnusApi, h: H, icon: (name: IconName) => SV
         { class: 'tour-features' },
         row('mic', 'Microphone', 'Meeting notes use it only after you press Start, and never keep the audio.', 'microphone', 'Allow…'),
         row('camera', 'Camera', 'Video calls ask for it themselves. Allow it now and macOS asks once, here, not mid-call.', 'camera', 'Allow…'),
-        row('shield', 'App management', 'macOS can block Uranus Browser from changing app files, for example when it updates. Allow it once so you aren’t interrupted.', 'appManagement', 'Open Settings'),
+        row('shield', 'App management', 'macOS can block UrAnus Browser from changing app files, for example when it updates. Allow it once so you aren’t interrupted.', 'appManagement', 'Open Settings'),
       ),
     );
   }
@@ -406,11 +406,11 @@ export function setupOnboarding(api: AnusApi, h: H, icon: (name: IconName) => SV
     return h(
       'div',
       { class: 'tour-step' },
-      heading('Last thing', d?.isDefault ? 'You’re all set' : 'Make it the default?', d?.isDefault ? 'Links from Slack, Mail and your terminal open in Uranus Browser.' : 'So links from Slack, Mail and your terminal open here instead of somewhere else.'),
+      heading('Last thing', d?.isDefault ? 'You’re all set' : 'Make it the default?', d?.isDefault ? 'Links from Slack, Mail and your terminal open in UrAnus Browser.' : 'So links from Slack, Mail and your terminal open here instead of somewhere else.'),
       d?.isDefault
-        ? h('div', { class: 'tour-note ok' }, h('span', { class: 'tour-done' }, icon('check')), 'Uranus Browser is your default browser')
+        ? h('div', { class: 'tour-note ok' }, h('span', { class: 'tour-done' }, icon('check')), 'UrAnus Browser is your default browser')
         : d?.canSet
-          ? h('button', { class: 'tour-ghost big', onclick: () => api.makeDefaultBrowser() }, icon('link'), 'Make Uranus Browser the default browser')
+          ? h('button', { class: 'tour-ghost big', onclick: () => api.makeDefaultBrowser() }, icon('link'), 'Make UrAnus Browser the default browser')
           : null,
       h('div', { class: 'tour-tips' }, h('span', {}, h('kbd', {}, keys('newTab')), ' Command bar'), h('span', {}, h('kbd', {}, keys('shortcuts')), ' All shortcuts'), h('span', {}, h('kbd', {}, keys('settings')), ' Settings')),
     );
@@ -431,7 +431,7 @@ export function setupOnboarding(api: AnusApi, h: H, icon: (name: IconName) => SV
     const index = STEPS.indexOf(step);
     const focused = document.activeElement as HTMLElement | null;
     const keepCaret = focused?.classList.contains('tour-input') ? (focused as HTMLInputElement).selectionStart : null;
-    const brand = h('div', { class: 'tour-brand' }, h('span', { class: 'tour-mark' }), h('span', {}, 'Uranus Browser'));
+    const brand = h('div', { class: 'tour-brand' }, h('span', { class: 'tour-mark' }), h('span', {}, 'UrAnus Browser'));
     brand.firstElementChild!.innerHTML = LOGO_TILE;
     // The frame (grid, miniature, progress bar) is built once so its animations run on;
     // only the step's own content is redrawn.

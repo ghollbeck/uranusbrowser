@@ -58,7 +58,7 @@ export class OllamaClient {
     const response = await this.fetcher(url, { ...init, redirect: 'manual' });
     if (response.status >= 300 && response.status < 400) {
       void response.body?.cancel().catch(() => undefined);
-      throw new JoinlyError('Ollama answered with a redirect, which Uranus Browser doesn’t follow.');
+      throw new JoinlyError('Ollama answered with a redirect, which UrAnus Browser doesn’t follow.');
     }
     return response;
   }

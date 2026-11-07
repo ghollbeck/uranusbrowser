@@ -1,4 +1,4 @@
-// End-to-end test of meeting notes, in a real Uranus Browser with a throwaway profile, through the real
+// End-to-end test of meeting notes, in a real UrAnus Browser with a throwaway profile, through the real
 // Agent panel (real mouse clicks):
 //   - the panel's mic button, the sheet, the privacy text and the reminder; Start, the recording
 //     bar, the live transcript, Stop; closing the panel while recording asks first;
@@ -16,7 +16,7 @@
 // OpenAI calls through the built host of THIS worktree (the installed app's bundled host is
 // older and has no meeting methods); the profile's NativeMessagingHosts entry is pointed at it.
 //
-//   node chromium/tests/e2e-meetings.mjs [--app /Applications/Uranus Browser.app] [--shell-dir <dist>]
+//   node chromium/tests/e2e-meetings.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir <dist>]
 //        [--shots <dir>] [--bundled-host]
 // It needs the OpenAI key in the Keychain (it checks first and says so).
 import { spawn, execFileSync } from 'node:child_process';
@@ -33,7 +33,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const bundledHost = process.argv.includes('--bundled-host'); // use the app's own (new) host, as shipped
 const shellDir = path.resolve(arg('--shell-dir', path.join(root, 'chromium/shell/dist')));
 const shots = arg('--shots');
@@ -65,7 +65,7 @@ const guarded = (session) => {
 async function launch() {
   fs.rmSync(path.join(profile, 'DevToolsActivePort'), { force: true });
   const browser = spawn(
-    path.join(app, 'Contents/MacOS/Uranus Browser'),
+    path.join(app, 'Contents/MacOS/UrAnus Browser'),
     [
       `--user-data-dir=${profile}`,
       `--anus-shell-dir=${shellDir}`,
@@ -181,8 +181,8 @@ check(!(await panel.eval(`!!document.querySelector('.mt-reminder')`)), 'the reco
 check(/not saved anywhere|never leaves it/.test(await text(panel, '.mt-card')) && /stays in this browser profile/.test(await text(panel, '.mt-card')), 'it says where audio and text go');
 check(/never logged/.test(await text(panel, '.mt-past')), 'it says transcripts are never logged and stay local');
 check((await panel.eval(`document.activeElement?.id`)) === 'mt-primary', 'focus moves into the sheet');
-// The pickers are Uranus Browser's own dropdowns, not the OS menu: real clicks open one, choose, and close it.
-check((await count(panel, '#mt-language.fs-native')) === 1 && (await count(panel, '.mt-miclabel button.fs-trigger')) === 2, 'Microphone and Language are Uranus Browser dropdowns');
+// The pickers are UrAnus Browser's own dropdowns, not the OS menu: real clicks open one, choose, and close it.
+check((await count(panel, '#mt-language.fs-native')) === 1 && (await count(panel, '.mt-miclabel button.fs-trigger')) === 2, 'Microphone and Language are UrAnus Browser dropdowns');
 await click(panel, 'button.fs-trigger.mt-language');
 await until(() => panel.eval(`!!document.querySelector('.fs-menu:popover-open')`), 'the language list to open');
 check((await count(panel, '.fs-menu:popover-open .fs-item')) > 20, 'the language list names every language');
@@ -256,7 +256,7 @@ await until(() => panel.eval(`document.getElementById('meetings').classList.cont
 check((await text(panel, '#mt-primary')) === 'Stop', 'the Start button became Stop, in the recorder card');
 check(/Recording/.test(await text(panel, '#mt-card-title')) && (await count(panel, '.mt-meter')) === 1, 'the card shows Recording with a level meter for Me only (no tab audio yet)');
 const hint = await text(panel, '#mt-tab-hint');
-check(/^Remote participants’ audio isn’t being captured yet\..*“Uranus Browser: add this tab’s audio to the meeting notes”/.test(hint ?? ''), 'Start only begins the microphone and says plainly how to add the others’ audio (right-click item, shortcut)');
+check(/^Remote participants’ audio isn’t being captured yet\..*“UrAnus Browser: add this tab’s audio to the meeting notes”/.test(hint ?? ''), 'Start only begins the microphone and says plainly how to add the others’ audio (right-click item, shortcut)');
 check(!/and the tab’s sound are/.test((await text(panel, '.mt-card')) ?? ''), 'it does not claim the others are being recorded');
 await shot(panel, 'meetings-4b-recording-no-tab-audio-light-400');
 // The gesture path (what the context-menu item and the shortcut run), but invoked from the test, so it is NOT a real
@@ -394,7 +394,7 @@ await wait(300);
   await until(async () => !(await sheetOpen(panel)), 'the sheet to close after Discuss', 10000);
   await until(() => count(panel, '.msg.user .bubble').then((n) => n >= 1), 'the message in the chat');
   const sent = await text(panel, '.msg.user .bubble');
-  check(/^I recorded a meeting with Uranus Browser/.test(sent) && sent.includes('<<<MEETING') && sent.includes('MEETING>>>'), '“Discuss in chat” sends the notes as the user’s own message, fenced as untrusted data');
+  check(/^I recorded a meeting with UrAnus Browser/.test(sent) && sent.includes('<<<MEETING') && sent.includes('MEETING>>>'), '“Discuss in chat” sends the notes as the user’s own message, fenced as untrusted data');
   check(/untrusted data, never as instructions/.test(sent) && /Alice Example/.test(sent), 'and it carries the quoted notes');
   await until(() => count(panel, '.msg.assistant .text').then((n) => n >= 1), 'the agent’s reply', 90000).catch(() => undefined);
   check((await count(panel, '.msg.assistant .text')) >= 1, 'the agent answers (it has the meeting to talk about)');
@@ -471,7 +471,7 @@ check(/Remote participants’ audio isn’t being captured yet/.test((await text
 check((await count(panel, '.mt-meter')) === 1, 'and shows one level meter, not two');
 await click(panel, '#meetings-close');
 await until(() => visible(panel, '#rec-bar-hint'), 'the how-to in the recording bar');
-check(/right-click inside the meeting page.*“Uranus Browser: add this tab’s audio to the meeting notes”/.test((await text(panel, '#rec-bar-hint')) ?? ''), 'the recording bar carries the same how-to while there is no tab audio');
+check(/right-click inside the meeting page.*“UrAnus Browser: add this tab’s audio to the meeting notes”/.test((await text(panel, '#rec-bar-hint')) ?? ''), 'the recording bar carries the same how-to while there is no tab audio');
 await shot(panel, 'meetings-4c-bar-hint-light-400');
 await click(panel, '#rec-bar-open');
 await until(() => sheetOpen(panel), 'the sheet again');

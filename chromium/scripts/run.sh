@@ -1,5 +1,5 @@
 #!/bin/bash
-# Launches the dev build (out/Dev/Uranus Browser.app) with its own profile. The Uranus Browser shell is a
+# Launches the dev build (out/Dev/UrAnus Browser.app) with its own profile. The UrAnus Browser shell is a
 # component extension (it can't be removed or turned off); --anus-shell-dir points it at
 # chromium/shell/dist, so shell changes need no C++ build: rebuild the shell
 # (node chromium/shell/build.mjs) and relaunch. Extra arguments go to Chromium, e.g.
@@ -20,7 +20,7 @@ mkdir -p "$profile"
 # the new shell runs. (Extension data, chrome.storage, lives elsewhere and stays.)
 rm -rf "$profile/Default/Service Worker"
 
-exec "$src/out/Dev/Uranus Browser.app/Contents/MacOS/Uranus Browser" \
+exec "$src/out/Dev/UrAnus Browser.app/Contents/MacOS/UrAnus Browser" \
   --user-data-dir="$profile" \
   --disable-features=MacAppCodeSignClone \
   --anus-shell-dir="$shell_dist" \

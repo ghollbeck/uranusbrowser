@@ -3,7 +3,7 @@
  * topics and a plan, plus the animated classification run, the chat with your history and every
  * recorded page. The desktop port of the iOS app's DietView/DietEngine/DietChat (same cards, same
  * numbers); visits come from the background's live tracker (diet.ts) and from history imports.
- * The on-device model is Underdog Woof 2B through Uranus Browser's helper; without it the rules
+ * The on-device model is Underdog Woof 2B through UrAnus Browser's helper; without it the rules
  * classify and the chat answers from the numbers.
  */
 import { cmd, invoke, on } from '../client';
@@ -385,7 +385,7 @@ function render() {
     if (!classifiedOnce() && !S.run && S.visits.some((v) => !isMeasured(v))) main.append(classifyHero());
     main.append(rangePicker());
     if (S.stats.visits === 0) {
-      main.append(card('Nothing in this range', undefined, h('p', { class: 'muted' }, 'Pick a longer range, or browse a bit: pages you open in Uranus Browser are added as you go.')));
+      main.append(card('Nothing in this range', undefined, h('p', { class: 'muted' }, 'Pick a longer range, or browse a bit: pages you open in UrAnus Browser are added as you go.')));
     } else {
       main.append(scoreCard(animate), consumptionCard(), nutritionFacts(animate), categoriesCard(animate));
       if (S.stats.days.length > 1) main.append(daysCard(animate));
@@ -400,7 +400,7 @@ function render() {
     h(
       'p',
       { class: 'footer' },
-      'Analysis stays on this Mac. Pages you read in Uranus Browser are recorded and classified automatically while its window is in front and you are at the Mac (or a video is playing); incognito windows are never recorded. Other browsers and apps are not monitored: import their history to include it. Video topics come from the page’s text, not the video itself.',
+      'Analysis stays on this Mac. Pages you read in UrAnus Browser are recorded and classified automatically while its window is in front and you are at the Mac (or a video is playing); incognito windows are never recorded. Other browsers and apps are not monitored: import their history to include it. Video topics come from the page’s text, not the video itself.',
     ),
   );
   app.replaceChildren(main, fileInput);
@@ -443,7 +443,7 @@ function emptyState() {
     { class: 'empty' },
     h('div', { class: 'empty-icon' }, icon('utensils', 40)),
     h('h2', {}, 'You are what you browse'),
-    h('p', { class: 'muted' }, 'Pages and videos you open in Uranus Browser are sorted into a diet and scored A to E, all on this Mac. Incognito windows are never recorded.'),
+    h('p', { class: 'muted' }, 'Pages and videos you open in UrAnus Browser are sorted into a diet and scored A to E, all on this Mac. Incognito windows are never recorded.'),
     button('Start browsing', () => window.close(), 'btn primary wide', 'globe'),
     h('p', { class: 'muted small' }, 'Tracking and classification happen automatically as you browse. Importing past history is optional.'),
     button('Import past history…', () => fileInput.click(), 'btn link'),
@@ -893,7 +893,7 @@ function openHistory() {
         h('h4', {}, 'Consumption'),
         kv(isMeasured(v) ? 'Measured browsing' : 'Estimated browsing', duration(v.seconds)),
         isMeasured(v) ? kv('Video playback', duration(v.watchSeconds ?? 0)) : '',
-        h('p', { class: 'muted small' }, isMeasured(v) ? 'Measured while this page was in front in Uranus Browser. Playback follows the video’s clock.' : 'Estimated from desktop visit durations or the gap to the next visit in the same profile. This is not measured watch time.'),
+        h('p', { class: 'muted small' }, isMeasured(v) ? 'Measured while this page was in front in UrAnus Browser. Playback follows the video’s clock.' : 'Estimated from desktop visit durations or the gap to the next visit in the same profile. This is not measured watch time.'),
         h('h4', {}, 'Why this score?'),
         kv('Category', CATEGORY[l.category].title),
         kv('Grade', grade(l.nutrients)),

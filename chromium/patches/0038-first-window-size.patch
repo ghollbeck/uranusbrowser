@@ -13,7 +13,7 @@
    gfx::Rect work_area = display.work_area();
  
 +#if BUILDFLAG(IS_MAC)
-+  // Uranus Browser: a window with no saved placement (a new profile's first window)
++  // UrAnus Browser: a window with no saved placement (a new profile's first window)
 +  // fills a laptop-sized screen's work area (not macOS full screen), and on a
 +  // bigger screen takes 60% of the work area each way, centred, but never
 +  // less than the laptop-sized 1600x1000 points (nor more than the work

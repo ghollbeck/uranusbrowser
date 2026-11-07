@@ -4,7 +4,7 @@
  #endif  // !defined(BUILDING_CHROME_RENDERER)
  
  #if !defined(BUILDING_CHROME_RENDERER)
-+  // Uranus Browser: the shell has its own onboarding, so Chromium's first-run
++  // UrAnus Browser: the shell has its own onboarding, so Chromium's first-run
 +  // experience never shows: no intro/profile picker FRE, no "What's New" tab,
 +  // no default-browser infobar, no search engine choice, no IPH promos, no
 +  // "install from disk image" prompt. Every launch behaves as with

@@ -6,7 +6,7 @@ export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const reaped = new Set();
 /**
  * Registers a browser the test launched, and makes sure it is stopped when the test ends for any
- * reason, a crash or a failed wait included. (A test that threw used to leave its Uranus Browser window
+ * reason, a crash or a failed wait included. (A test that threw used to leave its UrAnus Browser window
  * open, on a throwaway profile, where it could be mistaken for the real browser.)
  */
 export function reap(child) {

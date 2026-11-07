@@ -4,7 +4,7 @@
  * tab's scroll position travels under between the old page and the new one.
  */
 
-/** Both halves of a View Transition last as long as Uranus Browser's own pages fade. */
+/** Both halves of a View Transition last as long as UrAnus Browser's own pages fade. */
 export const THEME_FADE_CSS =
   '::view-transition-old(root),::view-transition-new(root){animation-duration:1s;animation-timing-function:cubic-bezier(0.37,0,0.63,1)}';
 

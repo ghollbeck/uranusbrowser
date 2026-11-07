@@ -27,7 +27,7 @@
  }
  
  void ShowSettings(BrowserWindowInterface* browser) {
-+  // Uranus Browser: Settings (Cmd+, and the app menu) is the shell's settings page.
++  // UrAnus Browser: Settings (Cmd+, and the app menu) is the shell's settings page.
 +  // chrome://settings stays reachable by typing it, and Chromium's own
 +  // sub-pages (clear browsing data, passwords, ...) still open there.
 +  if (extensions::ExtensionRegistry::Get(browser->GetProfile())

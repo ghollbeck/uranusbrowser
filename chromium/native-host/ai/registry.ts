@@ -1,6 +1,6 @@
 /**
  * The central AI provider: which provider and model each AI feature uses, saved as a small JSON
- * file in Uranus Browser's app data (no keys, no tokens). Every feature asks here; none picks a service
+ * file in UrAnus Browser's app data (no keys, no tokens). Every feature asks here; none picks a service
  * or reads a key on its own.
  *
  * - `chat` is the Agent panel (companions and artifacts run in it); `routines` follow the chat

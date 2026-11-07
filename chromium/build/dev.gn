@@ -1,4 +1,4 @@
-# Uranus Browser dev build: component build, so a change relinks one small library
+# UrAnus Browser dev build: component build, so a change relinks one small library
 # instead of the whole 300MB framework. Use this one day to day.
 is_debug = false
 is_component_build = true

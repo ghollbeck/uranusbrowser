@@ -1,7 +1,7 @@
 --- /dev/null
 +++ b/chrome/browser/anus/anus_shell_commands.h
 @@ -0,0 +1,44 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -20,7 +20,7 @@
 +#include "extensions/browser/extension_registry.h"
 +#include "extensions/common/event_args.h"
 +
-+// Browser commands that Uranus Browser hands to the shell (chromium/shell) instead of
++// Browser commands that UrAnus Browser hands to the shell (chromium/shell) instead of
 +// Chromium's own UI. Each is one of the "commands" in the shell's manifest,
 +// and reaches it as chrome.commands.onCommand(name), the way an extension
 +// keyboard shortcut would.
@@ -67,7 +67,7 @@
            base::BindRepeating(
                [](BrowserWindowInterface* bwi, actions::ActionItem* item,
                   actions::ActionInvocationContext context) {
-+                // Uranus Browser: the sidebar owns the URL, so Cmd+L opens the shell's
++                // UrAnus Browser: the sidebar owns the URL, so Cmd+L opens the shell's
 +                // location field instead of focusing the hidden omnibox.
 +                if (AnusHidesTopChrome(bwi)) {
 +                  DispatchAnusShellCommand(bwi->GetProfile(),
@@ -99,7 +99,7 @@
        FocusToolbar(browser_);
        break;
      case IDC_FOCUS_LOCATION:
-+      // Uranus Browser: the sidebar owns the URL, so Cmd+L opens the shell's location
++      // UrAnus Browser: the sidebar owns the URL, so Cmd+L opens the shell's location
 +      // field instead of focusing the hidden omnibox.
 +      if (AnusHidesTopChrome(browser_)) {
 +        DispatchAnusShellCommand(profile(), kAnusOpenLocationCommand);

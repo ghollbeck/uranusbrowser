@@ -383,7 +383,7 @@ export function registerAgentPanel(ctx: AgentPanelContext) {
       await companionsLoaded;
       const name = cleanFileName(file?.name);
       const kind = kindOf(name);
-      if (!kind) return { error: `“${name}” isn’t a kind of file Uranus Browser can read. Try a PDF, a Word or text file.` };
+      if (!kind) return { error: `“${name}” isn’t a kind of file UrAnus Browser can read. Try a PDF, a Word or text file.` };
       if (typeof file?.data !== 'string' || !file.data) return { error: 'The file didn’t arrive.' };
       if (file.data.length * 0.75 > MAX_FILE_BYTES) return { error: `“${name}” is too big (the limit is ${Math.round(MAX_FILE_BYTES / 1024 / 1024)} MB).` };
       let read: ExtractReply;
@@ -391,7 +391,7 @@ export function registerAgentPanel(ctx: AgentPanelContext) {
         const bytes = Uint8Array.from(atob(file.data), (c) => c.charCodeAt(0));
         read = cleanFileText(new TextDecoder('utf-8').decode(bytes));
       } else {
-        if (!ctx.extractText) return { error: 'Reading PDFs and documents needs Uranus Browser’s helper, which isn’t available in this window.' };
+        if (!ctx.extractText) return { error: 'Reading PDFs and documents needs UrAnus Browser’s helper, which isn’t available in this window.' };
         read = await ctx.extractText({ name, data: file.data }).catch((err) => ({ error: err instanceof Error ? err.message : 'The file couldn’t be read.' }));
       }
       if ('error' in read) return { error: read.error };

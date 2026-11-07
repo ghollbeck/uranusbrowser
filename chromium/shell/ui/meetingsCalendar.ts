@@ -81,7 +81,7 @@ export const CONSENT_HINT = 'Tell the other people in the meeting that you’re 
 const WHERE_TO_FIND =
   'Google Calendar: Settings › your calendar › Integrate calendar › “Secret address in iCal format”. Outlook and iCloud: a published calendar’s ICS (webcal://) link works too.';
 const SECRET_HINT =
-  'This address works like a password: anyone who has it can read your calendar. Uranus Browser keeps it only in this browser profile, shows it shortened, never logs it, and never gives it, or your events, to the AI model. It is read every 10 minutes, without your cookies.';
+  'This address works like a password: anyone who has it can read your calendar. UrAnus Browser keeps it only in this browser profile, shows it shortened, never logs it, and never gives it, or your events, to the AI model. It is read every 10 minutes, without your cookies.';
 const OFFER_HINT = 'When the tab you are on is a Google Meet, Zoom or Teams meeting, the panel asks whether to take notes. It only reads the tab’s address; nothing is added to the page.';
 
 export function setupMeetingsCalendar(hooks: CalendarHooks) {
@@ -205,7 +205,7 @@ export function setupMeetingsCalendar(hooks: CalendarHooks) {
           'div',
           { class: 'memory-empty mt-up-empty' },
           icon('calendar'),
-          h('span', {}, 'Connect your calendar and Uranus Browser reminds you two minutes before a meeting with a Google Meet, Zoom or Teams link, and opens it ready to take notes.'),
+          h('span', {}, 'Connect your calendar and UrAnus Browser reminds you two minutes before a meeting with a Google Meet, Zoom or Teams link, and opens it ready to take notes.'),
         ),
         h('button', { class: 'secondary-button', type: 'button', onclick: () => hooks.openSettings() }, 'Connect a calendar…'),
       );
@@ -285,7 +285,7 @@ export function setupMeetingsCalendar(hooks: CalendarHooks) {
       h('span', { class: 'switch-thumb' }),
     );
     fill(settingsEl, 
-      h('p', { class: 'sheet-hint' }, 'A couple of minutes before a meeting with a Google Meet, Zoom or Teams link, Uranus Browser can remind you and open it ready to take notes. It reads your calendar from its private iCal address; it never signs in to your account. Recording still starts only when you press Start recording.'),
+      h('p', { class: 'sheet-hint' }, 'A couple of minutes before a meeting with a Google Meet, Zoom or Teams link, UrAnus Browser can remind you and open it ready to take notes. It reads your calendar from its private iCal address; it never signs in to your account. Recording still starts only when you press Start recording.'),
       v.connected
         ? h(
             'section',

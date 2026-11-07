@@ -11,21 +11,21 @@ import { broadcast, handle } from './hub';
 
 export interface SettingsContext {
   store: Store;
-  /** Closes the Chromium tabs of these Uranus Browser tabs; they reopen from the Store when next shown. */
+  /** Closes the Chromium tabs of these UrAnus Browser tabs; they reopen from the Store when next shown. */
   unload(tabIds: string[]): void;
   /** Sends every page the new state, as after any change from the sidebar. */
   broadcastState(): void;
-  /** Whether a Uranus Browser tab has a live Chromium tab. Without it, Tabs & Spaces shows every tab as closed. */
+  /** Whether a UrAnus Browser tab has a live Chromium tab. Without it, Tabs & Spaces shows every tab as closed. */
   isOpen?(tabId: string): boolean;
-  /** Navigates a Uranus Browser tab's live Chromium tab. Without it, the tab is unloaded and reopens at the new address. */
+  /** Navigates a UrAnus Browser tab's live Chromium tab. Without it, the tab is unloaded and reopens at the new address. */
   load?(tabId: string, url: string): void;
   /** The agent bridge's address while it runs (nativeHost.ts). */
   agentEndpoint?(): string | undefined;
-  /** Why Uranus Browser's native host last failed, for the Import and Coding Agents panes (nativeHost.ts). */
+  /** Why UrAnus Browser's native host last failed, for the Import and Coding Agents panes (nativeHost.ts). */
   hostError?(): string | undefined;
-  /** Whether Uranus Browser is the default browser, and whether it can become it (patch 0027). */
+  /** Whether UrAnus Browser is the default browser, and whether it can become it (patch 0027). */
   defaultBrowser?(): { isDefault: boolean; canSet: boolean };
-  /** Asks macOS to make Uranus Browser the default browser. */
+  /** Asks macOS to make UrAnus Browser the default browser. */
   makeDefaultBrowser?(): Promise<void>;
 }
 
@@ -87,7 +87,7 @@ export function registerSettings(ctx: SettingsContext) {
     'settings:get': view,
     'settings:set': async (patch: SettingsPatch) => {
       const notice = await applySettings(store, patch && typeof patch === 'object' ? patch : {}, {
-        // TODO(chromium): Chromium's own light/dark mode isn't settable from an extension; Uranus Browser's pages follow the system.
+        // TODO(chromium): Chromium's own light/dark mode isn't settable from an extension; UrAnus Browser's pages follow the system.
         theme: () => {},
         // nativeHost.ts follows state.agent itself, whoever sets it.
         agent: async () => {},
@@ -104,7 +104,7 @@ export function registerSettings(ctx: SettingsContext) {
     // TODO(chromium): needs a native folder picker.
     'settings:choose-downloads-folder': () => ({ ...view(), ...notYet('Choosing the downloads folder') }),
     'settings:make-default-browser': async () => {
-      if (!ctx.makeDefaultBrowser) return { ...view(), ...notYet('Making Uranus Browser the default browser') };
+      if (!ctx.makeDefaultBrowser) return { ...view(), ...notYet('Making UrAnus Browser the default browser') };
       await ctx.makeDefaultBrowser();
       return view();
     },
@@ -144,7 +144,7 @@ export async function openSettings(pane?: string) {
     if (pane) broadcast('settings:pane', pane);
     return;
   }
-  // Its own small window, as in Electron, not a tab among the pages; centred on Uranus Browser's window.
+  // Its own small window, as in Electron, not a tab among the pages; centred on UrAnus Browser's window.
   const main = await chrome.windows.getLastFocused({ windowTypes: ['normal'] }).catch(() => undefined);
   const size = { width: 780, height: 580 };
   const at =

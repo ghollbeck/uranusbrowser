@@ -1,9 +1,9 @@
-// End-to-end test of a blank tab's own page (newtab.html), in a real Uranus Browser:
+// End-to-end test of a blank tab's own page (newtab.html), in a real UrAnus Browser:
 //   - clicking its "Search or enter a URL" box with a real mouse opens the window's command bar,
 //     empty and focused;
 //   - typing an address and pressing Enter loads it in that same tab, not in another new one.
 //
-//   node chromium/tests/e2e-newtab.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--keep]
+//   node chromium/tests/e2e-newtab.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--keep]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,7 +16,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir');
 const profile = path.join(here, '.scratch', `newtab-profile-${Date.now()}`);
 const results = [];
@@ -29,7 +29,7 @@ const fixture = await startFixtureServer(0);
 fs.mkdirSync(profile, { recursive: true });
 const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900'];
 if (shellDir) flags.push(`--anus-shell-dir=${path.resolve(shellDir)}`);
-const browser = spawn(path.join(app, 'Contents/MacOS/Uranus Browser'), flags, { stdio: 'ignore' });
+const browser = spawn(path.join(app, 'Contents/MacOS/UrAnus Browser'), flags, { stdio: 'ignore' });
 reap(browser);
 process.on('exit', () => process.argv.includes('--keep') || browser.kill());
 

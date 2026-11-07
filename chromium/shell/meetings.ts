@@ -56,7 +56,7 @@ export interface MeetingsContext {
   onHostLost(fn: () => void): void;
   /** The tab the user is looking at (the one a recording would capture), if it's a page. */
   activeTab(): Promise<{ chromeId: number; url: string; title: string } | undefined>;
-  /** Opens an address in a normal Uranus Browser tab in front. */
+  /** Opens an address in a normal UrAnus Browser tab in front. */
   openPage(url: string): void;
 }
 
@@ -227,8 +227,8 @@ export function registerMeetings(ctx: MeetingsContext) {
     } catch (err) {
       engines = [];
       const why = err instanceof Error ? err.message : '';
-      // An older helper answers "No method meetingEngines": this Uranus Browser is newer than the helper it found.
-      hostProblem = /No method/.test(why) ? 'Uranus Browser’s helper is older than meeting notes. Quit and reopen Uranus Browser so it registers the new one.' : why || 'Uranus Browser’s helper isn’t available.';
+      // An older helper answers "No method meetingEngines": this UrAnus Browser is newer than the helper it found.
+      hostProblem = /No method/.test(why) ? 'UrAnus Browser’s helper is older than meeting notes. Quit and reopen UrAnus Browser so it registers the new one.' : why || 'UrAnus Browser’s helper isn’t available.';
     }
   }
 
@@ -260,7 +260,7 @@ export function registerMeetings(ctx: MeetingsContext) {
     const record = store.toRecord(live, 'recovered', live.lastMs);
     if (record.segments.length) {
       await saveRecord(record);
-      notice = 'A recording that was running when Uranus Browser stopped was saved as it was.';
+      notice = 'A recording that was running when UrAnus Browser stopped was saved as it was.';
     }
   }
 
@@ -299,7 +299,7 @@ export function registerMeetings(ctx: MeetingsContext) {
     if (phase !== 'idle') return { error: 'A recording is already running.' };
     if (index.length >= MAX_MEETINGS) return { error: `You have ${MAX_MEETINGS} saved meetings. Delete some before recording another.` };
     const tab = await ctx.activeTab();
-    if (!tab || !/^https?:\/\//.test(tab.url)) return { error: 'Open the meeting in a tab first: Uranus Browser records the tab you are looking at when you press Start.' };
+    if (!tab || !/^https?:\/\//.test(tab.url)) return { error: 'Open the meeting in a tab first: UrAnus Browser records the tab you are looking at when you press Start.' };
     await refreshEngines(true);
     if (hostProblem) return { error: hostProblem };
     const picked = store.chooseEngine(settings.engine, engines);
@@ -357,7 +357,7 @@ export function registerMeetings(ctx: MeetingsContext) {
         startWaiter = { ok: resolve, fail: (e) => reject(Object.assign(new Error(e.message), { code: e.code })) };
         // Nothing for 20 seconds, and no error, is almost always a permission question the browser
         // could not show for a page without a window.
-        setTimeout(() => reject(Object.assign(new Error('The microphone didn’t start. Uranus Browser may need your permission first.'), { code: 'mic-permission' })), STARTUP_MS);
+        setTimeout(() => reject(Object.assign(new Error('The microphone didn’t start. UrAnus Browser may need your permission first.'), { code: 'mic-permission' })), STARTUP_MS);
       });
       // Test mode (a flag only the end-to-end tests set, in a throwaway profile) plays recorded
       // speech in place of the microphone and the tab, so the rest of the path runs for real.
@@ -547,7 +547,7 @@ export function registerMeetings(ctx: MeetingsContext) {
           : reason === 'limit'
             ? 'The recording reached its time limit and stopped.'
             : reason === 'lost'
-              ? 'Uranus Browser’s helper stopped, so the recording ended. What was transcribed so far is saved.'
+              ? 'UrAnus Browser’s helper stopped, so the recording ended. What was transcribed so far is saved.'
               : reason === 'error'
                 ? (detail ?? 'The recorder stopped unexpectedly.')
                 : undefined;

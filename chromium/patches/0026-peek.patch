@@ -8,7 +8,7 @@
 +
 +namespace {
 +
-+// The window a Peek call is about: `window_id`, or Uranus Browser's main window.
++// The window a Peek call is about: `window_id`, or UrAnus Browser's main window.
 +AnusFrameHost* PeekHost(const std::optional<int>& window_id,
 +                          content::BrowserContext* context) {
 +  if (window_id) {
@@ -202,7 +202,7 @@
    return main ? main->GetBrowserWindowInterface() : nullptr;
 +}
 +
-+// Uranus Browser: the window frame that opens `source`'s new foreground tabs in Peek
++// UrAnus Browser: the window frame that opens `source`'s new foreground tabs in Peek
 +// (a pinned tab's links, chrome.anusPrivate.setPeekTabs()), or null.
 +AnusFrameHost* AnusPeekHostFor(BrowserWindowInterface& browser,
 +                                   content::WebContents* source,
@@ -223,21 +223,21 @@
                                    std::move(navigation_handle_callback));
    }
  
-+  // Uranus Browser: like Arc, links leaving a pinned tab open in Peek.
++  // UrAnus Browser: like Arc, links leaving a pinned tab open in Peek.
 +  if (AnusFrameHost* peek =
 +          AnusPeekHostFor(*browser_, source, params.disposition)) {
 +    peek->OpenPeek(params.url);
 +    return nullptr;
 +  }
 +
-   // Uranus Browser: a AnusMini is about its one page; the tabs it opens are Uranus Browser's.
+   // UrAnus Browser: a AnusMini is about its one page; the tabs it opens are UrAnus Browser's.
    if (source && IsAnusNewTab(params.disposition)) {
      if (BrowserWindowInterface* main = AnusMiniMainWindow(*browser_)) {
 @@ -810,6 +834,14 @@
      }
    }
  
-+  // Uranus Browser: a pinned tab's new foreground tabs open in Peek, keeping their
++  // UrAnus Browser: a pinned tab's new foreground tabs open in Peek, keeping their
 +  // opener.
 +  if (AnusFrameHost* peek =
 +          AnusPeekHostFor(*browser_, source, disposition)) {
@@ -245,7 +245,7 @@
 +    return nullptr;
 +  }
 +
-   // Uranus Browser: a AnusMini's new tabs open in Uranus Browser's main window (real popups,
+   // UrAnus Browser: a AnusMini's new tabs open in UrAnus Browser's main window (real popups,
    // which need window.opener, stay popups).
    if (IsAnusNewTab(disposition)) {
 --- a/chrome/browser/ui/views/frame/browser_view.cc
@@ -637,7 +637,7 @@
    // in the background's insets.
    raw_ptr<views::View> anus_frame = nullptr;
    raw_ptr<views::View> anus_frame_background = nullptr;
-+  // Uranus Browser: Peek's card, above the frame, in AnusPeekBounds() of the page
++  // UrAnus Browser: Peek's card, above the frame, in AnusPeekBounds() of the page
 +  // area while it is visible.
 +  raw_ptr<views::View> anus_peek = nullptr;
  };
@@ -687,7 +687,7 @@
          optional DoneCallback callback);
  
 +    // Peek: a page in a floating card over the page area of the given window
-+    // (default: Uranus Browser's main window), replacing any Peek there. Escape
++    // (default: UrAnus Browser's main window), replacing any Peek there. Escape
 +    // closes it; its links to new tabs open as tabs.
 +    static void openPeek(
 +        DOMString url,
@@ -725,7 +725,7 @@
 -  DCHECK(layer);
 -  layer->SetRoundedCornerRadius(corner_radii);
 -  layer->SetIsFastRoundedCorner(true);
-+  // Uranus Browser: a host without a views layer (a plain WebView) still rounds its
++  // UrAnus Browser: a host without a views layer (a plain WebView) still rounds its
 +  // NSView below.
 +  if (ui::Layer* layer = GetUiLayer()) {
 +    layer->SetRoundedCornerRadius(corner_radii);

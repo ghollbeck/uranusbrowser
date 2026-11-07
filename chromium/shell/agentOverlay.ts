@@ -107,7 +107,7 @@ export function registerAgentOverlay(ctx: AgentOverlayContext) {
   async function draw(chromeId: number, state: OverlayState, pointAt?: PagePoint, immediately = false) {
     const [result] = await chrome.scripting
       .executeScript({ target: { tabId: chromeId }, func: renderAgentOverlay, args: [state, pointAt ?? null], world: 'ISOLATED', injectImmediately: immediately } as any)
-      // Uranus Browser's own pages, the Web Store and error pages can't take scripts: no overlay there.
+      // UrAnus Browser's own pages, the Web Store and error pages can't take scripts: no overlay there.
       .catch(() => [undefined]);
     if (state.on && result) glowed.add(chromeId);
     return result;
@@ -467,7 +467,7 @@ export function renderAgentOverlay(state: OverlayState, pointAt: PagePoint | nul
   }
 
   o.host.dataset.waiting = String(state.waiting);
-  o.title.textContent = `Controlled by ${state.name || 'Uranus Browser'}`;
+  o.title.textContent = `Controlled by ${state.name || 'UrAnus Browser'}`;
   o.text.textContent = state.text;
   o.dot.style.setProperty('--hue', String(state.hue));
   if (!pointAt) return true;

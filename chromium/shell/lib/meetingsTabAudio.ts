@@ -4,8 +4,8 @@
  * Chromium refuses `chrome.tabCapture.getMediaStreamId` unless the extension was "invoked" for
  * that tab (the activeTab grant), and it only grants that on a user gesture in ITS OWN UI: a
  * click on one of the extension's context-menu items, or one of its keyboard commands. A click
- * in Uranus Browser's Agent panel doesn't count. So while a recording runs, this module keeps one
- * context-menu item on web pages ("Uranus Browser: add this tab's audio to the meeting notes") and
+ * in UrAnus Browser's Agent panel doesn't count. So while a recording runs, this module keeps one
+ * context-menu item on web pages ("UrAnus Browser: add this tab's audio to the meeting notes") and
  * answers the extension's keyboard command; either one, and only either one, asks for the
  * stream id, in the same turn as the click (that click is the grant), and hands it to the
  * capture page, which adds the tab's sound mid-recording.
@@ -15,7 +15,7 @@
  */
 
 export const MENU_ID = 'anus-meeting-tab-audio';
-export const MENU_TITLE = 'Uranus Browser: add this tab’s audio to the meeting notes';
+export const MENU_TITLE = 'UrAnus Browser: add this tab’s audio to the meeting notes';
 export const COMMAND = 'anus-add-tab-audio';
 export const MENU_CONTEXTS = ['page', 'frame', 'video', 'audio', 'selection'] as const;
 

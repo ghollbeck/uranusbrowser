@@ -45,7 +45,7 @@ test('the menu item exists only while a recording runs, on page-like contexts, a
   t.setActive(true);
   assert.deepEqual(f.log, ['create'], 'created once');
   assert.deepEqual(f.created[0], { id: MENU_ID, title: MENU_TITLE, contexts: [...MENU_CONTEXTS] });
-  assert.match(MENU_TITLE, /^Uranus Browser: add this tab’s audio to the meeting notes$/);
+  assert.match(MENU_TITLE, /^UrAnus Browser: add this tab’s audio to the meeting notes$/);
   assert.deepEqual([...MENU_CONTEXTS], ['page', 'frame', 'video', 'audio', 'selection']);
   t.setActive(false);
   t.setActive(false);
@@ -147,7 +147,7 @@ test('a click that arrives after Stop attaches nothing, and pages that cannot be
 test('the hint tells the user exactly what to do, with the shortcut only if there is one', () => {
   assert.equal(
     tabAudioHint({ tabAudioMenu: MENU_TITLE, tabAudioShortcut: '⌘⇧Y' }),
-    'Remote participants’ audio isn’t being captured yet. Click the meeting tab, then press ⌘⇧Y. Or right-click inside the meeting page (not the sidebar) and choose “Uranus Browser: add this tab’s audio to the meeting notes”.',
+    'Remote participants’ audio isn’t being captured yet. Click the meeting tab, then press ⌘⇧Y. Or right-click inside the meeting page (not the sidebar) and choose “UrAnus Browser: add this tab’s audio to the meeting notes”.',
   );
   assert.ok(!/press/.test(tabAudioHint({ tabAudioMenu: MENU_TITLE, tabAudioShortcut: '' })));
 });

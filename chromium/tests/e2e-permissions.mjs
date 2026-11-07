@@ -1,11 +1,11 @@
-// End-to-end test of the first-run tour's Permissions step, in a real Uranus Browser on a fresh profile:
+// End-to-end test of the first-run tour's Permissions step, in a real UrAnus Browser on a fresh profile:
 //   - the tour reaches a Permissions step with Microphone, Camera and App management rows;
 //   - Allow on the microphone and camera opens their permission pages in a tab (where Chromium and macOS ask);
 //   - once the microphone is granted the row reads "Allowed" by itself;
 //   - the tour carries on to the end.
 // It never presses "Open Settings" (that would open System Settings on the screen).
 //
-//   node chromium/tests/e2e-permissions.mjs [--app /Applications/Uranus Browser.app] [--shell-dir <dist>] [--shots <dir>]
+//   node chromium/tests/e2e-permissions.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir <dist>] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,7 +17,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = path.resolve(arg('--shell-dir', path.join(here, '../shell/dist')));
 const shots = arg('--shots');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -30,7 +30,7 @@ const check = (ok, what) => {
 
 fs.mkdirSync(profile, { recursive: true });
 const browser = spawn(
-  path.join(app, 'Contents/MacOS/Uranus Browser'),
+  path.join(app, 'Contents/MacOS/UrAnus Browser'),
   [`--user-data-dir=${profile}`, `--anus-shell-dir=${shellDir}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1280,860', '--window-position=60,40'],
   { stdio: 'ignore' },
 );

@@ -1,4 +1,4 @@
-// End-to-end test of two windows, in a real Uranus Browser (no AI involved):
+// End-to-end test of two windows, in a real UrAnus Browser (no AI involved):
 //   - each window shows its own tab: opening or picking one in window 2 leaves window 1 alone;
 //   - picking in window 2 the tab window 1 shows moves it over, and window 1's page says so
 //     (with "Show Here"), its sidebar marking the tab; focusing window 1 doesn't take it back;
@@ -6,7 +6,7 @@
 //   - "Show Here" takes it back (its picture is deleted), and then window 2 is the one told;
 //   - closing window 2 keeps its tabs in the sidebar.
 //
-//   node chromium/tests/e2e-windows.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>]
+//   node chromium/tests/e2e-windows.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,7 +19,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir');
 const shots = arg('--shots');
 const profile = path.join(here, '.scratch', `windows-profile-${Date.now()}`);
@@ -33,7 +33,7 @@ const fixture = await startFixtureServer(0);
 fs.mkdirSync(profile, { recursive: true });
 const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1200,800', '--window-position=60,40'];
 if (shellDir) flags.push(`--anus-shell-dir=${path.resolve(shellDir)}`);
-const browser = spawn(path.join(app, 'Contents/MacOS/Uranus Browser'), flags, { stdio: 'ignore' });
+const browser = spawn(path.join(app, 'Contents/MacOS/UrAnus Browser'), flags, { stdio: 'ignore' });
 reap(browser);
 process.on('exit', () => browser.kill());
 for (const event of ['uncaughtException', 'unhandledRejection']) {
@@ -66,7 +66,7 @@ const shown = async () =>
 const ids = (frame) => frame.eval(`[...document.querySelectorAll('#today [data-tab-id]')].map((el) => el.dataset.tabId)`);
 const activeRow = (frame) => frame.eval(`document.querySelector('#today .row.active')?.dataset.tabId`);
 const marked = (frame) => frame.eval(`[...document.querySelectorAll('#today [data-tab-id]')].filter((el) => el.querySelector('.window-mark')).map((el) => el.dataset.tabId)`);
-/** The Uranus Browser tab whose page has this address. */
+/** The UrAnus Browser tab whose page has this address. */
 const tabAt = (part) =>
   frame1.eval(`Promise.all([chrome.storage.session.get(null), chrome.tabs.query({})]).then(([s, tabs]) => {
     const live = Object.entries(s).find(([k]) => k.endsWith('live'))?.[1] ?? {};

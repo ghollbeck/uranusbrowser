@@ -1,5 +1,5 @@
-// End-to-end test of the theme switch on web pages, in a real Uranus Browser: clicking the sidebar's
-// light/dark button fades the page on the same one-second curve as Uranus Browser's own pages.
+// End-to-end test of the theme switch on web pages, in a real UrAnus Browser: clicking the sidebar's
+// light/dark button fades the page on the same one-second curve as UrAnus Browser's own pages.
 //   1. A page that recolours itself with prefers-color-scheme: a View Transition runs on it.
 //   2. A page the server themes (it reads the Sec-CH-Prefers-Color-Scheme hint, as Google does):
 //      the tab loads the new page, and that arrival is a cross-document View Transition. The
@@ -9,13 +9,13 @@
 //      still fades, and the fragment is still in the address.
 //   4. A page that runs its own navigations (the Navigation API's intercept): it keeps its
 //      document, so the tab plainly reloads; it still switches.
-//   5. A Space with separate cookies, on an origin Uranus Browser hasn't seen before: its page
+//   5. A Space with separate cookies, on an origin UrAnus Browser hasn't seen before: its page
 //      request comes without a tab, so the tab is found by its origin; it still switches.
-//   6. A new tab opened while Uranus Browser is dark (macOS light) is served dark: Chromium alone
+//   6. A new tab opened while UrAnus Browser is dark (macOS light) is served dark: Chromium alone
 //      would tell its first request macOS's scheme.
-// Local pages only (no network). Takes a minute: it starts a throwaway Uranus Browser on a fresh profile.
+// Local pages only (no network). Takes a minute: it starts a throwaway UrAnus Browser on a fresh profile.
 //
-//   node chromium/tests/e2e-themefade.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist]
+//   node chromium/tests/e2e-themefade.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist]
 import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -28,9 +28,9 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir');
-const binary = arg('--binary', 'Uranus Browser');
+const binary = arg('--binary', 'UrAnus Browser');
 const port = arg('--port-name', 'anus');
 const profile = path.join(here, '.scratch', `themefade-profile-${Date.now()}`);
 const results = [];
@@ -65,7 +65,7 @@ const server = http.createServer((req, res) => {
 });
 await new Promise((resolve) => server.listen(0, resolve));
 const base = `http://localhost:${server.address().port}`;
-// The same server under another origin, for a page Uranus Browser has never seen.
+// The same server under another origin, for a page UrAnus Browser has never seen.
 const otherOrigin = `http://127.0.0.1:${server.address().port}`;
 
 // ---- launch ---------------------------------------------------------------------------------
@@ -235,7 +235,7 @@ async function serverPage(label, page, { rounds, fade, hash = '', how }) {
   }
   const page = await openRecorded(`${base}/server?newtab=1`, { record: false });
   const text = await page.eval(`document.body.innerText`);
-  check(text.includes(`hint=${want}`), `a new tab opened while Uranus Browser is ${want} (macOS ${macDark ? 'dark' : 'light'}) is served ${want} (${text})`);
+  check(text.includes(`hint=${want}`), `a new tab opened while UrAnus Browser is ${want} (macOS ${macDark ? 'dark' : 'light'}) is served ${want} (${text})`);
 }
 
 const failed = results.filter((r) => !r.ok);

@@ -21,7 +21,7 @@ export interface BrowserAgentHelpers {
   listTabs(): unknown[];
   hasTab(id: string): boolean;
   activate(id: string): void;
-  /** Opens a URL in a new, active Uranus Browser tab. */
+  /** Opens a URL in a new, active UrAnus Browser tab. */
   open(url: string): string;
   /** The tool's tab (the active one when id is null) with its Chromium tab. */
   target(id: string | null | undefined, action: string): Promise<{ tabId: string; chromeId: number }>;
@@ -66,7 +66,7 @@ async function noDownloads<T>(act: () => Promise<T>): Promise<T | AgentResult> {
     // Give a response that turns into a download a moment to show up.
     await new Promise((r) => setTimeout(r, 400));
     if (caughtDownloads.length > before) {
-      return fail(`${STALE} That started a download, which Uranus Browser cancelled: downloads need the user’s approval.`);
+      return fail(`${STALE} That started a download, which UrAnus Browser cancelled: downloads need the user’s approval.`);
     }
     return result;
   } finally {

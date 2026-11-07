@@ -35,7 +35,7 @@
                ->browser_window_create_params()
                .is_trusted_source,
            browser->GetUnownedUserDataHost());
-+  // Uranus Browser: windows the shell's frame draws have no top chrome to reveal in
++  // UrAnus Browser: windows the shell's frame draws have no top chrome to reveal in
 +  // fullscreen.
 +  window_feature_controller_->set_anus_frame(AnusHidesTopChrome(browser));
  
@@ -47,7 +47,7 @@
    } else {
      ProcessFullscreen(IsFullscreen(), display::kInvalidDisplayId);
    }
-+  // Uranus Browser: the frame lays the page area out for fullscreen, and tells the
++  // UrAnus Browser: the frame lays the page area out for fullscreen, and tells the
 +  // shell's frame page.
 +  if (AnusFrameView* anus_frame = AnusFrameView::From(this)) {
 +    anus_frame->OnWindowFullscreenChanged();
@@ -55,7 +55,7 @@
  }
  
  void BrowserView::FullscreenStateChanged() {
-+  // Uranus Browser: as in FullscreenStateChanging(), in case only this one comes.
++  // UrAnus Browser: as in FullscreenStateChanging(), in case only this one comes.
 +  if (AnusFrameView* anus_frame = AnusFrameView::From(this)) {
 +    anus_frame->OnWindowFullscreenChanged();
 +  }
@@ -177,7 +177,7 @@
    bool UsesImmersiveFullscreenTabbedMode() const;
  #endif
  
-+  // Uranus Browser: the window is drawn by the shell's frame page
++  // UrAnus Browser: the window is drawn by the shell's frame page
 +  // (anus_top_chrome.h), with no tab strip or toolbar to reveal. On macOS
 +  // it then uses plain AppKit fullscreen instead of immersive fullscreen: no
 +  // empty top container band under the menu bar, and the page fills the

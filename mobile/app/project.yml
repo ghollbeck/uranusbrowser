@@ -17,7 +17,7 @@ targets:
     info:
       path: Sources/Info.plist
       properties:
-        CFBundleDisplayName: Uranus Browser
+        CFBundleDisplayName: UrAnus Browser
         CFBundleShortVersionString: "0.1.0"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         ITSAppUsesNonExemptEncryption: false   # only Apple's HTTPS, so no export compliance questions per build

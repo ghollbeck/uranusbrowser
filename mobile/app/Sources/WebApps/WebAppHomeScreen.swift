@@ -6,7 +6,7 @@ import UIKit
 /// Only browsers with Apple's managed entitlement `com.apple.developer.web-browser` get that sheet. Builds that have it
 /// are signed with `Sources/WebBrowser.entitlements` and compiled with `ANUS_WEB_BROWSER` (`ANUS_BROWSER_ENTITLEMENT=1
 /// ./run.sh device`). A WebKit browser's icon is always a bookmark, and iOS opens bookmarks in the default browser: with
-/// Uranus Browser as the default, the icon comes back here with `#anus-app=<id>` and opens the web app full screen, logged
+/// UrAnus Browser as the default, the icon comes back here with `#anus-app=<id>` and opens the web app full screen, logged
 /// in and tracked by the Algorithm Diet. (Safari-style standalone web apps would run in a container nobody can read.)
 enum WebAppHomeScreen {
     static let marker = "anus-app"

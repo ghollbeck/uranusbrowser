@@ -2,7 +2,7 @@
 
 :root {
   --toolbar: 44px;
-  /* The one loud control: moving the page into Uranus Browser. */
+  /* The one loud control: moving the page into UrAnus Browser. */
   --cta: var(--ink);
   --cta-text: #fff;
   --cta-hover: #3a3b3e;
@@ -298,7 +298,7 @@ body {
   }
 }
 
-/* ---- Open in Uranus Browser ------------------------------------------------------ */
+/* ---- Open in UrAnus Browser ------------------------------------------------------ */
 
 #open-in-anus {
   display: flex;

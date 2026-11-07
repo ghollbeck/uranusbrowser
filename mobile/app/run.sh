@@ -11,7 +11,7 @@ esac
 if [ "${ANUS_BUILD_LOCKED:-}" != "$HERE" ]; then
   exec python3 "$HERE/Tools/build-lock.py" "$@"
 fi
-DEVICE_NAME="${FLECHA_SIM:-Uranus Browser}"
+DEVICE_NAME="${FLECHA_SIM:-UrAnus Browser}"
 xcodegen generate --quiet
 
 if [ "$mode" = device-build ] || [ "$mode" = device ]; then

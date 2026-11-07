@@ -234,7 +234,7 @@ export class WhisperCppEngine implements TranscribeEngine {
       model: paths ? path.basename(paths.model) : 'whisper.cpp',
       where: 'local',
       ready: !!paths,
-      detail: paths ? 'Audio stays on this Mac (an installed whisper.cpp server on 127.0.0.1).' : 'Not available: no whisper-server and ggml model are installed. Uranus Browser doesn’t download one.',
+      detail: paths ? 'Audio stays on this Mac (an installed whisper.cpp server on 127.0.0.1).' : 'Not available: no whisper-server and ggml model are installed. UrAnus Browser doesn’t download one.',
     };
   }
 

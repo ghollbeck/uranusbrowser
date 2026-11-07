@@ -1,10 +1,10 @@
-// End-to-end test of picking several tabs in the sidebar, in a real Uranus Browser (no AI involved):
+// End-to-end test of picking several tabs in the sidebar, in a real UrAnus Browser (no AI involved):
 //   - ⌘-click starts a selection with the tab you're on, ⇧-click picks a run, a plain click lets go;
 //   - the bar at the bottom pins them together and unpins them; dragging them moves them together;
 //   - their right-click menu acts on all of them; dropping them on another Space moves them there;
 //   - ⌫ archives them; Delete asks first, then removes them.
 //
-//   node chromium/tests/e2e-multiselect.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>]
+//   node chromium/tests/e2e-multiselect.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>]
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,7 +17,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir');
 const shots = arg('--shots');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -32,7 +32,7 @@ const fixture = await startFixtureServer(0);
 fs.mkdirSync(profile, { recursive: true });
 const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', '--window-position=60,40'];
 if (shellDir) flags.push(`--anus-shell-dir=${path.resolve(shellDir)}`);
-const browser = spawn(path.join(app, 'Contents/MacOS/Uranus Browser'), flags, { stdio: 'ignore' });
+const browser = spawn(path.join(app, 'Contents/MacOS/UrAnus Browser'), flags, { stdio: 'ignore' });
 reap(browser);
 process.on('exit', () => browser.kill());
 for (const event of ['uncaughtException', 'unhandledRejection']) {

@@ -1,20 +1,20 @@
 --- a/build/apple/tweak_info_plist.py
 +++ b/build/apple/tweak_info_plist.py
 @@ -449,6 +449,18 @@
-         help='Uranus Browser: its build counter; CFBundleVersion becomes '
+         help='UrAnus Browser: its build counter; CFBundleVersion becomes '
          'BUILD.PATCH.<this>.',
      )
 +    parser.add_option(
 +        '--anus-sparkle-feed-url',
 +        dest='anus_sparkle_feed_url',
 +        default=None,
-+        help='Uranus Browser: Sparkle\'s appcast URL (SUFeedURL).',
++        help='UrAnus Browser: Sparkle\'s appcast URL (SUFeedURL).',
 +    )
 +    parser.add_option(
 +        '--anus-sparkle-public-key',
 +        dest='anus_sparkle_public_key',
 +        default=None,
-+        help='Uranus Browser: Sparkle\'s EdDSA public key (SUPublicEDKey).',
++        help='UrAnus Browser: Sparkle\'s EdDSA public key (SUPublicEDKey).',
 +    )
      (options, args) = parser.parse_args(argv)
  
@@ -23,7 +23,7 @@
  
      _SetDirectLaunchUrlScheme(plist, options.bundle_identifier)
  
-+    # Uranus Browser: Sparkle's settings, for apps that carry it (chrome/BUILD.gn's
++    # UrAnus Browser: Sparkle's settings, for apps that carry it (chrome/BUILD.gn's
 +    # anus_sparkle_framework): where the feed is, the key its updates are
 +    # signed with, and checking on its own schedule.
 +    if options.anus_sparkle_feed_url or options.anus_sparkle_public_key:
@@ -52,7 +52,7 @@
    anus_version = ""
    anus_build_number = ""
 +
-+  # Uranus Browser: Sparkle, the auto-updater. A source-absolute path ("//...") to
++  # UrAnus Browser: Sparkle, the auto-updater. A source-absolute path ("//...") to
 +  # Sparkle.framework from its official release (chromium/scripts/
 +  # fetch-sparkle.sh; build-release.sh stages it at //anus/Sparkle.framework),
 +  # copied into the app's Contents/Frameworks, where AppController starts it.
@@ -83,7 +83,7 @@
 +    }
 +  }
 +
-+  # Uranus Browser: Sparkle.framework, as Sparkle ships it, in the app's
++  # UrAnus Browser: Sparkle.framework, as Sparkle ships it, in the app's
 +  # Contents/Frameworks (package-release.sh signs its nested code).
 +  if (anus_sparkle_framework != "") {
 +    bundle_data("anus_sparkle_framework") {

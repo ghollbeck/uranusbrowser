@@ -53,7 +53,7 @@ const text = (value: unknown): AgentResult => ({ content: [{ type: 'text', text:
 
 const submitButton: TargetInfo = {
   url: FIXTURE,
-  title: 'Uranus Browser agent test page',
+  title: 'UrAnus Browser agent test page',
   element: { tag: 'button', role: 'button', name: 'Send feedback', type: 'submit', inForm: true, submits: true },
   fingerprint: `${FIXTURE}|e9|button`,
 };
@@ -70,7 +70,7 @@ test('a submit click shows an approval card, and declining does nothing', async 
   assert.equal(card.kind, 'approval');
   if (card.kind === 'approval') {
     assert.match(card.summary, /Send feedback/);
-    assert.deepEqual(card.tab, { title: 'Uranus Browser agent test page', host: '127.0.0.1:4711' });
+    assert.deepEqual(card.tab, { title: 'UrAnus Browser agent test page', host: '127.0.0.1:4711' });
     assert.ok(card.reasons.some((r) => /submits a form/.test(r)));
   }
   assert.equal(waiting.status, 'waiting');
@@ -263,10 +263,10 @@ test('two quick sends start one run', async () => {
   assert.ok(h.published.at(-1)!.entries.some((e) => e.kind === 'notice' && /still working/.test(e.text)));
 });
 
-test('an action Uranus Browser did not answer in time halts the run instead of being retried', async () => {
+test('an action UrAnus Browser did not answer in time halts the run instead of being retried', async () => {
   const counter: TargetInfo = { ...submitButton, element: { tag: 'button', role: 'button', name: 'Add one', type: 'button' }, fingerprint: 'f' };
   const h = harness([{ output: [call('click', { tabId: null, ref: 'e2' })] }], (name) =>
-    name === 'agent_inspect' ? text(counter) : { content: [{ type: 'text', text: 'Uranus Browser didn’t answer agent_click within 60s' }], isError: true },
+    name === 'agent_inspect' ? text(counter) : { content: [{ type: 'text', text: 'UrAnus Browser didn’t answer agent_click within 60s' }], isError: true },
   );
   await h.chat.handle({ action: 'send', text: 'Click' });
   assert.equal(h.requests.length, 1);

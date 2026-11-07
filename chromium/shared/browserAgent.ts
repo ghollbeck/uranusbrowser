@@ -32,7 +32,7 @@ const ref = { type: 'string', description: 'Element ref from the latest read_pag
 export const BROWSER_TOOLS = [
   {
     name: 'list_tabs',
-    description: "List the user's open Uranus Browser tabs: id, title, URL, Space and whether each is active.",
+    description: "List the user's open UrAnus Browser tabs: id, title, URL, Space and whether each is active.",
     parameters: { type: 'object', properties: {}, required: [], additionalProperties: false },
   },
   {

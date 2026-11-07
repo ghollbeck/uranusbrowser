@@ -1,5 +1,5 @@
 /**
- * Uranus Browser's own dropdown. The browser's <select> menu is drawn by the OS and ignores the design
+ * UrAnus Browser's own dropdown. The browser's <select> menu is drawn by the OS and ignores the design
  * system, so every picker goes through customSelect(): a styled button plus a listbox in the top
  * layer. The real <select> stays in the DOM (hidden) and remains the source of truth, so the
  * code around it keeps working as before: `.value`, `.selectedIndex`, `options`, `disabled`

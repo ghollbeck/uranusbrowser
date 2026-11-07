@@ -1,5 +1,5 @@
 #!/bin/bash
-# Puts Uranus Browser on top of a Chromium checkout: branding files, then our patches.
+# Puts UrAnus Browser on top of a Chromium checkout: branding files, then our patches.
 # Safe to run again: it first resets every file it touches.
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,4 +26,4 @@ for p in "$here"/patches/*.patch; do
   git apply "$p"
 done
 
-echo "Uranus Browser applied to $src"
+echo "UrAnus Browser applied to $src"

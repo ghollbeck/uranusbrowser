@@ -17,7 +17,7 @@
  #include "content/public/browser/web_contents.h"
  #include "extensions/browser/extensions_browser_client.h"
 @@ -26,6 +30,8 @@
- constexpr char kNoWindowError[] = "No Uranus Browser window with id *.";
+ constexpr char kNoWindowError[] = "No UrAnus Browser window with id *.";
  constexpr char kNotAFramePageError[] = "The caller is not a frame page.";
  constexpr char kBadColorError[] = "background must be #rrggbb.";
 +constexpr char kNoTabError[] = "No tab with id *.";
@@ -69,7 +69,7 @@
 --- /dev/null
 +++ b/chrome/browser/anus/anus_shell_events.h
 @@ -0,0 +1,41 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -90,7 +90,7 @@
 +#include "extensions/common/event_args.h"
 +
 +// Sends one of chrome.anusPrivate's events ("anusPrivate.onSomething") to
-+// Uranus Browser's shell, and only to it. Header-only, like anus_shell_commands.h,
++// UrAnus Browser's shell, and only to it. Header-only, like anus_shell_commands.h,
 +// so that any browser code can send one without a new dependency.
 +inline void DispatchAnusShellEvent(Profile* profile,
 +                                     const std::string& event_name,
@@ -117,7 +117,7 @@
          include_trailing_inset ? default_inset : panel_side_inset);
  
 -    views().multi_contents_view->SetSplitViewInsets(contents_insets);
-+    // Uranus Browser: the panes fill the page area; the frame's gap is around it.
++    // UrAnus Browser: the panes fill the page area; the frame's gap is around it.
 +    views().multi_contents_view->SetSplitViewInsets(
 +        views().multi_contents_view->IsAnusFlatSplit() ? gfx::Insets()
 +                                                         : contents_insets);
@@ -131,7 +131,7 @@
                                    : views::LayoutOrientation::kHorizontal);
  
 -  gfx::Size preferred_size(kHandleResizeAxisSize + kHandleResizeAxisPadding,
-+  // Uranus Browser: the gap between the panes is the page area's gap, and the handle.
++  // UrAnus Browser: the gap between the panes is the page area's gap, and the handle.
 +  gfx::Size preferred_size(multi_contents_view_->IsAnusFlatSplit()
 +                               ? MultiContentsView::kAnusSplitGap
 +                               : kHandleResizeAxisSize + kHandleResizeAxisPadding,
@@ -164,7 +164,7 @@
  
    gfx::Rect available_space = gfx::Rect(width, height);
  
-+  // Uranus Browser: the window's own background shows between the panes.
++  // UrAnus Browser: the window's own background shows between the panes.
    const bool show_background =
 -      drop_target_view_->GetVisible() || IsInSplitView();
 +      drop_target_view_->GetVisible() ||
@@ -190,7 +190,7 @@
          is_in_split
              ? kSplitViewContentRoundedCorners
              : (is_active ? GetBackgroundRadii() : gfx::RoundedCornersF()));
-+    // Uranus Browser: each pane looks like a single page (no border, outline or mini
++    // UrAnus Browser: each pane looks like a single page (no border, outline or mini
 +    // toolbar); only its corners say it is a pane.
      contents_container_view->UpdateBorderAndOverlay(
 -        is_in_split, is_active, is_active && active_contents_view_highlighted_);
@@ -205,7 +205,7 @@
    // Returns true if more than one WebContents is displayed.
    bool IsInSplitView() const;
  
-+  // Uranus Browser: in Uranus Browser windows (top chrome hidden, see anus_top_chrome.h) a
++  // UrAnus Browser: in UrAnus Browser windows (top chrome hidden, see anus_top_chrome.h) a
 +  // split has none of Chromium's own chrome: the panes sit straight in the
 +  // page area, kAnusSplitGap apart (the resize area), each with its own
 +  // round corners; no inset, padding, outline, background or mini toolbar.
@@ -239,7 +239,7 @@
      const split_tabs::SplitTabId split_id =
          tab_strip_model_->GetActiveTab()->GetSplit().value();
  
-+    // Uranus Browser: the shell keeps the ratio in its Store (splitRatio).
++    // UrAnus Browser: the shell keeps the ratio in its Store (splitRatio).
 +    if (AnusHidesTopChrome(&*browser_)) {
 +      const std::vector<tabs::TabInterface*> tabs =
 +          tab_strip_model_->GetSplitData(split_id)->ListTabs();

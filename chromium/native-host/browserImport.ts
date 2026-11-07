@@ -14,14 +14,14 @@ import type { BrowserImportData } from '../shared/importApply';
  * only ever read: databases are copied to a temporary folder first, since the browser may
  * have them open and locked. Passwords and cookies are left where they are.
  *
- * Reading (`readBrowser`) is kept apart from adding to Uranus Browser (`applyBrowserImport`), so the
+ * Reading (`readBrowser`) is kept apart from adding to UrAnus Browser (`applyBrowserImport`), so the
  * Chromium build's native messaging host can read and its shell extension can add. Nothing
  * here needs Electron.
  */
 
 const run = promisify(execFile);
 
-/** Pages taken from each profile's history, newest first. Uranus Browser keeps 5,000 in all. */
+/** Pages taken from each profile's history, newest first. UrAnus Browser keeps 5,000 in all. */
 const HISTORY_ROWS = 5000;
 /** Bookmarks past this many are left behind: no sidebar can usefully hold more. */
 const MAX_BOOKMARKS = 2000;
@@ -164,7 +164,7 @@ function diaSource(): BrowserSource {
  */
 async function decryptChromium(file: string, keychainService: string, denied: string): Promise<string> {
   const data = await fs.promises.readFile(file);
-  if (data.subarray(0, 3).toString() !== 'v10') throw new Error(`${path.basename(file)} is encrypted in a way Uranus Browser doesn’t know.`);
+  if (data.subarray(0, 3).toString() !== 'v10') throw new Error(`${path.basename(file)} is encrypted in a way UrAnus Browser doesn’t know.`);
   let password: string;
   try {
     password = (await run('/usr/bin/security', ['find-generic-password', '-w', '-s', keychainService])).stdout.trim();
@@ -178,8 +178,8 @@ async function decryptChromium(file: string, keychainService: string, denied: st
 
 // ---- Chromium browsers not listed by name ------------------------------------
 
-/** Folders with a `Local State` that are Uranus Browser's own: its Chromium build's profile, and the Electron spike's. */
-const ANUS_FOLDERS = new Set(['Uranus Browser', 'Uranus Browser Import Tests']);
+/** Folders with a `Local State` that are UrAnus Browser's own: its Chromium build's profile, and the Electron spike's. */
+const ANUS_FOLDERS = new Set(['UrAnus Browser', 'UrAnus Browser Import Tests']);
 const PROFILE_DIR = /^(Default|Profile \d+)$/;
 
 /**
@@ -348,7 +348,7 @@ function firefoxBookmarks(rows: FirefoxBookmark[]): ImportNode[] {
 // ---- Safari ----------------------------------------------------------------
 
 const FULL_DISK_ACCESS =
-  'macOS only lets apps read Safari’s data with Full Disk Access. Turn it on for Uranus Browser in System Settings › Privacy & Security › Full Disk Access, then import again.';
+  'macOS only lets apps read Safari’s data with Full Disk Access. Turn it on for UrAnus Browser in System Settings › Privacy & Security › Full Disk Access, then import again.';
 
 function safariSource(): BrowserSource {
   const root = path.join(os.homedir(), 'Library', 'Safari');
@@ -576,7 +576,7 @@ export async function readBrowser(id: string): Promise<BrowserImportData> {
 }
 
 /**
- * Reads a bookmarks file exported from any browser as HTML, for browsers Uranus Browser can't read
+ * Reads a bookmarks file exported from any browser as HTML, for browsers UrAnus Browser can't read
  * directly. The shell picks the file and sends its text. History has no such format.
  */
 export function readBookmarksHtml(html: string, fileName = 'the file'): BrowserImportData {

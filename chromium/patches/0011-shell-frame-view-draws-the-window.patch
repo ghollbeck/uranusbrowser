@@ -1,7 +1,7 @@
 --- /dev/null
 +++ b/chrome/browser/ui/views/frame/anus_frame_view.h
 @@ -0,0 +1,109 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -22,7 +22,7 @@
 +
 +class BrowserView;
 +
-+// Uranus Browser's window frame (see anus_frame_host.h): the shell's frame page,
++// UrAnus Browser's window frame (see anus_frame_host.h): the shell's frame page,
 +// chrome-extension://<shell>/window.html?window=<id>, in a transparent view
 +// stacked above the page area of a normal browser window, plus the window
 +// background behind the page area. chrome.anusPrivate.setFrame() says where
@@ -113,7 +113,7 @@
 --- /dev/null
 +++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
 @@ -0,0 +1,245 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -364,7 +364,7 @@
    ]
  }
  
-+# Uranus Browser: the shell's frame page, which draws the window.
++# UrAnus Browser: the shell's frame page, which draws the window.
 +source_set("anus_frame_view") {
 +  sources = [
 +    "anus_frame_view.cc",
@@ -413,7 +413,7 @@
    layout_views.top_container_separator = top_container_separator_;
    // LINT.ThenChange(//chrome/browser/ui/views/frame/layout/browser_view_layout.h:BrowserViewLayoutViews)
  
-+  // Uranus Browser: the shell's frame page draws the window (anus_frame_view.h).
++  // UrAnus Browser: the shell's frame page draws the window (anus_frame_view.h).
 +  if (AnusFrameView* anus_frame = AnusFrameView::MaybeCreate(this)) {
 +    layout_views.anus_frame = anus_frame;
 +    layout_views.anus_frame_background = anus_frame->background_view();
@@ -429,7 +429,7 @@
    // These views are dynamically set.
    raw_ptr<BookmarkBarView> bookmark_bar = nullptr;
 +
-+  // Uranus Browser: the window frame and the window background behind the page area
++  // UrAnus Browser: the window frame and the window background behind the page area
 +  // (anus_frame_view.h), or null. While the frame is visible it lays out
 +  // the window: it is as wide as its preferred width, and the page area sits
 +  // in the background's insets.
@@ -446,7 +446,7 @@
                      is_scrim_visible);
 +  }
 +
-+  // Uranus Browser: the shell's frame page draws the window, like the Electron spike
++  // UrAnus Browser: the shell's frame page draws the window, like the Electron spike
 +  // (see anus_frame_view.h). The background fills the window, the page area
 +  // sits in its insets, and the frame view covers the window's left part (or
 +  // all of it, for an overlay), above the page.

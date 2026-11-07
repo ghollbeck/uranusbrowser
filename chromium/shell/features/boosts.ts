@@ -3,7 +3,7 @@
  * named the same way (`github.com.ts`, `github.com.css`, `all.css`; see lib/boostFiles.ts).
  *
  * An extension can't read ~/.anus/boosts, so boosts live in chrome.storage.local and are
- * edited on Uranus Browser's Boosts page (boosts.html) rather than in your editor.
+ * edited on UrAnus Browser's Boosts page (boosts.html) rather than in your editor.
  *
  * Applying them, like Electron:
  *  - styles go in as user styles when a page commits (chrome.scripting.insertCSS), and are
@@ -38,7 +38,7 @@ export interface CompiledBoost {
 
 const TEMPLATES: Record<BoostKind, (host: string) => string> = {
   script: (host) => `// Boost for ${host}: runs on every page of this site once it has loaded.
-// It's TypeScript; Uranus Browser strips the types when you save (⌘S), and open ${host} tabs reload.
+// It's TypeScript; UrAnus Browser strips the types when you save (⌘S), and open ${host} tabs reload.
 
 export {};
 
@@ -92,7 +92,7 @@ async function registerUserScripts(): Promise<boolean> {
     if (scripts.length) await api.register(scripts);
     return true;
   } catch (err) {
-    console.warn('Uranus Browser boosts: user scripts unavailable, evaluating on load instead', err);
+    console.warn('UrAnus Browser boosts: user scripts unavailable, evaluating on load instead', err);
     return false;
   }
 }
@@ -136,7 +136,7 @@ async function runScript(tabId: number, documentId: string | undefined, name: st
           return 'ran';
         } catch (err) {
           if (err instanceof EvalError) return 'csp';
-          console.error(`[Uranus Browser boost ${file}]`, err);
+          console.error(`[UrAnus Browser boost ${file}]`, err);
           return 'failed';
         }
       },
@@ -144,7 +144,7 @@ async function runScript(tabId: number, documentId: string | undefined, name: st
   } catch (err) {
     // A page that only just loaded can still be settling in; try once more.
     if (attempt === 0) return void setTimeout(() => void runScript(tabId, documentId, name, code, 1), 150);
-    return console.warn(`Uranus Browser boosts: couldn't run ${name}`, err);
+    return console.warn(`UrAnus Browser boosts: couldn't run ${name}`, err);
   }
   if (outcome !== 'csp') return;
   if (!(await hold(tabId, 'boosts'))) return reportError(tabId, name, 'this page doesn’t allow boost scripts');
@@ -162,7 +162,7 @@ async function runScript(tabId: number, documentId: string | undefined, name: st
 /** Boost errors go to the page's own console, where the developer is already looking. */
 function reportError(tabId: number, name: string, message: string) {
   void chrome.scripting
-    .executeScript({ target: { tabId }, world: 'MAIN', args: [`[Uranus Browser boost ${name}] ${message}`], func: (m: string) => console.error(m) })
+    .executeScript({ target: { tabId }, world: 'MAIN', args: [`[UrAnus Browser boost ${name}] ${message}`], func: (m: string) => console.error(m) })
     .catch(() => undefined);
 }
 

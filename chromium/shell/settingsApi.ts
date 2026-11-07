@@ -24,7 +24,7 @@ const findListeners: Array<() => void> = [];
 
 // Capture on window, so neither the page's own handlers nor its defaults see a key being recorded.
 // TODO(chromium): keys Chromium keeps for itself (⌘T, ⌘W, ⌘N, ⌘Q…) never reach a page; recording
-// those needs a browser-side hook (a patch, or chrome.commands once Uranus Browser's shortcuts move there).
+// those needs a browser-side hook (a patch, or chrome.commands once UrAnus Browser's shortcuts move there).
 window.addEventListener(
   'keydown',
   (e) => {
@@ -45,14 +45,14 @@ window.addEventListener(
 );
 window.addEventListener('blur', () => setRecording(false));
 
-/** Recording also pauses Uranus Browser's browser-wide shortcuts, so those keys reach this page. */
+/** Recording also pauses UrAnus Browser's browser-wide shortcuts, so those keys reach this page. */
 function setRecording(on: boolean) {
   if (recording === on) return;
   recording = on;
   cmd('settings:recording')(on);
 }
 
-// The background (Uranus Browser's ⌘F, say) can ask for the search field too.
+// The background (UrAnus Browser's ⌘F, say) can ask for the search field too.
 on('settings:find', () => {
   for (const fn of findListeners) fn();
 });

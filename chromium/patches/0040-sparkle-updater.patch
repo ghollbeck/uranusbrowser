@@ -5,10 +5,10 @@
    AppController* const app_controller_;  // Weak; owns us.
  };
 +
-+// Uranus Browser: Sparkle 2 (https://sparkle-project.org) updates the app. Release
++// UrAnus Browser: Sparkle 2 (https://sparkle-project.org) updates the app. Release
 +// builds carry Sparkle.framework in Contents/Frameworks (the
 +// anus_sparkle_framework GN arg), and the feed and key in the Info.plist
-+// (SUFeedURL, SUPublicEDKey). It is loaded when the app starts, so Uranus Browser
++// (SUFeedURL, SUPublicEDKey). It is loaded when the app starts, so UrAnus Browser
 +// doesn't link it: dev builds, which don't carry it, simply never update.
 +// This is the part of SPUStandardUpdaterController's API used here.
 +@protocol AnusSparkleUpdaterController
@@ -19,7 +19,7 @@
 +@end
  
  @implementation AppController {
-+  // Uranus Browser: Sparkle's updater controller, if the app carries Sparkle.
++  // UrAnus Browser: Sparkle's updater controller, if the app carries Sparkle.
 +  NSObject* _anusUpdater;
 +
    // Manages the state of the command menu items.
@@ -29,9 +29,9 @@
  // Placed here for 2 reasons:
  // 1) Same spot as other Pref stuff
  // 2) Try and be friendly by keeping this after app launch
-+// Uranus Browser: starts Sparkle's standard updater (it checks the feed on its own
++// UrAnus Browser: starts Sparkle's standard updater (it checks the feed on its own
 +// schedule, SUEnableAutomaticChecks) and adds "Check for Updates…" under
-+// "About Uranus Browser" in the app menu. Without Sparkle.framework in the app, does
++// "About UrAnus Browser" in the app menu. Without Sparkle.framework in the app, does
 +// nothing.
 +- (void)startAnusUpdater {
 +  if (_anusUpdater) {
@@ -45,7 +45,7 @@
 +  }
 +  NSError* error = nil;
 +  if (![sparkle loadAndReturnError:&error]) {
-+    LOG(ERROR) << "Uranus Browser: can't load Sparkle: "
++    LOG(ERROR) << "UrAnus Browser: can't load Sparkle: "
 +               << base::SysNSStringToUTF8(error.localizedDescription);
 +    return;
 +  }
@@ -53,7 +53,7 @@
 +  if (![controllerClass instancesRespondToSelector:@selector
 +                        (initWithStartingUpdater:
 +                                 updaterDelegate:userDriverDelegate:)]) {
-+    LOG(ERROR) << "Uranus Browser: Sparkle has no SPUStandardUpdaterController";
++    LOG(ERROR) << "UrAnus Browser: Sparkle has no SPUStandardUpdaterController";
 +    return;
 +  }
 +  NSObject<AnusSparkleUpdaterController>* updater =

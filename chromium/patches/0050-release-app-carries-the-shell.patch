@@ -5,7 +5,7 @@
    # entitlements will be skipped.
    include_branded_entitlements = true
 +
-+  # Uranus Browser: a source-absolute path ("//...") to the built shell extension
++  # UrAnus Browser: a source-absolute path ("//...") to the built shell extension
 +  # (chromium/shell/dist), copied into the framework's Resources as
 +  # anus-shell, where ComponentLoader looks without --anus-shell-dir.
 +  # chromium/scripts/build-release.sh stages the shell at //anus/shell and
@@ -18,7 +18,7 @@
      }
    }
  
-+  # Uranus Browser's shell extension (chromium/shell/dist, staged by
++  # UrAnus Browser's shell extension (chromium/shell/dist, staged by
 +  # build-release.sh), as Resources/anus-shell: chrome::DIR_RESOURCES is the
 +  # framework's Resources on Mac (chrome_paths.cc).
 +  if (anus_shell_dir != "") {

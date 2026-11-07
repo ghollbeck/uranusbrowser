@@ -15,10 +15,10 @@
   const address = browser.querySelector('.hero-address');
   address.innerHTML = '<b>⌑</b> uranus.guide <span>⋮</span>';
   const sidebar = browser.querySelector('.hero-browser-sidebar');
-  sidebar.innerHTML = '<div class="hero-favs"><b>◉</b><b>◧</b><b>▶</b><b>F</b></div><div class="hero-sidebar-group">◇ &nbsp; Explore</div><div class="hero-sidebar-tab">Trip ideas</div><div class="hero-sidebar-tab active">◉ &nbsp; Uranus</div><div class="hero-sidebar-tab">Google Flights</div><div class="hero-sidebar-section">Today</div><div class="hero-sidebar-tab">+ New Tab</div><div class="hero-sidebar-spaces">◈ &nbsp; ⌂ &nbsp; +</div>';
+  sidebar.innerHTML = '<div class="hero-favs"><b>◉</b><b>◧</b><b>▶</b><b>F</b></div><div class="hero-sidebar-group">◇ &nbsp; Explore</div><div class="hero-sidebar-tab">Trip ideas</div><div class="hero-sidebar-tab active">◉ &nbsp; UrAnus</div><div class="hero-sidebar-tab">Google Flights</div><div class="hero-sidebar-section">Today</div><div class="hero-sidebar-tab">+ New Tab</div><div class="hero-sidebar-spaces">◈ &nbsp; ⌂ &nbsp; +</div>';
   const page = browser.querySelector('.hero-page');
   page.className = 'hero-page uranus-guide';
-  page.innerHTML = '<div class="uranus-guide-nav"><strong>URANUS<span> / FIELD GUIDE</span></strong><div><span>The planet</span><span>The journey</span><span>The view ↗</span></div></div><div class="uranus-guide-intro"><p>THE SEVENTH PLANET</p><h2>A little further<br>out there.</h2><p class="uranus-guide-deck">Follow your curiosity.<br>There’s a whole world beyond the feed.</p><span class="uranus-guide-link">Explore Uranus <b>↗</b></span></div><div class="uranus-orbit" aria-hidden="true"><div class="uranus-planet-ring"></div><div class="uranus-planet"></div><span class="uranus-orbit-dot"></span></div><div class="uranus-guide-facts"><span><small>DISTANCE FROM THE SUN</small><b>2.9 billion km</b></span><span><small>ONE TRIP AROUND THE SUN</small><b>84 Earth years</b></span><span><small>YOUR NEXT DESTINATION</small><b>A little perspective.</b></span></div>';
+  page.innerHTML = '<div class="uranus-guide-nav"><strong>URANUS<span> / FIELD GUIDE</span></strong><div><span>The planet</span><span>The journey</span><span>The view ↗</span></div></div><div class="uranus-guide-intro"><p>THE SEVENTH PLANET</p><h2>A little further<br>out there.</h2><p class="uranus-guide-deck">Follow your curiosity.<br>There’s a whole world beyond the feed.</p><span class="uranus-guide-link">Explore UrAnus <b>↗</b></span></div><div class="uranus-orbit" aria-hidden="true"><div class="uranus-planet-ring"></div><div class="uranus-planet"></div><span class="uranus-orbit-dot"></span></div><div class="uranus-guide-facts"><span><small>DISTANCE FROM THE SUN</small><b>2.9 billion km</b></span><span><small>ONE TRIP AROUND THE SUN</small><b>84 Earth years</b></span><span><small>YOUR NEXT DESTINATION</small><b>A little perspective.</b></span></div>';
   // Keep the same layout underneath the existing expanding-circle reveal.
   const darkLayer = document.createElement('div');
   darkLayer.className = 'uranus-dark-layer uranus-is-dark shot-iris';
@@ -48,7 +48,7 @@
     scene.classList.toggle('is-on', active);
     darkLayer.classList.toggle('is-on', dark);
     scene.setAttribute('aria-hidden', String(!active));
-    scene.setAttribute('aria-label', dark ? 'The same Uranus guide and browser sidebar in dark mode.' : 'Uranus Browser opens a guide to Uranus, hides its sidebar with Command S, then shows it again with the same shortcut.');
+    scene.setAttribute('aria-label', dark ? 'The same UrAnus guide and browser sidebar in dark mode.' : 'UrAnus Browser opens a guide to UrAnus, hides its sidebar with Command S, then shows it again with the same shortcut.');
     render();
   };
   const tabObserver = new MutationObserver(sync);

@@ -12,7 +12,7 @@
  }
  
  bool ShouldSaveWindowPlacement(const BrowserWindowInterface* browser) {
-+  // Uranus Browser: a AnusMini's small size and place are its own; new Uranus Browser
++  // UrAnus Browser: a AnusMini's small size and place are its own; new UrAnus Browser
 +  // windows shouldn't take them.
 +  if (AnusFrameHost* host =
 +          AnusFrameHost::ForWindow(browser->GetSessionID().id());

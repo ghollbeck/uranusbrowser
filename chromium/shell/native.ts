@@ -1,5 +1,5 @@
 /**
- * The shell's side of Uranus Browser's native patches (0016+): what chrome.anusPrivate does beyond
+ * The shell's side of UrAnus Browser's native patches (0016+): what chrome.anusPrivate does beyond
  * the window frame. background.ts calls registerNative(ctx) once, after the Store is loaded.
  *
  * Every call checks that the API is there, so the shell still runs on a Chromium without the
@@ -15,22 +15,22 @@ import { incognito } from './incognito';
 export interface NativeContext {
   store: Store;
   /**
-   * Runs one of Uranus Browser's commands, by id: every id in lib/shortcuts.ts (newTab,
+   * Runs one of UrAnus Browser's commands, by id: every id in lib/shortcuts.ts (newTab,
    * toggleSidebar, …), plus `selectTab:1`…`selectTab:9` (⌘1…⌘9; 9 is the last tab) and
    * `selectSpace:1`…`selectSpace:9` (⌃1…⌃9). `windowId` is the window the key was pressed in.
    */
   run(command: string, windowId?: number): void;
-  /** The Chromium tab of an open Uranus Browser tab (background.ts's `live` map). */
+  /** The Chromium tab of an open UrAnus Browser tab (background.ts's `live` map). */
   chromeTabId?(anusId: string): number | undefined;
-  /** The Uranus Browser tab of a Chromium tab. */
+  /** The UrAnus Browser tab of a Chromium tab. */
   anusTabId?(chromeId: number): string | undefined;
   /**
-   * Forgets a Uranus Browser tab's Chromium tab without closing it (it moved into a AnusMini), then
-   * closes the Uranus Browser tab. background.ts: `live.delete(id); rememberLive(); store.closeTab(id)`.
+   * Forgets a UrAnus Browser tab's Chromium tab without closing it (it moved into a AnusMini), then
+   * closes the UrAnus Browser tab. background.ts: `live.delete(id); rememberLive(); store.closeTab(id)`.
    */
   releaseTab?(anusId: string): void;
   /**
-   * A Chromium tab that moved into the main window ("Open in Uranus Browser" from a AnusMini)
+   * A Chromium tab that moved into the main window ("Open in UrAnus Browser" from a AnusMini)
    * becomes an active Today tab in the active Space, like onCreated does for new tabs.
    */
   adoptTab?(chromeId: number): void;
@@ -151,10 +151,10 @@ function registerPeek(ctx: NativeContext) {
  * AnusMini, the small window for one page, as in the Electron version. Its frame page is
  * window.html?window=<id>&kind=anusmini. Hub commands:
  *  - newAnusMini(): an empty one (the new tab page), ⌥⌘N.
- *  - openAnusMini(url?, tabId?): with a Uranus Browser tab id, that tab's page moves into it and the
- *    Uranus Browser tab closes; otherwise it opens `url`.
+ *  - openAnusMini(url?, tabId?): with a UrAnus Browser tab id, that tab's page moves into it and the
+ *    UrAnus Browser tab closes; otherwise it opens `url`.
  *  - anusmini:openInAnus(windowId): its page moves back as an active Today tab.
- * Windows that are AnusMinis aren't Uranus Browser's: isAnusMini(windowId) tells them apart.
+ * Windows that are AnusMinis aren't UrAnus Browser's: isAnusMini(windowId) tells them apart.
  */
 const anusminis = new Set<number>();
 /** Whether a window is a AnusMini, from what this module has seen (synchronous, may lag). */
@@ -171,7 +171,7 @@ export async function isAnusMiniWindow(windowId: number | undefined) {
 
 function registerAnusMini(ctx: NativeContext) {
   if (!has('openAnusMini')) return;
-  // Links from other apps (Uranus Browser as the default browser) go to a AnusMini unless turned off.
+  // Links from other apps (UrAnus Browser as the default browser) go to a AnusMini unless turned off.
   let linksSent: boolean | undefined;
   const applyLinks = () => {
     const enabled = ctx.store.state.openLinksInAnusMini !== false;
@@ -258,7 +258,7 @@ function registerTheme(ctx: NativeContext) {
     // Pages the server themes are asked for in this scheme from now on (serverThemedTabs.ts).
     const hinted = useScheme(theme);
     if (first) return void chrome.anusPrivate.setTheme(theme);
-    // Pages recolour in the frame the scheme flips, so they arm their fade first: Uranus Browser's own
+    // Pages recolour in the frame the scheme flips, so they arm their fade first: UrAnus Browser's own
     // (lib/themeFade.ts) and the web pages on screen (pageThemeFade.ts; for 'system' the
     // background can't tell which way macOS is, so those switch at once).
     broadcast('theme-fade');
@@ -285,7 +285,7 @@ export function shortcutMap(state: Store['state']): Record<string, string> {
     map[`CmdOrCtrl+${i}`] = `selectTab:${i}`;
     map[`Ctrl+${i}`] = `selectSpace:${i}`;
   }
-  // ⌘O in a AnusMini: Open in Uranus Browser, as in the Electron spike (the toolbar's button says so).
+  // ⌘O in a AnusMini: Open in UrAnus Browser, as in the Electron spike (the toolbar's button says so).
   map['CmdOrCtrl+O'] = 'openInAnus';
   for (const { id } of SHORTCUTS) {
     const keys = keysFor(state, id);
@@ -297,7 +297,7 @@ export function shortcutMap(state: Store['state']): Record<string, string> {
 function registerShortcuts(ctx: NativeContext) {
   if (!has('setShortcuts')) return;
   let sent = '';
-  // While Settings records a shortcut the keys go to its page, not to Uranus Browser's commands.
+  // While Settings records a shortcut the keys go to its page, not to UrAnus Browser's commands.
   let recording = false;
   const apply = () => {
     // The browser keeps one map for every window; the regular shell sets it.
@@ -307,7 +307,7 @@ function registerShortcuts(ctx: NativeContext) {
     if (json === sent) return;
     sent = json;
     void chrome.anusPrivate.setShortcuts(map).then((rejected) => {
-      if (rejected.length) console.warn('Uranus Browser shell: the browser could not read these shortcuts', rejected);
+      if (rejected.length) console.warn('UrAnus Browser shell: the browser could not read these shortcuts', rejected);
     });
   };
   apply();

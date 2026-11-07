@@ -4,7 +4,7 @@
        bindings_->CallClientMethod("DevToolsAPI", "enterInspectElementMode");
        break;
  
-+    // Uranus Browser: an open DevTools window switches to the Console too (the panel
++    // UrAnus Browser: an open DevTools window switches to the Console too (the panel
 +    // is otherwise only picked when the window opens).
 +    case DevToolsToggleAction::kShowConsolePanel:
 +      bindings_->CallClientMethod("DevToolsAPI", "showPanel",

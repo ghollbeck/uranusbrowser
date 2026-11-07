@@ -1,13 +1,13 @@
-// End-to-end test of the meeting reminder for a meeting already going on, in a real Uranus Browser
+// End-to-end test of the meeting reminder for a meeting already going on, in a real UrAnus Browser
 // with a throwaway profile (no network: the calendar's last reading is seeded in the profile):
 //   - after a restart the meeting, started 20 minutes ago, is prompted at once (one notification);
 //   - the sidebar's reminder card shows it (title as text, platform, Join, Join & record, Dismiss);
 //   - the native host puts up the floating panel (an osascript process) on the pointer's display;
-//   - Dismiss on the card closes the card and the panel (until Uranus Browser is reopened);
+//   - Dismiss on the card closes the card and the panel (until UrAnus Browser is reopened);
 //   - Join on the card (a second meeting) opens the meeting link in a new tab and closes both;
 //   - reopened, the card and panel come back for a meeting still going on; the notification doesn't.
 //
-//   node chromium/tests/e2e-reminder.mjs [--app /Applications/Uranus Browser.app] [--shots <dir>]
+//   node chromium/tests/e2e-reminder.mjs [--app /Applications/UrAnus Browser.app] [--shots <dir>]
 // With --shots, the panel's own picture is saved too (ANUS_REMINDER_SNAPSHOT).
 import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -20,7 +20,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shots = arg('--shots') && path.resolve(arg('--shots'));
 if (shots) fs.mkdirSync(shots, { recursive: true });
 const profile = path.join(here, '.scratch', `reminder-profile-${Date.now()}`);
@@ -35,7 +35,7 @@ async function launch() {
   fs.rmSync(path.join(profile, 'DevToolsActivePort'), { force: true });
   const env = { ...process.env, ...(shots ? { ANUS_REMINDER_SNAPSHOT: path.join(shots, 'panel.png') } : {}) };
   const browser = spawn(
-    path.join(app, 'Contents/MacOS/Uranus Browser'),
+    path.join(app, 'Contents/MacOS/UrAnus Browser'),
     [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1280,820', '--window-position=60,40'],
     { stdio: 'ignore', env },
   );

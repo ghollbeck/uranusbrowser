@@ -17,9 +17,9 @@
 -      GoogleApiKeysInfoBarDelegate::Create(infobar_manager);
 -    }
 -  }
-+  // Uranus Browser: builds carry no Google API keys on purpose, and the features that
++  // UrAnus Browser: builds carry no Google API keys on purpose, and the features that
 +  // need them (Chromium sync and sign-in, some Google web services) are not
-+  // Uranus Browser's, so there is no "Google API keys are missing" infobar
++  // UrAnus Browser's, so there is no "Google API keys are missing" infobar
 +  // (GoogleApiKeysInfoBarDelegate) here.
  
    if (ObsoleteSystem::IsObsoleteNowOrSoon()) {

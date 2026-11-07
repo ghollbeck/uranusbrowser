@@ -1,14 +1,14 @@
 /**
  * Routines, from the background: saved per profile (lib/routinesState.ts), scheduled with
  * chrome.alarms, and run through the Agent panel's own conversation (shell/agentPanel.ts), so
- * a routine meets the same approval cards as anything else. They run only while Uranus Browser is open.
+ * a routine meets the same approval cards as anything else. They run only while UrAnus Browser is open.
  *
  * What the scheduler promises:
- *  - A routine that comes due while Uranus Browser is open and the agent is free starts at once: the
+ *  - A routine that comes due while UrAnus Browser is open and the agent is free starts at once: the
  *    panel opens (approvals appear there), a new conversation begins as the routine's
  *    companion, and its instructions are sent as the user's message.
  *  - If the agent is busy it waits its turn; it never interleaves with another conversation.
- *  - What came due while Uranus Browser was closed (or the computer slept, or the wait was long) is
+ *  - What came due while UrAnus Browser was closed (or the computer slept, or the wait was long) is
  *    "overdue": it waits for the user's Run now or Skip. Nothing runs late on its own.
  *  - Nothing is approved on its own. A card nobody answers for 10 minutes stops the run
  *    (declined, nothing done) and the run is recorded as "needed you".
@@ -112,7 +112,7 @@ export function registerRoutines(ctx: RoutinesContext) {
   // ---- loading, saving, alarms ------------------------------------------------------------
 
   async function wasRestarted() {
-    // Session storage lives as long as the browser does: if it's empty, Uranus Browser was started
+    // Session storage lives as long as the browser does: if it's empty, UrAnus Browser was started
     // since the last time we ran, and what came due meanwhile is overdue.
     try {
       const session = chrome.storage.session;
@@ -145,7 +145,7 @@ export function registerRoutines(ctx: RoutinesContext) {
   function commit(next: store.RoutinesState) {
     state = next;
     emit('routines', view());
-    saving = saving.then(() => store.saveState(chrome.storage.local, state)).catch((err) => console.warn('Uranus Browser routines: could not save', err));
+    saving = saving.then(() => store.saveState(chrome.storage.local, state)).catch((err) => console.warn('UrAnus Browser routines: could not save', err));
     void syncAlarms();
     return saving;
   }

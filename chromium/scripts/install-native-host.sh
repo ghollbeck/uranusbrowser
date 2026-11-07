@@ -1,12 +1,12 @@
 #!/bin/bash
-# Builds Uranus Browser's native messaging host (chromium/native-host) and registers it with Chromium
+# Builds UrAnus Browser's native messaging host (chromium/native-host) and registers it with Chromium
 # for the shell extension, so it can import from other browsers and run the agent bridge.
 #
-#   chromium/scripts/install-native-host.sh                 # Uranus Browser's own profile folder
+#   chromium/scripts/install-native-host.sh                 # UrAnus Browser's own profile folder
 #   chromium/scripts/install-native-host.sh <user-data-dir> # a --user-data-dir profile too
 #   ANUS_PROFILE=<dir> chromium/scripts/install-native-host.sh  # same, as run.sh takes it
 #   chromium/scripts/install-native-host.sh --only <dir>    # that profile alone
-#   chromium/scripts/install-native-host.sh --app "/Applications/Uranus Browser.app"  # a release app's
+#   chromium/scripts/install-native-host.sh --app "/Applications/UrAnus Browser.app"  # a release app's
 #
 # Chromium looks for user-level hosts in <user data dir>/NativeMessagingHosts
 # (chrome::DIR_USER_NATIVE_MESSAGING in chrome/common/chrome_paths.cc), and the user data dir
@@ -20,8 +20,8 @@
 # like. Run this again after changing the host.
 #
 # A release app (package-release.sh) carries its own host, Node included, at
-# Uranus Browser.app/Contents/Resources/native-host/anus-host, and registers it in its own profile
-# folder on every launch (patch 0054), so it needs none of this. --app <Uranus Browser.app> builds
+# UrAnus Browser.app/Contents/Resources/native-host/anus-host, and registers it in its own profile
+# folder on every launch (patch 0054), so it needs none of this. --app <UrAnus Browser.app> builds
 # and copies nothing and points the manifests at that one, for other profile folders or an
 # app built before patch 0054. Manifest paths must be absolute on macOS (launch_context.cc),
 # so run it again if the app moves.
@@ -36,11 +36,11 @@ default=1
 app=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    # --only: just the folders given, not Uranus Browser's own profile folder.
+    # --only: just the folders given, not UrAnus Browser's own profile folder.
     --only) default=0 ;;
     --app)
       if [ $# -lt 2 ]; then
-        echo "error: --app needs a Uranus Browser.app" >&2
+        echo "error: --app needs a UrAnus Browser.app" >&2
         exit 1
       fi
       app="$(cd "$2" && pwd)"
@@ -94,7 +94,7 @@ for dir in "${targets[@]}"; do
   cat >"$hosts/$name.json" <<EOF
 {
   "name": "$name",
-  "description": "Uranus Browser: imports from other browsers and the agent bridge",
+  "description": "UrAnus Browser: imports from other browsers and the agent bridge",
   "path": "$launcher",
   "type": "stdio",
   "allowed_origins": ["$origin"]

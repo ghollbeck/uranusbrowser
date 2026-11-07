@@ -332,14 +332,14 @@ test('a join that took minutes before failing was waiting in the lobby: nobody l
   assert.doesNotMatch((err as Error).message, /403/);
 });
 
-test('Uranus Browser giving up on a join nobody admitted says so, and the connection is closed', async () => {
+test('UrAnus Browser giving up on a join nobody admitted says so, and the connection is closed', async () => {
   const fake = await FakeJoinly.start();
   const client = new JoinlyClient({ timeouts: { ...FAST, join: 250 } });
   open.push(fake, { stop: () => client.shutdown() });
   await client.configure({ enabled: true, endpoint: fake.endpoint });
   fake.holdJoin = true;
   const err = await client.join({ meetingUrl: MEET, botName: 'Bot Bot' }, yes).catch((e: Error) => e);
-  assert.match((err as Error).message, /Nobody let the bot in: Uranus Browser waited/);
+  assert.match((err as Error).message, /Nobody let the bot in: UrAnus Browser waited/);
   await until(() => fake.closed === 1, 'the connection to be closed');
   fake.admit();
 });
@@ -373,7 +373,7 @@ test('joining right after leaving waits for joinly to finish closing the old bot
 
 test('a bot browser taken by someone else is not retried forever', async () => {
   const { fake, client } = await setup();
-  // Taken by a session that Uranus Browser never opened (a `playground.sh live` run, say).
+  // Taken by a session that UrAnus Browser never opened (a `playground.sh live` run, say).
   fake.lingerMs = 60_000;
   const other = new JoinlyClient({ timeouts: FAST });
   open.push({ stop: () => other.shutdown() });
@@ -381,7 +381,7 @@ test('a bot browser taken by someone else is not retried forever', async () => {
   await other.join({ meetingUrl: MEET, botName: 'Other Bot' }, yes);
   await other.leave();
   const started = Date.now();
-  // Uranus Browser's own client released it just now, so it waits a few times, then gives up: three tries, not more.
+  // UrAnus Browser's own client released it just now, so it waits a few times, then gives up: three tries, not more.
   const err = await client.join({ meetingUrl: MEET, botName: 'Bot Bot' }, yes).catch((e: Error) => e);
   assert.match((err as Error).message, /busy/);
   assert.equal(fake.tools('join_meeting').length, 1, 'never got as far as joining');
@@ -478,16 +478,16 @@ test('the participant list is read off Meet’s People panel, so it is read now 
   assert.deepEqual(client.view().participants, ['Anna Keller']);
 });
 
-test('joinly’s browser signed in to Google: the meeting shows that name, and Uranus Browser says so', async () => {
+test('joinly’s browser signed in to Google: the meeting shows that name, and UrAnus Browser says so', async () => {
   const { fake, client } = await setup();
   fake.participants = [
     { name: 'Anna Keller', email: null, infos: ['Meeting host', 'Unmuted'] },
     { name: 'Jordan Example (You)', email: null, infos: ['You', 'Muted'] },
   ];
-  const said = await client.join({ meetingUrl: MEET, botName: 'Uranus Browser AI assistant' }, yes);
+  const said = await client.join({ meetingUrl: MEET, botName: 'UrAnus Browser AI assistant' }, yes);
   assert.match(said, /as “Jordan Example”/);
   assert.match(said, /signed in to a Google account/);
-  assert.match(said, /instead of “Uranus Browser AI assistant”/);
+  assert.match(said, /instead of “UrAnus Browser AI assistant”/);
   assert.match(said, /does not announce itself/);
   const view = client.view();
   assert.equal(view.meeting?.botName, 'Jordan Example', 'the cards and the panel say what other people really see');
@@ -497,11 +497,11 @@ test('joinly’s browser signed in to Google: the meeting shows that name, and U
 
 test('joining as a guest under the asked name leaves the name alone', async () => {
   const { fake, client } = await setup();
-  fake.participants = [{ name: 'Anna Keller', infos: [] }, { name: 'Uranus Browser AI assistant', infos: ['You'] }];
-  const said = await client.join({ meetingUrl: MEET, botName: 'Uranus Browser AI assistant' }, yes);
-  assert.match(said, /^Joined the meeting on meet\.google\.com as “Uranus Browser AI assistant”\./);
+  fake.participants = [{ name: 'Anna Keller', infos: [] }, { name: 'UrAnus Browser AI assistant', infos: ['You'] }];
+  const said = await client.join({ meetingUrl: MEET, botName: 'UrAnus Browser AI assistant' }, yes);
+  assert.match(said, /^Joined the meeting on meet\.google\.com as “UrAnus Browser AI assistant”\./);
   assert.doesNotMatch(said, /Google account/);
-  assert.equal(client.view().meeting?.botName, 'Uranus Browser AI assistant');
+  assert.equal(client.view().meeting?.botName, 'UrAnus Browser AI assistant');
 });
 
 test('not being able to read the participant list after joining does not fail the join', async () => {
@@ -555,7 +555,7 @@ test('a server that refuses the subscription is polled instead, quickly', async 
 test('when everyone else has left the call, the bot leaves by itself, after two looks', async () => {
   const { fake, client, logs } = await setup();
   fake.participants = [{ name: 'Anna Keller' }, { name: 'Jordan Example (You)', infos: ['You'] }];
-  await client.join({ meetingUrl: MEET, botName: 'Uranus Browser AI assistant' }, yes);
+  await client.join({ meetingUrl: MEET, botName: 'UrAnus Browser AI assistant' }, yes);
   await new Promise((r) => setTimeout(r, 300));
   assert.equal(fake.tools('leave_meeting').length, 0, 'someone is still there: it stays');
   // Anna closes the call: only the bot is left.
@@ -574,7 +574,7 @@ test('when everyone else has left the call, the bot leaves by itself, after two 
 test('one odd reading never sends the bot away: an empty list, or people coming back, resets the wait', async () => {
   const { fake, client } = await setup();
   fake.participants = [{ name: 'Anna Keller' }, { name: 'Jordan Example (You)', infos: ['You'] }];
-  await client.join({ meetingUrl: MEET, botName: 'Uranus Browser AI assistant' }, yes);
+  await client.join({ meetingUrl: MEET, botName: 'UrAnus Browser AI assistant' }, yes);
   // A list that could not be read at all (nothing, not even the bot) is not "the room is empty".
   fake.participants = [];
   await new Promise((r) => setTimeout(r, 350));

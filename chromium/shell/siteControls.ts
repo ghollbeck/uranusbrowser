@@ -8,9 +8,9 @@ import { broadcast, handle } from './hub';
 
 export interface SiteControlsContext {
   store: Store;
-  /** The Chromium tab on screen, if the active Uranus Browser tab has one. */
+  /** The Chromium tab on screen, if the active UrAnus Browser tab has one. */
   activeChromeId(): number | undefined;
-  /** The window Uranus Browser's tabs live in. */
+  /** The window UrAnus Browser's tabs live in. */
   mainWindow(): Promise<number>;
 }
 
@@ -59,7 +59,7 @@ export function registerSiteControls(ctx: SiteControlsContext) {
   }
 
   handle({
-    capturePage: () => capturePage().catch((err) => console.error('Uranus Browser shell: screenshot failed', err)),
+    capturePage: () => capturePage().catch((err) => console.error('UrAnus Browser shell: screenshot failed', err)),
     clearSiteData: async (origin: string) => {
       if (!/^https?:\/\//.test(String(origin))) return;
       await clearSite(String(origin));
@@ -77,7 +77,7 @@ export function registerSiteControls(ctx: SiteControlsContext) {
         // "Ask" is Chromium's default; setting it back forgets the decision.
         await chrome.contentSettings[name]
           .set({ primaryPattern, setting: chosen ?? 'ask' })
-          .catch((err: unknown) => console.warn(`Uranus Browser shell: ${name} for ${origin}`, err));
+          .catch((err: unknown) => console.warn(`UrAnus Browser shell: ${name} for ${origin}`, err));
       }
     },
   });

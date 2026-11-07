@@ -1,6 +1,6 @@
 /**
  * A minimal MCP client for a joinly server the user runs themselves (Docker, on this Mac).
- * Uranus Browser is only a client: nothing of joinly ships here, and when it isn't running this says
+ * UrAnus Browser is only a client: nothing of joinly ships here, and when it isn't running this says
  * so instead of trying to start it.
  *
  * - Loopback only. The address is checked when it is set (shared/joinly.ts), and again on
@@ -79,7 +79,7 @@ export interface JoinlyTimeouts {
   emptyRecheck: number;
   /** How long to wait for the bot's own name after joining. */
   name: number;
-  /** Before trying again while joinly is still closing a meeting Uranus Browser just left. */
+  /** Before trying again while joinly is still closing a meeting UrAnus Browser just left. */
   settle: number;
   speak: number;
   call: number;
@@ -400,7 +400,7 @@ export class JoinlyClient implements MeetingPort {
     const response = await this.fetcher(input, { ...init, redirect: 'manual' });
     if (response.status >= 300 && response.status < 400) {
       void response.body?.cancel().catch(() => undefined);
-      throw new JoinlyError('joinly answered with a redirect, which Uranus Browser doesn’t follow.');
+      throw new JoinlyError('joinly answered with a redirect, which UrAnus Browser doesn’t follow.');
     }
     return response;
   };
@@ -449,7 +449,7 @@ export class JoinlyClient implements MeetingPort {
 
   async join(request: { meetingUrl: string; botName: string }, approval: { approved: boolean }): Promise<string> {
     if (approval?.approved !== true) throw new JoinlyError('Joining needs the user’s approval first.');
-    if (!this.config.enabled) throw new JoinlyError('Meetings are switched off in Uranus Browser.');
+    if (!this.config.enabled) throw new JoinlyError('Meetings are switched off in UrAnus Browser.');
     const url = checkMeetingUrl(request.meetingUrl);
     if (!url.ok) throw new JoinlyError(url.reason);
     const name = checkBotName(request.botName);
@@ -478,7 +478,7 @@ export class JoinlyClient implements MeetingPort {
     let stage: 'connect' | 'tools' | 'join' = 'connect';
     try {
       // Opening the connection makes joinly build its meeting session (models, audio, browser). If it
-      // refuses (its bot is in use), it just ends the stream. Right after a meeting Uranus Browser left, the
+      // refuses (its bot is in use), it just ends the stream. Right after a meeting UrAnus Browser left, the
       // old session is still closing: wait a little and try again.
       for (let attempt = 1; ; attempt++) {
         try {
@@ -550,7 +550,7 @@ export class JoinlyClient implements MeetingPort {
 
   /**
    * joinly's browser may be signed in to Google, and then the meeting shows that account's
-   * name, not the one Uranus Browser asked for. Its participant list marks the bot's own entry:
+   * name, not the one UrAnus Browser asked for. Its participant list marks the bot's own entry:
    * ask once, so the cards and the panel say what other people really see.
    */
   private async learnName(session: Session, asked: string): Promise<string | undefined> {

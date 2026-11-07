@@ -23,7 +23,7 @@ export function setAdBlocking(enabled: boolean) {
       await setCosmetic(enabled);
     } catch (err) {
       applied = undefined;
-      console.error('Uranus Browser: the ad blocker failed', err);
+      console.error('UrAnus Browser: the ad blocker failed', err);
     }
   });
   return applying;

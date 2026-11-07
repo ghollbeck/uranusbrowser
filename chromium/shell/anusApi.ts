@@ -11,7 +11,7 @@ import { confirmDeleteSpace, confirmDeleteTabs, copy, setupWindowUi, showMenu } 
 import { incognito } from './incognito';
 
 const surface = document.documentElement.dataset.surface;
-/** Uranus Browser's own browser draws the window frame from window.html; stock Chromium has the side panel. */
+/** UrAnus Browser's own browser draws the window frame from window.html; stock Chromium has the side panel. */
 const framed = typeof chrome.anusPrivate?.setFrame === 'function';
 if (framed) document.documentElement.dataset.frame = '';
 // An incognito window's pages: one Space of tabs, always dark (shell.css, incognito.ts).
@@ -19,7 +19,7 @@ if (incognito) document.documentElement.dataset.incognito = '';
 
 /**
  * The background sends the Space's light colour; dark mode darkens it here. Pages follow
- * Chromium's appearance (the system's), not Uranus Browser's theme setting, until a native patch
+ * Chromium's appearance (the system's), not UrAnus Browser's theme setting, until a native patch
  * applies that setting to Chromium; the tint follows the same thing so text stays readable.
  */
 const stateListeners: Array<(state: UiState) => void> = [];
@@ -115,7 +115,7 @@ if (windowId && typeof chrome.anusPrivate.setAgentPanel === 'function') {
       try {
         await chrome.anusPrivate.setAgentPanel(panel.float ? { ...state, floating: panel.float } : state, id);
       } catch (err) {
-        if (!panel.float) return console.error('Uranus Browser shell: the Agent panel didn’t move', err);
+        if (!panel.float) return console.error('UrAnus Browser shell: the Agent panel didn’t move', err);
         await chrome.anusPrivate.setAgentPanel(state, id).catch(() => undefined);
       }
     });
@@ -184,12 +184,12 @@ const api: AnusApi = {
   flash: cmd('flash'),
   clearToday: cmd('clearToday'),
   undoClose: cmd('undoClose'),
-  // Brings over Uranus Browser's own Electron state (~/Library/Application Support/Anus Browser/anus-state.json).
+  // Brings over UrAnus Browser's own Electron state (~/Library/Application Support/Anus Browser/anus-state.json).
   importMenu: async () => {
-    // Uranus Browser's native host reads it straight from disk; the file picker is for when it isn't installed.
+    // UrAnus Browser's native host reads it straight from disk; the file picker is for when it isn't installed.
     const json = await invoke<string | undefined>('nativeHost:anusState').catch(() => undefined);
     if (json) {
-      if (confirm('Replace your Spaces and tabs with those of Uranus Browser (Electron)?')) cmd('importAnusState')(json);
+      if (confirm('Replace your Spaces and tabs with those of UrAnus Browser (Electron)?')) cmd('importAnusState')(json);
       return;
     }
     const input = Object.assign(document.createElement('input'), { type: 'file', accept: '.json,application/json' });

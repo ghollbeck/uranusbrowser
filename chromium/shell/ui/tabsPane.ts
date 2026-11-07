@@ -105,7 +105,7 @@ export function setupTabsPane(icon: (name: IconName) => SVGSVGElement) {
     } catch {
       // Not a web page.
     }
-    // The page's own icon once it has loaded, else the icon Uranus Browser fetched for the site.
+    // The page's own icon once it has loaded, else the icon UrAnus Browser fetched for the site.
     const src = tab.favicon || (view?.faviconHosts.includes(hostname) ? `favicon://${hostname}` : undefined);
     if (!src) return letter();
     const img = el('img', { class: 'tm-favicon', src, draggable: 'false', alt: '' });
@@ -312,7 +312,7 @@ export function setupTabsPane(icon: (name: IconName) => SVGSVGElement) {
       el(
         'span',
         { class: 'tm-actions' },
-        iconButton('external', 'Show in Uranus Browser', () => api.showTab(id)),
+        iconButton('external', 'Show in UrAnus Browser', () => api.showTab(id)),
         iconButton('pencil', 'Edit', () => startEditing({ kind: 'tab', id, focus: 'title' })),
         iconButton('trash', 'Delete', () => send({ op: 'delete', tabIds: [id] })),
       ),

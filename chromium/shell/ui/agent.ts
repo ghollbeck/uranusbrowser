@@ -506,5 +506,5 @@ void invoke<PanelLayout & { chat?: ChatSnapshot }>('agentPanel:get')
     applyLayout({ ...current, open: true });
     if (current.chat) render(current.chat);
   })
-  .catch((err) => console.error('Uranus Browser agent panel: no layout yet', err))
+  .catch((err) => console.error('UrAnus Browser agent panel: no layout yet', err))
   .finally(() => cmd('agent:action')({ action: 'hello' }));

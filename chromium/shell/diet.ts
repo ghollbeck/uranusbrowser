@@ -23,7 +23,7 @@ const IDLE_SECONDS = 120;
 const TRACKING_KEY = 'diet.tracking';
 
 export interface DietDeps {
-  /** The on-device model, through Uranus Browser's helper; undefined in incognito. */
+  /** The on-device model, through UrAnus Browser's helper; undefined in incognito. */
   complete?: (request: { system: string; user: string; maxTokens: number }) => Promise<string>;
   modelInfo?: () => Promise<{ ready: boolean; label: string; detail: string } | undefined>;
   /** Opens a page in a new tab of the main window. */
@@ -198,7 +198,7 @@ export function registerDiet(deps: DietDeps) {
       await db.updateVisit(v);
       visitChanged(v);
     } catch (err) {
-      console.warn('Uranus Browser diet: sample failed', err instanceof Error ? err.message : err);
+      console.warn('UrAnus Browser diet: sample failed', err instanceof Error ? err.message : err);
       reset();
     } finally {
       sampling = false;
@@ -263,9 +263,9 @@ export function registerDiet(deps: DietDeps) {
       }
       return enabled;
     },
-    'diet:model': async () => (await deps.modelInfo?.().catch(() => undefined)) ?? { ready: false, label: 'Underdog Woof 2B 1.1', detail: 'Uranus Browser’s helper isn’t running.' },
+    'diet:model': async () => (await deps.modelInfo?.().catch(() => undefined)) ?? { ready: false, label: 'Underdog Woof 2B 1.1', detail: 'UrAnus Browser’s helper isn’t running.' },
     'diet:complete': async (request: { system: string; user: string; maxTokens: number }) => {
-      if (!deps.complete) throw new Error('The on-device model needs Uranus Browser’s helper.');
+      if (!deps.complete) throw new Error('The on-device model needs UrAnus Browser’s helper.');
       return deps.complete({ system: String(request.system), user: String(request.user), maxTokens: Number(request.maxTokens) || 256 });
     },
     // The page erased or imported: drop what the tracker holds so the next sample starts fresh.

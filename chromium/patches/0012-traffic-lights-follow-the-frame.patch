@@ -4,11 +4,11 @@
  // When set to `YES`, the traffic lights will always be shown. When set to `NO`,
  // the traffic lights follow the default AppKit behavior.
  - (void)setAlwaysShowTrafficLights:(BOOL)alwaysShow;
-+// Uranus Browser: puts the traffic lights where Uranus Browser's window frame wants them, with
++// UrAnus Browser: puts the traffic lights where UrAnus Browser's window frame wants them, with
 +// the close button's top-left corner at `origin` from the window's top-left
 +// corner, or hides them. Outside fullscreen only.
 +- (void)setAnusTrafficLightsVisible:(BOOL)visible origin:(NSPoint)origin;
-+// Uranus Browser: gives the traffic lights back to AppKit (and Chromium).
++// UrAnus Browser: gives the traffic lights back to AppKit (and Chromium).
 +- (void)resetAnusTrafficLights;
  // A controller that keeps a small portion (0.5px) of the fullscreen AppKit
  // NSWindow on screen.
@@ -27,16 +27,16 @@
  @implementation BrowserWindowFrame {
    BOOL _inFullScreen;
    BOOL _alwaysShowTrafficLights;
-+  // Uranus Browser: the window frame places the traffic lights (see
++  // UrAnus Browser: the window frame places the traffic lights (see
 +  // -setAnusTrafficLightsVisible:origin:).
 +  BOOL _anusTrafficLights;
 +  BOOL _anusTrafficLightsVisible;
 +  NSPoint _anusTrafficLightsOrigin;
  }
  
-+// Uranus Browser: AppKit centres the traffic lights in the title bar, and puts the
++// UrAnus Browser: AppKit centres the traffic lights in the title bar, and puts the
 +// leading one -_minXTitlebarWidgetInset from the window's edge; both follow
-+// the origin Uranus Browser's window frame asks for.
++// the origin UrAnus Browser's window frame asks for.
 +- (void)setAnusTrafficLightsVisible:(BOOL)visible origin:(NSPoint)origin {
 +  _anusTrafficLights = YES;
 +  _anusTrafficLightsVisible = visible;
@@ -76,7 +76,7 @@
  // widgets, this is also an important part of the functioning of immersive
  // fullscreen and must not be removed lest that break.
  - (CGFloat)_titlebarHeight {
-+  // Uranus Browser: as tall as centres the traffic lights at the frame's origin.
++  // UrAnus Browser: as tall as centres the traffic lights at the frame's origin.
 +  if (_anusTrafficLights && !_inFullScreen) {
 +    NSButton* close = [self.window standardWindowButton:NSWindowCloseButton];
 +    return 2 * _anusTrafficLightsOrigin.y + NSHeight(close.frame);
@@ -124,7 +124,7 @@
 --- /dev/null
 +++ b/chrome/browser/ui/views/frame/anus_frame_view_mac.mm
 @@ -0,0 +1,31 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -141,7 +141,7 @@
 +    return;
 +  }
 +  // Browser windows are in-process NSWindows (only PWAs may live in an app
-+  // shim, and those never get a Uranus Browser frame).
++  // shim, and those never get a UrAnus Browser frame).
 +  NSWindow* ns_window = widget->GetNativeWindow().GetNativeNSWindow();
 +  if (![ns_window isKindOfClass:[BrowserNativeWidgetWindow class]]) {
 +    return;
@@ -171,7 +171,7 @@
 +void SetAnusTrafficLights(views::Widget* widget,
 +                            const AnusFrameState* state);
 +
- // Uranus Browser's window frame (see anus_frame_host.h): the shell's frame page,
+ // UrAnus Browser's window frame (see anus_frame_host.h): the shell's frame page,
  // chrome-extension://<shell>/window.html?window=<id>, in a transparent view
  // stacked above the page area of a normal browser window, plus the window
 @@ -58,6 +68,7 @@

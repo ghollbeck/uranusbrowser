@@ -13,7 +13,7 @@ export interface ArcImport {
 
 /**
  * What `readBrowser` (browserImport.ts) found in another browser, before any of it is added
- * to Uranus Browser. Plain data, so it can cross from the Chromium build's native host to the shell.
+ * to UrAnus Browser. Plain data, so it can cross from the Chromium build's native host to the shell.
  */
 export interface BrowserImportData {
   /** The browser's name, which the new Space of bookmarks takes. */
@@ -28,7 +28,7 @@ export interface BrowserImportData {
 }
 
 /**
- * Adds what was read to Uranus Browser: Arc's Spaces, or a Space of bookmarks, and the history.
+ * Adds what was read to UrAnus Browser: Arc's Spaces, or a Space of bookmarks, and the history.
  * Kept free of Node so the shell extension can run it too.
  */
 export async function applyBrowserImport(

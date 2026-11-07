@@ -12,7 +12,7 @@
      return nullptr;
    }
  
-+  // Uranus Browser: the bubble hangs off the app menu button, which Uranus Browser's windows
++  // UrAnus Browser: the bubble hangs off the app menu button, which UrAnus Browser's windows
 +  // never draw, and before the window is shown there is no fallback anchor
 +  // either (AppMenuButton::GetAnchor() CHECKs), so the next launch after a
 +  // crash would crash too. Skip the "Restore pages?" bubble instead.

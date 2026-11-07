@@ -4,7 +4,7 @@
  * default and keeps the ones that answer HTTP. Each is named after its page's <title>
  * (Electron used the project folder, which only lsof knows), or `localhost:port`.
  *
- * Every few seconds while a Uranus Browser window is in front, rarely otherwise, as in Electron.
+ * Every few seconds while a UrAnus Browser window is in front, rarely otherwise, as in Electron.
  */
 import type { LocalServer } from '../../shared/types';
 
@@ -77,16 +77,16 @@ export function watchLocalServers(onChange: (servers: LocalServer[]) => void) {
     const due = focused ? FOCUSED_EVERY_MS : BACKGROUND_EVERY_MS;
     if (Date.now() - last >= due) {
       last = Date.now();
-      await scan().catch((err) => console.warn('Uranus Browser: looking for local servers failed', err));
+      await scan().catch((err) => console.warn('UrAnus Browser: looking for local servers failed', err));
     }
     setTimeout(tick, 2000);
   }
 
-  // Uranus Browser's windows are the only ones this browser has, so any focused window is Uranus Browser's.
+  // UrAnus Browser's windows are the only ones this browser has, so any focused window is UrAnus Browser's.
   chrome.windows.onFocusChanged.addListener((windowId) => {
     const was = focused;
     focused = windowId !== chrome.windows.WINDOW_ID_NONE;
-    // Coming back to Uranus Browser: look again on the next tick.
+    // Coming back to UrAnus Browser: look again on the next tick.
     if (focused && !was) last = 0;
   });
   void chrome.windows.getLastFocused().then(

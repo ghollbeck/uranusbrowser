@@ -30,7 +30,7 @@ function h(tag: string, props: Props = {}, ...children: Array<Node | string | nu
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === false) continue;
     if (key === 'class') el.className = String(value);
-    // Native tooltips look out of place; `title` feeds Uranus Browser's own tooltip instead.
+    // Native tooltips look out of place; `title` feeds UrAnus Browser's own tooltip instead.
     else if (key === 'title') el.dataset.tip = String(value);
     else if (key.startsWith('on')) el.addEventListener(key.slice(2).toLowerCase(), value as EventListener);
     else if (key === 'dataset') Object.assign(el.dataset, value);
@@ -56,8 +56,8 @@ for (const el of document.querySelectorAll<HTMLElement>('i[data-icon]')) el.repl
 
 function host(url: string) {
   try {
-    // Uranus Browser's own pages (Boosts, in the Chromium build) are named, not shown as an extension id.
-    if (url.startsWith(location.origin + '/') && location.protocol === 'chrome-extension:') return 'Uranus Browser';
+    // UrAnus Browser's own pages (Boosts, in the Chromium build) are named, not shown as an extension id.
+    if (url.startsWith(location.origin + '/') && location.protocol === 'chrome-extension:') return 'UrAnus Browser';
     return new URL(url).host.replace(/^www\./, '');
   } catch {
     return url;
@@ -948,7 +948,7 @@ type PaletteGroup = '' | 'Developer' | 'Actions' | 'Tabs' | 'History' | 'Archive
 const ACTIONS: Array<{ label: string; keywords: string; icon: IconName; shortcut?: string; run: () => void }> = [
   { label: 'New Space', keywords: 'space create add', icon: 'space', shortcut: 'newSpace', run: () => api.newSpace() },
   { label: 'Edit Space', keywords: 'space rename emoji colour color icon', icon: 'space', run: () => state && openSpaceEditor(state.activeSpaceId) },
-  { label: 'New Uranus Mini Window', keywords: 'anusmini little mini small window quick lookup', icon: 'miniWindow', shortcut: 'newAnusMini', run: () => api.newAnusMini() },
+  { label: 'New UrAnus Mini Window', keywords: 'anusmini little mini small window quick lookup', icon: 'miniWindow', shortcut: 'newAnusMini', run: () => api.newAnusMini() },
   { label: 'Settings', keywords: 'preferences settings config options', icon: 'settings', shortcut: 'settings', run: () => api.openSettings() },
   {
     label: 'Switch Light / Dark Mode',
@@ -967,7 +967,7 @@ const ACTIONS: Array<{ label: string; keywords: string; icon: IconName; shortcut
     run: () => api.openSettings('import'),
   },
   {
-    label: 'Import from Uranus Browser (Electron)',
+    label: 'Import from UrAnus Browser (Electron)',
     keywords: 'import migrate electron anus spaces tabs',
     icon: 'import',
     run: () => api.importMenu(),

@@ -44,7 +44,7 @@
  #include "services/service_manager/public/cpp/interface_provider.h"
  #include "ui/base/window_open_disposition.h"
  
-+// Uranus Browser: when a swipe navigates, a snapshot of the page you are leaving
++// UrAnus Browser: when a swipe navigates, a snapshot of the page you are leaving
 +// covers the page, stays put until the page you are going to has committed,
 +// then slides away in the swipe's direction (right for back, left for
 +// forward), so the new page looks like it was underneath.
@@ -183,7 +183,7 @@
      return;
    }
  
-+  // Uranus Browser: snapshot the page first so the navigation can slide it away.
++  // UrAnus Browser: snapshot the page first so the navigation can slide it away.
 +  // If the snapshot doesn't come within kSnapshotWait, navigate without it.
 +  content::RenderWidgetHostView* view = webContents->GetRenderWidgetHostView();
 +  NSView* page = self.nsView;
@@ -240,7 +240,7 @@
  
      // If the gesture was completed, perform a navigation.
      if (finished) {
-+      // Uranus Browser: the badge carries on into the page instead of retreating.
++      // UrAnus Browser: the badge carries on into the page instead of retreating.
 +      _historyOverlay.committed = YES;
        [self navigateBrowserInDirection:_historySwipeDirection];
      }
@@ -259,7 +259,7 @@
  - (void)setProgress:(CGFloat)gestureAmount finished:(BOOL)finished;
  
  // Fades the shield out and removes it from the view hierarchy.
-+// Uranus Browser: set before -dismiss when the gesture navigates, so the badge
++// UrAnus Browser: set before -dismiss when the gesture navigates, so the badge
 +// carries on in the swipe's direction instead of retreating to the edge.
 +@property(nonatomic) BOOL committed;
 +
@@ -283,7 +283,7 @@
 -#include "ui/gfx/image/image.h"
  
 -// Constants ///////////////////////////////////////////////////////////////////
-+// Uranus Browser: the swipe-to-navigate badge. A round badge with an arrow comes
++// UrAnus Browser: the swipe-to-navigate badge. A round badge with an arrow comes
 +// in from the page edge as the fingers move, follows them, and pops (with a
 +// trackpad haptic tick) at the point where letting go will navigate. Ink on the
 +// page in light mode, light on the page in dark mode, like the browser's own UI.

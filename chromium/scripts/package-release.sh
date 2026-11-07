@@ -1,11 +1,11 @@
 #!/bin/bash
-# Packages the release build (out/Release/Uranus Browser.app, from build-release.sh) into a signed
+# Packages the release build (out/Release/UrAnus Browser.app, from build-release.sh) into a signed
 # app you can copy to /Applications, and with --dmg (or ANUS_DMG=1) a disk image too:
 #
 #   chromium/scripts/package-release.sh [--dmg]
 #
 # Into $ANUS_RELEASE_DIR (out/Release/anus-release by default, on the build volume) it
-#   1. copies the built app to <release>/Uranus Browser/Uranus Browser.app (rsync, so a re-run starts clean);
+#   1. copies the built app to <release>/UrAnus Browser/UrAnus Browser.app (rsync, so a re-run starts clean);
 #   2. checks the shell the build put in the framework's Resources/anus-shell (patch 0050)
 #      against chromium/shell/dist, and copies dist over it if they differ (the GN copy only
 #      notices a changed staging folder, not a changed file inside it);
@@ -17,7 +17,7 @@
 #      ANUS_SIGN_IDENTITY names a keychain identity ("Developer ID Application: …"), which
 #      also gets the hardened runtime, a timestamp and Chromium's entitlements (as
 #      chrome/installer/mac/signing/parts.py does);
-#   5. with --dmg, makes <release>/Uranus-Browser-<version>.dmg with hdiutil, laid out as an
+#   5. with --dmg, makes <release>/UrAnus-Browser-<version>.dmg with hdiutil, laid out as an
 #      installer window (the background is chromium/branding/dmg, the .DS_Store is written by
 #      scripts/dmg-layout.py, no Finder scripting); with a Developer ID
 #      identity and ANUS_NOTARY_PROFILE (a notarytool keychain profile, made once with
@@ -82,7 +82,7 @@ done < <(find "$app" -name app.icns -print0)
 # Meeting notes (the Agent panel) records the microphone, only when the user starts it.
 echo "== Info.plist: microphone usage description"
 /usr/libexec/PlistBuddy -c 'Delete :NSMicrophoneUsageDescription' "$app/Contents/Info.plist" 2>/dev/null || true
-/usr/libexec/PlistBuddy -c 'Add :NSMicrophoneUsageDescription string "Uranus Browser records your microphone only while you are taking meeting notes, after you press Start."' "$app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c 'Add :NSMicrophoneUsageDescription string "UrAnus Browser records your microphone only while you are taking meeting notes, after you press Start."' "$app/Contents/Info.plist"
 
 echo "== shell"
 shell_dist="$here/shell/dist"
@@ -126,7 +126,7 @@ host="$app/Contents/Resources/native-host"
 cp "$here/native-host/dist/anus-host.cjs" "$host/anus-host.cjs"
 cat >"$host/anus-host" <<'EOF'
 #!/bin/sh
-# Uranus Browser's native messaging host: the app's own Node runs the bundled host script.
+# UrAnus Browser's native messaging host: the app's own Node runs the bundled host script.
 here="$(cd "$(dirname "$0")" && pwd)"
 exec "$here/../../Helpers/anus-node" "$here/anus-host.cjs" "$@"
 EOF
@@ -239,7 +239,7 @@ codesign --verify --deep --strict --verbose=1 "$app"
 echo "signed $app"
 
 if [ "$dmg" = 1 ]; then
-  # Uranus Browser's version (package.json, which build-release.sh put in the Info.plist as
+  # UrAnus Browser's version (package.json, which build-release.sh put in the Info.plist as
   # CFBundleShortVersionString, patch 0052), not Chromium's.
   version="$(node -p 'require(process.argv[1]).version' "$here/../package.json")"
   plist_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")"
@@ -251,7 +251,7 @@ if [ "$dmg" = 1 ]; then
   echo "== dmg $image"
   # A read-write image first, laid out like an installer: the app and an Applications
   # alias side by side over a background (chromium/branding/dmg), a fixed window with no
-  # toolbar or sidebar, Uranus Browser's icon on the volume. Then it's compressed.
+  # toolbar or sidebar, UrAnus Browser's icon on the volume. Then it's compressed.
   # macOS won't mount an image inside another mounted image (the build volume), so the
   # mount point is a temporary folder on the system disk.
   # The read-write image lives there too: a bookmark to a file on an image that is itself

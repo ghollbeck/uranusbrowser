@@ -9,13 +9,13 @@
 +        '--anus-version',
 +        dest='anus_version',
 +        default=None,
-+        help='Uranus Browser: the app\'s CFBundleShortVersionString (e.g. 0.1.0).',
++        help='UrAnus Browser: the app\'s CFBundleShortVersionString (e.g. 0.1.0).',
 +    )
 +    parser.add_option(
 +        '--anus-build-number',
 +        dest='anus_build_number',
 +        default=None,
-+        help='Uranus Browser: its build counter; CFBundleVersion becomes '
++        help='UrAnus Browser: its build counter; CFBundleVersion becomes '
 +        'BUILD.PATCH.<this>.',
      )
      (options, args) = parser.parse_args(argv)
@@ -25,9 +25,9 @@
              'CFBundleVersion': '@MAJOR@.@MINOR@.@BUILD@.@PATCH@',
          }
 +
-+    # Uranus Browser: the app carries Uranus Browser's own version (package.json's "version")
++    # UrAnus Browser: the app carries UrAnus Browser's own version (package.json's "version")
 +    # as CFBundleShortVersionString, and as CFBundleVersion, the build number
-+    # Sparkle compares, Chromium's BUILD.PATCH plus Uranus Browser's build counter
++    # Sparkle compares, Chromium's BUILD.PATCH plus UrAnus Browser's build counter
 +    # (chromium/scripts/build-release.sh). chrome://version and the user agent
 +    # keep Chromium's version: they don't read the Info.plist.
 +    if options.anus_version:
@@ -61,7 +61,7 @@
    # sets this. Empty (dev builds, which pass --anus-shell-dir) copies none.
    anus_shell_dir = ""
 +
-+  # Uranus Browser: the app's own version, its Info.plist CFBundleShortVersionString
++  # UrAnus Browser: the app's own version, its Info.plist CFBundleShortVersionString
 +  # (package.json's "version"), and its build counter, which makes
 +  # CFBundleVersion Chromium's BUILD.PATCH.<counter> for Sparkle.
 +  # build-release.sh sets both; empty keeps Chromium's version (dev builds).

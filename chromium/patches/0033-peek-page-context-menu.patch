@@ -40,7 +40,7 @@
        "//chrome/app:command_ids",
        "//chrome/app:generated_resources",
        "//chrome/browser:browser_features",
-+      # Uranus Browser: Peek's page context menu (render_view_context_menu.cc).
++      # UrAnus Browser: Peek's page context menu (render_view_context_menu.cc).
 +      "//chrome/browser/anus:anus_frame_host",
        "//chrome/browser:browser_process",
        "//chrome/browser/accessibility",
@@ -59,7 +59,7 @@
      }
  
      case IDC_RELOAD:
-+      // Uranus Browser: a Peek isn't its window's active tab, which Reload on the
++      // UrAnus Browser: a Peek isn't its window's active tab, which Reload on the
 +      // window would reload instead; it reloads itself.
 +      if (AnusFrameHost::IsPeek(embedder_web_contents_)) {
 +        embedder_web_contents_->GetController().Reload(
@@ -73,7 +73,7 @@
  // Controller functions --------------------------------------------------------
  
  bool RenderViewContextMenu::IsReloadEnabled() const {
-+  // Uranus Browser: a Peek's page has no tab helpers and no window of its own to ask;
++  // UrAnus Browser: a Peek's page has no tab helpers and no window of its own to ask;
 +  // it reloads itself (ExecuteCommand).
 +  if (AnusFrameHost::IsPeek(embedder_web_contents_)) {
 +    return true;
@@ -86,7 +86,7 @@
    CoreTabHelper* core_tab_helper =
        CoreTabHelper::FromWebContents(embedder_web_contents_);
 -  if (!core_tab_helper) {
-+  // Uranus Browser: a Peek's page is saved like a tab's (it has no tab helpers).
++  // UrAnus Browser: a Peek's page is saved like a tab's (it has no tab helpers).
 +  if (!core_tab_helper && !AnusFrameHost::IsPeek(embedder_web_contents_)) {
      return false;
    }

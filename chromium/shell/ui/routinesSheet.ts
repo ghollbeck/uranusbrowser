@@ -170,7 +170,7 @@ export function setupRoutines(hooks: RoutinesHooks) {
         'div',
         { class: 'routines-card-text' },
         h('strong', {}, `Routine overdue: ${first.name}`),
-        h('span', {}, `Was due ${first.pending ? describeWhen(first.pending.since, Date.now()) : 'earlier'}. It didn’t run because Uranus Browser was closed or busy.`),
+        h('span', {}, `Was due ${first.pending ? describeWhen(first.pending.since, Date.now()) : 'earlier'}. It didn’t run because UrAnus Browser was closed or busy.`),
       ),
       h(
         'div',
@@ -340,10 +340,10 @@ export function setupRoutines(hooks: RoutinesHooks) {
             { class: 'routines-empty' },
             h('span', { class: 'empty-mark', 'aria-hidden': 'true' }, icon('clock')),
             h('p', { class: 'routines-empty-title' }, 'No routines yet'),
-            h('p', { class: 'sheet-hint' }, 'A routine is a task the agent does for you on a schedule: every morning, every hour, or once at a set time. Routines run only while Uranus Browser is open.'),
-            h('p', { class: 'sheet-hint' }, 'If Uranus Browser was closed when one was due, it waits for you here instead of running late.'),
+            h('p', { class: 'sheet-hint' }, 'A routine is a task the agent does for you on a schedule: every morning, every hour, or once at a set time. Routines run only while UrAnus Browser is open.'),
+            h('p', { class: 'sheet-hint' }, 'If UrAnus Browser was closed when one was due, it waits for you here instead of running late.'),
           ),
-      v.routines.length ? h('p', { class: 'sheet-hint routines-foot' }, 'Routines run only while Uranus Browser is open. A routine that was missed waits for you here. Approval cards still ask first, and if nobody answers for 10 minutes the run stops and does nothing.') : null,
+      v.routines.length ? h('p', { class: 'sheet-hint routines-foot' }, 'Routines run only while UrAnus Browser is open. A routine that was missed waits for you here. Approval cards still ask first, and if nobody answers for 10 minutes the run stops and does nothing.') : null,
       message ? errorIn(message.field) : null,
     );
   }
@@ -453,7 +453,7 @@ export function setupRoutines(hooks: RoutinesHooks) {
         minutes,
         h('p', { class: 'sheet-hint' }, `At least ${MIN_INTERVAL_MINUTES} minutes. It counts from when you save.`),
       ),
-      once: h('div', { class: 'when-fields', id: 'when-once' }, h('label', { for: 'rf-at', class: 'label' }, 'Date and time'), at, h('p', { class: 'sheet-hint' }, 'Your local time. It runs once, if Uranus Browser is open then.')),
+      once: h('div', { class: 'when-fields', id: 'when-once' }, h('label', { for: 'rf-at', class: 'label' }, 'Date and time'), at, h('p', { class: 'sheet-hint' }, 'Your local time. It runs once, if UrAnus Browser is open then.')),
       meeting: meetingFields(),
     } as const;
     let kind = draft.kind;
@@ -551,7 +551,7 @@ export function setupRoutines(hooks: RoutinesHooks) {
       panels.meeting,
       errorIn('time', 'days', 'minutes', 'at', 'offset'),
       h('label', { class: 'check-row', for: 'rf-enabled' }, enabled, h('span', {}, 'Turn it on')),
-      h('p', { class: 'sheet-hint' }, 'It runs as a new conversation in this panel, only while Uranus Browser is open. Anything that sends, buys or changes an account still asks you first, and it stops if no one answers for 10 minutes.'),
+      h('p', { class: 'sheet-hint' }, 'It runs as a new conversation in this panel, only while UrAnus Browser is open. Anything that sends, buys or changes an account still asks you first, and it stops if no one answers for 10 minutes.'),
       errorIn(undefined, 'limit'),
       h(
         'div',

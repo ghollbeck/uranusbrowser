@@ -1,5 +1,5 @@
 // End-to-end test of Meetings (the agent joining a meeting through the user's own joinly server),
-// in a real Uranus Browser with a throwaway profile. The joinly server is a FAKE that this script
+// in a real UrAnus Browser with a throwaway profile. The joinly server is a FAKE that this script
 // starts on 127.0.0.1 (tests/fakeJoinly.ts): no real meeting is ever joined, and nothing here
 // touches the user's own playground. By default the profile uses THIS checkout's native host
 // (like e2e.mjs --dev-host), because an installed app's host predates meetings.
@@ -14,7 +14,7 @@
 //     approval cards with the host / the exact words, declining does nothing, the meeting's
 //     words trigger nothing, and "New conversation" leaves the meeting.
 //
-//   node chromium/tests/e2e-joinly.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist]
+//   node chromium/tests/e2e-joinly.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist]
 //        [--installed-host] [--no-model] [--shots <dir>]
 import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -31,7 +31,7 @@ const arg = (name, fallback) => {
   return i > 0 ? process.argv[i + 1] : fallback;
 };
 const has = (name) => process.argv.includes(name);
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir');
 const shots = arg('--shots');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -69,14 +69,14 @@ const TALK = [
 ];
 const PEOPLE = [{ name: 'Anna Keller', email: 'anna@example.com' }, { name: 'Ben Ortiz' }, { name: 'Mallory <b>Eve</b>' }];
 
-// ---- launching Uranus Browser ----------------------------------------------------------------------------------
+// ---- launching UrAnus Browser ----------------------------------------------------------------------------------
 
 async function launch() {
   fs.mkdirSync(profile, { recursive: true });
   fs.rmSync(path.join(profile, 'DevToolsActivePort'), { force: true });
   const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', '--window-position=60,40'];
   if (shellDir) flags.push(`--anus-shell-dir=${path.resolve(shellDir)}`);
-  const browser = spawn(path.join(app, 'Contents/MacOS/Uranus Browser'), flags, { stdio: 'ignore' });
+  const browser = spawn(path.join(app, 'Contents/MacOS/UrAnus Browser'), flags, { stdio: 'ignore' });
   reap(browser);
   const portFile = path.join(profile, 'DevToolsActivePort');
   const port = await until(async () => fs.existsSync(portFile) && fs.readFileSync(portFile, 'utf8').split('\n')[0], 'DevTools port', 180000);
@@ -190,10 +190,10 @@ await until(() => sheetOpen(panel), 'the sheet to open');
 check((await attr(panel, '#joinly-open', 'aria-expanded')) === 'true', 'opening it sets aria-expanded');
 await until(async () => (await status(panel)) === 'joinly isn’t running', 'the “not running” status', 30000);
 check(true, 'joinly not running: the status says so');
-check(/isn’t answering on 127\.0\.0\.1:\d+/.test(await text(panel, '.jn-status .jn-detail')), '… and where Uranus Browser looked');
+check(/isn’t answering on 127\.0\.0\.1:\d+/.test(await text(panel, '.jn-status .jn-detail')), '… and where UrAnus Browser looked');
 check((await text(panel, '.jn-code')) === JOINLY_START_COMMAND, 'the exact command to start the playground is shown as plain text');
 check(/playground\.sh start/.test(JOINLY_START_COMMAND), '… the playground’s own start command');
-check(/you start it yourself|Nothing is started for you/.test(await text(panel, '.jn-setup-region')), '… with a note that Uranus Browser starts nothing');
+check(/you start it yourself|Nothing is started for you/.test(await text(panel, '.jn-setup-region')), '… with a note that UrAnus Browser starts nothing');
 await click(panel, '#jn-copy');
 await until(async () => /Copied/.test(await text(panel, '#jn-copy')), 'the Copy button to confirm', 8000).catch(() => undefined);
 check(/Copied/.test(await text(panel, '#jn-copy')), 'Copy confirms with “Copied”');

@@ -4,7 +4,7 @@
  * background asks for. The background builds menus as data (protocol.ts MenuRun); this page
  * shows them with settingsUi's in-page menu.
  *
- * In Uranus Browser's own browser the frame page is only as wide as the sidebar, so while a menu or
+ * In UrAnus Browser's own browser the frame page is only as wide as the sidebar, so while a menu or
  * a question is up it covers the whole window (an "overlay", like the command bar): clicks
  * on the page dismiss the menu, and the dialog has room.
  */
@@ -156,7 +156,7 @@ export async function copy(text: string, message: string) {
     await writeClipboard(text);
     cmd('flash')(message);
   } catch (err) {
-    console.error('Uranus Browser shell: copying failed', err);
+    console.error('UrAnus Browser shell: copying failed', err);
   }
 }
 
@@ -170,7 +170,7 @@ if (surface === 'window' || (surface === 'panel' && !framed)) {
       else if (data.text !== undefined) await writeClipboard(data.text);
       cmd('flash')(data.message);
     } catch (err) {
-      console.error('Uranus Browser shell: copying failed', err);
+      console.error('UrAnus Browser shell: copying failed', err);
     }
   });
 }

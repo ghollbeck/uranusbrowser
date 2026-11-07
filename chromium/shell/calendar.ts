@@ -2,7 +2,7 @@
  * Calendar reminders for meeting notes, from the background: read the user's calendar from its
  * private iCal address, and from a couple of minutes before a meeting that has a Google Meet, Zoom
  * or Teams link until it ends, say so: once as a macOS notification, and for the whole meeting as
- * a reminder card at the side of every Uranus Browser window (meetingReminder.ts) and a floating
+ * a reminder card at the side of every UrAnus Browser window (meetingReminder.ts) and a floating
  * panel on the display the pointer is on (the native host's reminderPopup.ts), each with Join,
  * Join & record, Record + AI assistant (when joinly is on) and Dismiss. The Agent panel's
  * Meetings sheet (ui/meetingsCalendar.ts) shows the address's settings, today's next meetings
@@ -20,8 +20,8 @@
  *  - One notification per occurrence (UID + start); the card and the panel stay until the meeting
  *    ends or it is answered. A dismissal or a join, from any of them, is remembered for that
  *    occurrence (the notification never asks twice), but for the card and the panel only until
- *    Uranus Browser quits (chrome.storage.session): reopened, it shows a meeting still going on
- *    again, answered or not. A meeting already going on (Uranus Browser just started, or the
+ *    UrAnus Browser quits (chrome.storage.session): reopened, it shows a meeting still going on
+ *    again, answered or not. A meeting already going on (UrAnus Browser just started, or the
  *    calendar was just read) is shown at once.
  *  - The calendar is read when the background starts (if the last read is over a few minutes
  *    old), every 10 minutes by `chrome.alarms`, and when the user asks. A one-shot alarm wakes the
@@ -51,7 +51,7 @@ import {
 import * as store from './lib/calendarState';
 
 export interface CalendarContext {
-  /** Opens an address in a new Uranus Browser tab, in front, and brings its window forward. */
+  /** Opens an address in a new UrAnus Browser tab, in front, and brings its window forward. */
   openPage(url: string): void;
   /** Opens the Agent panel if it is closed. */
   openPanel(): Promise<void>;
@@ -153,7 +153,7 @@ async function fetchCalendar(url: string): Promise<{ text: string } | { error: s
   } catch (err) {
     return { error: (err as Error)?.name === 'TimeoutError' ? 'The calendar didn’t answer in time. It will be tried again in a few minutes.' : 'Couldn’t reach the calendar. Check your connection; it will be tried again in a few minutes.' };
   }
-  if (res.url && !res.url.startsWith('https:')) return { error: 'The calendar address sent Uranus Browser to an address that isn’t https, so it wasn’t read.' };
+  if (res.url && !res.url.startsWith('https:')) return { error: 'The calendar address sent UrAnus Browser to an address that isn’t https, so it wasn’t read.' };
   if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 410) {
     return { error: `The calendar address was refused (${res.status}). It may have been reset: copy the secret iCal address again.` };
   }
@@ -181,7 +181,7 @@ export function registerCalendar(ctx: CalendarContext): CalendarApi {
   let checking: Promise<{ error?: string }> | undefined;
   let focus: ReadyFocus | undefined;
   let reminder: ReminderView = { assistant: false };
-  /** Meetings answered on the card or the panel since Uranus Browser started (they come back after a restart). */
+  /** Meetings answered on the card or the panel since UrAnus Browser started (they come back after a restart). */
   let answered = new Set<string>();
 
   const ready = (async () => {
@@ -265,7 +265,7 @@ export function registerCalendar(ctx: CalendarContext): CalendarApi {
         if ('error' in got) {
           // Keep the meetings already known: a flaky network shouldn't make reminders vanish.
           cache = { ...cache, error: got.error, checkedAt: cache.checkedAt };
-          console.warn('Uranus Browser calendar: the calendar couldn’t be read');
+          console.warn('UrAnus Browser calendar: the calendar couldn’t be read');
         } else {
           const { events, meetings } = meetingsIn(got.text, now);
           cache = { checkedAt: now, events, meetings };
@@ -391,7 +391,7 @@ export function registerCalendar(ctx: CalendarContext): CalendarApi {
     const m = cache.meetings.find((x) => x.id === id);
     if (!m) return { error: 'That meeting is no longer in your calendar.' };
     const link = meetingLinkOf(m.url);
-    if (!link) return { error: 'That meeting’s link isn’t one Uranus Browser opens.' };
+    if (!link) return { error: 'That meeting’s link isn’t one UrAnus Browser opens.' };
     ctx.openPage(link.url);
     // Opened: no more prompts or strips for it, nor (when it is to be recorded) "Record notes?" for its tab.
     const now = Date.now();

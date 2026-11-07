@@ -12,7 +12,7 @@
  
    // We allow policy-installed extensions to circumvent the normal
    // infobar warning. See crbug.com/41302695.
-+  // Uranus Browser: so is Uranus Browser's shell, which is the browser itself (responsive
++  // UrAnus Browser: so is UrAnus Browser's shell, which is the browser itself (responsive
 +  // view, console error counts); other extensions still get the warning.
    const bool suppress_warning =
        base::CommandLine::ForCurrentProcess()->HasSwitch(

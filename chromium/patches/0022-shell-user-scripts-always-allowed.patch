@@ -4,7 +4,7 @@
  
  #include "base/feature_list.h"
  #include "base/one_shot_event.h"
-+// Uranus Browser: header-only, the shell's extension ID.
++// UrAnus Browser: header-only, the shell's extension ID.
 +#include "chrome/browser/anus/anus_shell.h"
  #include "content/public/browser/browser_context.h"
  #include "extensions/browser/extension_prefs.h"
@@ -13,7 +13,7 @@
  
  bool UserScriptManager::IsUserScriptPrefEnabled(
      const ExtensionId& extension_id) const {
-+  // Uranus Browser: the shell's Boosts are user scripts; its "Allow User Scripts" is
++  // UrAnus Browser: the shell's Boosts are user scripts; its "Allow User Scripts" is
 +  // always on (it is a component extension, with no toggle to show).
 +  if (IsAnusShell(extension_id)) {
 +    return true;

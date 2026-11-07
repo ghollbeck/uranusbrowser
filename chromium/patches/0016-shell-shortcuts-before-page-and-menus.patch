@@ -75,7 +75,7 @@
 --- /dev/null
 +++ b/chrome/browser/anus/anus_accelerator.cc
 @@ -0,0 +1,136 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -214,7 +214,7 @@
 --- /dev/null
 +++ b/chrome/browser/anus/anus_accelerator.h
 @@ -0,0 +1,23 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -226,7 +226,7 @@
 +
 +#include "ui/base/accelerators/accelerator.h"
 +
-+// Parses one of Uranus Browser's keyboard shortcuts, written as an Electron
++// Parses one of UrAnus Browser's keyboard shortcuts, written as an Electron
 +// accelerator ("CmdOrCtrl+Shift+T", "Alt+CmdOrCtrl+Left", "Ctrl+Tab", "Cmd+["):
 +// modifiers (Cmd/Command/CmdOrCtrl/CommandOrControl/Super/Meta, Ctrl/Control,
 +// Alt/Option, Shift) then one key: a letter, a digit, punctuation
@@ -272,7 +272,7 @@
    // after it.
    static std::optional<AnusFrameState>& DefaultState();
  
-+  // Uranus Browser's keyboard shortcuts, from chrome.anusPrivate.setShortcuts():
++  // UrAnus Browser's keyboard shortcuts, from chrome.anusPrivate.setShortcuts():
 +  // each accelerator and the shell command it runs. Every window's frame
 +  // takes these keys before the page and before Chromium's own shortcuts, and
 +  // hands them to the shell (chrome.anusPrivate.onShortcut).
@@ -416,7 +416,7 @@
    // Applies `state_` to the background, the layout and the window controls.
    void ApplyState();
  
-+  // Takes Uranus Browser's shortcuts (AnusFrameHost::Shortcuts()) at the window's
++  // Takes UrAnus Browser's shortcuts (AnusFrameHost::Shortcuts()) at the window's
 +  // focus manager with high priority, the way extension commands are: on
 +  // macOS that is before the page and before the main menu's key
 +  // equivalents, so Cmd+S toggles the sidebar instead of saving the page.
@@ -460,8 +460,8 @@
      // The window the calling frame page belongs to.
      static void getWindowId(WindowIdCallback callback);
 +
-+    // Uranus Browser's keyboard shortcuts: <code>shortcuts</code> maps Electron
-+    // accelerators ("CmdOrCtrl+Shift+T") to the shell's command ids. Uranus Browser
++    // UrAnus Browser's keyboard shortcuts: <code>shortcuts</code> maps Electron
++    // accelerators ("CmdOrCtrl+Shift+T") to the shell's command ids. UrAnus Browser
 +    // windows take these keys before the page and before Chromium's own
 +    // shortcuts, and send them to onShortcut. Replaces the previous map. The
 +    // callback gets the accelerators that couldn't be read.

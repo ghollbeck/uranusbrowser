@@ -1,4 +1,4 @@
-/* Uranus Browser's dropdown (ui/select.ts): replaces the OS menu of every <select>. The button takes the
+/* UrAnus Browser's dropdown (ui/select.ts): replaces the OS menu of every <select>. The button takes the
    classes of the select it replaces (.select, .mt-mic, .field …) for size and surface; the rules
    here only add what a button needs and a fallback look when the host class says nothing. */
 

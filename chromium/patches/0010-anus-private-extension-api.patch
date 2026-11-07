@@ -1,11 +1,11 @@
 --- /dev/null
 +++ b/chrome/browser/anus/BUILD.gn
 @@ -0,0 +1,18 @@
-+# Copyright 2026 The Uranus Browser Authors
++# Copyright 2026 The UrAnus Browser Authors
 +# Use of this source code is governed by a BSD-style license that can be
 +# found in the LICENSE file.
 +
-+# The browser's side of Uranus Browser's window frame, shared by the extension API
++# The browser's side of UrAnus Browser's window frame, shared by the extension API
 +# (chrome.anusPrivate) and the browser views. The other headers in this
 +# directory are header-only and belong to no target.
 +source_set("anus_frame_host") {
@@ -22,7 +22,7 @@
 --- /dev/null
 +++ b/chrome/browser/anus/anus_frame_host.h
 @@ -0,0 +1,118 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -43,10 +43,10 @@
 +class WebContents;
 +}
 +
-+// Uranus Browser's window frame: the shell's frame page (window.html) is a transparent
++// UrAnus Browser's window frame: the shell's frame page (window.html) is a transparent
 +// view over each normal window, and the browser lays the page area and the
 +// window controls out around it, the way the Electron spike's Browser.layout()
-+// did (src/main/main.ts in the Uranus Browser repo). chrome.anusPrivate drives it;
++// did (src/main/main.ts in the UrAnus Browser repo). chrome.anusPrivate drives it;
 +// the contract is chromium/shell/anusPrivate.d.ts.
 +//
 +// This target (chrome/browser/anus:anus_frame_host) has no dependencies on
@@ -143,7 +143,7 @@
 --- /dev/null
 +++ b/chrome/browser/anus/anus_frame_host.cc
 @@ -0,0 +1,35 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -181,15 +181,15 @@
 --- /dev/null
 +++ b/chrome/common/extensions/api/anus_private.idl
 @@ -0,0 +1,59 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
-+// Use the <code>chrome.anusPrivate</code> API to lay out Uranus Browser's browser
++// Use the <code>chrome.anusPrivate</code> API to lay out UrAnus Browser's browser
 +// window: the shell's frame page (window.html) is a transparent view over the
 +// window, and the browser places the page area and the window controls (the
-+// macOS traffic lights) around it. Only Uranus Browser's shell may use it; the
-+// contract is chromium/shell/anusPrivate.d.ts in the Uranus Browser repo.
++// macOS traffic lights) around it. Only UrAnus Browser's shell may use it; the
++// contract is chromium/shell/anusPrivate.d.ts in the UrAnus Browser repo.
 +namespace anusPrivate {
 +  // Where the sidebar is.
 +  enum SidebarMode {
@@ -247,7 +247,7 @@
      "experimental_actor.webidl",
      "experimental_ai_data.webidl",
 +
-+    # Uranus Browser: what the browser gives Uranus Browser's shell (chromium/shell).
++    # UrAnus Browser: what the browser gives UrAnus Browser's shell (chromium/shell).
 +    "anus_private.idl",
      "image_writer_private.webidl",
      "indigo_private.webidl",
@@ -260,7 +260,7 @@
      "dependencies": ["permission:identity"],
 +    "contexts": ["privileged_extension"]
 +  },
-+  // Uranus Browser: what the browser gives Uranus Browser's shell (chromium/shell), and only
++  // UrAnus Browser: what the browser gives UrAnus Browser's shell (chromium/shell), and only
 +  // the shell (see the permission's allowlist).
 +  "anusPrivate": {
 +    "dependencies": ["permission:anusPrivate"],
@@ -273,7 +273,7 @@
      "channel": "stable",
      "extension_types": ["extension", "platform_app"]
    },
-+  // Uranus Browser: only Uranus Browser's shell, abdiaepfgbbhdjaecjipmaailijaaide (see
++  // UrAnus Browser: only UrAnus Browser's shell, abdiaepfgbbhdjaecjipmaailijaaide (see
 +  // chrome/browser/anus/anus_shell.h), which is loaded unpacked.
 +  "anusPrivate": {
 +    "channel": "stable",
@@ -289,7 +289,7 @@
    kPublicSuffix = 273,
    kEnterpriseWebrtc = 274,
    kMimeTypesHandlerPdf = 275,
-+  // Uranus Browser: chrome.anusPrivate, for Uranus Browser's shell. On a rebase, keep it
++  // UrAnus Browser: chrome.anusPrivate, for UrAnus Browser's shell. On a rebase, keep it
 +  // last (after any new Chromium entry).
 +  kAnusPrivate = 276,
  
@@ -301,7 +301,7 @@
       APIPermissionInfo::kFlagCannotBeOptional},
      {APIPermissionID::kPdfViewerPrivate, "pdfViewerPrivate"},
      {APIPermissionID::kIndigoPrivate, "indigoPrivate"},
-+    // Uranus Browser: chrome.anusPrivate, for Uranus Browser's shell.
++    // UrAnus Browser: chrome.anusPrivate, for UrAnus Browser's shell.
 +    {APIPermissionID::kAnusPrivate, "anusPrivate",
 +     APIPermissionInfo::kFlagCannotBeOptional},
      {APIPermissionID::kProxyOverrideRulesPrivate, "proxyOverrideRulesPrivate",
@@ -320,7 +320,7 @@
 --- /dev/null
 +++ b/chrome/browser/extensions/api/anus_private/BUILD.gn
 @@ -0,0 +1,20 @@
-+# Copyright 2026 The Uranus Browser Authors
++# Copyright 2026 The UrAnus Browser Authors
 +# Use of this source code is governed by a BSD-style license that can be
 +# found in the LICENSE file.
 +
@@ -343,7 +343,7 @@
 --- /dev/null
 +++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
 @@ -0,0 +1,45 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -354,9 +354,9 @@
 +
 +namespace extensions {
 +
-+// chrome.anusPrivate: what Uranus Browser's browser gives its shell, and only the
++// chrome.anusPrivate: what UrAnus Browser's browser gives its shell, and only the
 +// shell (see anus_frame_host.h). Its functions use the UNKNOWN histogram
-+// value so that Uranus Browser's patches stay off Chromium's histogram enums.
++// value so that UrAnus Browser's patches stay off Chromium's histogram enums.
 +
 +class AnusPrivateSetFrameFunction : public ExtensionFunction {
 + public:
@@ -391,7 +391,7 @@
 --- /dev/null
 +++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
 @@ -0,0 +1,164 @@
-+// Copyright 2026 The Uranus Browser Authors
++// Copyright 2026 The UrAnus Browser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
 +
@@ -412,7 +412,7 @@
 +
 +namespace anus_private = api::anus_private;
 +
-+constexpr char kNoWindowError[] = "No Uranus Browser window with id *.";
++constexpr char kNoWindowError[] = "No UrAnus Browser window with id *.";
 +constexpr char kNotAFramePageError[] = "The caller is not a frame page.";
 +constexpr char kBadColorError[] = "background must be #rrggbb.";
 +

@@ -2,7 +2,7 @@
  * The shell's pages are the browser's UI, not web pages, so a right-click on them must not
  * bring up Chromium's page menu (Back, Reload, Save As…, View Page Source, Inspect).
  * Importing this module turns that menu off for the page, except in text fields, where the
- * native Cut / Copy / Paste menu stays. Elements with a Uranus Browser menu of their own (tabs,
+ * native Cut / Copy / Paste menu stays. Elements with a UrAnus Browser menu of their own (tabs,
  * Spaces…) call preventDefault in their handlers, which run first; this one only catches
  * what's left when the event bubbles up to the window.
  *

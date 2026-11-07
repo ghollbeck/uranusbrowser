@@ -12,7 +12,7 @@ import { FakeJoinly } from './fakeJoinly';
 import { FakeOllama } from './fakeOllama';
 
 const MEET = 'https://meet.google.com/abc-defg-hij';
-const BOT = 'Uranus Browser AI assistant';
+const BOT = 'UrAnus Browser AI assistant';
 const FAST = { poll: 60_000, idle: 60_000, probe: 600, connect: 4_000, join: 4_000, call: 4_000, speak: 4_000, leave: 3_000, people: 60_000, name: 2_000, settle: 60, talkFast: 30, talkSafety: 60_000 };
 const yes = { approved: true };
 

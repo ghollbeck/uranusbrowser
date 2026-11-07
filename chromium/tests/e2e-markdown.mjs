@@ -1,5 +1,5 @@
 // End-to-end check of the agent's answers drawn as Markdown (shell/ui/markdownView.ts) in a real
-// Uranus Browser, through the real panel, with a stand-in native host that sends one rich answer
+// UrAnus Browser, through the real panel, with a stand-in native host that sends one rich answer
 // (so it runs without a model, the same for every provider):
 //   - headings, bold, lists, a task list, a quote, inline code and a code block with Copy;
 //   - a table with right-aligned numbers that scrolls inside the answer;
@@ -9,7 +9,7 @@
 //   - raw HTML and a javascript: link in the answer stay text;
 //   - light and dark screenshots.
 //
-//   node chromium/tests/e2e-markdown.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>] [--keep]
+//   node chromium/tests/e2e-markdown.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>] [--keep]
 import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -25,7 +25,7 @@ const arg = (name, fallback) => {
   return i > 0 ? process.argv[i + 1] : fallback;
 };
 const has = (name) => process.argv.includes(name);
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir', path.join(here, '../shell/dist'));
 const shots = arg('--shots');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -51,7 +51,7 @@ async function click(target, selector) {
   for (const type of ['mouseMoved', 'mousePressed', 'mouseReleased']) await target.send('Input.dispatchMouseEvent', { type, x: at.x, y: at.y, button: 'left', buttons: type === 'mousePressed' ? 1 : 0, clickCount: 1 });
 }
 
-// ---- the stand-in native host: relays between Uranus Browser and this script --------------------------
+// ---- the stand-in native host: relays between UrAnus Browser and this script --------------------------
 
 let hostSocket;
 const toolWaits = new Map();
@@ -117,14 +117,14 @@ process.stdin.on('end', () => process.exit(0));
 const launcher = path.join(hostDir, 'host');
 fs.writeFileSync(launcher, `#!/bin/sh\nexec "${process.execPath}" "${path.join(hostDir, 'host.mjs')}"\n`, { mode: 0o755 });
 const manifestFile = path.join(profile, 'NativeMessagingHosts/dev.oprimo.anus.host.json');
-const manifest = JSON.stringify({ name: 'dev.oprimo.anus.host', description: 'Uranus Browser overlay test stand-in', path: launcher, type: 'stdio', allowed_origins: [`chrome-extension://${SHELL_ID}/`] });
+const manifest = JSON.stringify({ name: 'dev.oprimo.anus.host', description: 'UrAnus Browser overlay test stand-in', path: launcher, type: 'stdio', allowed_origins: [`chrome-extension://${SHELL_ID}/`] });
 
 // ---- launch ----------------------------------------------------------------------------------
 
 fs.mkdirSync(path.dirname(manifestFile), { recursive: true });
 const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', `--anus-shell-dir=${path.resolve(shellDir)}`];
-console.log(`Uranus Browser: ${app}\nshell: ${shellDir}\nprofile: ${profile}`);
-const browser = spawn(path.join(app, 'Contents/MacOS/Uranus Browser'), flags, { stdio: 'ignore' });
+console.log(`UrAnus Browser: ${app}\nshell: ${shellDir}\nprofile: ${profile}`);
+const browser = spawn(path.join(app, 'Contents/MacOS/UrAnus Browser'), flags, { stdio: 'ignore' });
 reap(browser);
 const quit = () => has('--keep') || browser.kill();
 process.on('exit', quit);

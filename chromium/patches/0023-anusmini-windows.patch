@@ -15,8 +15,8 @@
 +    }
 +  }
 +
-+  // Uranus Browser: links from other apps open in a AnusMini, Uranus Browser's small window
-+  // for one page, while Uranus Browser's window is up (see anus_private_api.h).
++  // UrAnus Browser: links from other apps open in a AnusMini, UrAnus Browser's small window
++  // for one page, while UrAnus Browser's window is up (see anus_private_api.h).
 +  if (Profile* profile = [self lastProfileIfLoaded]) {
 +    StartupTabs rest;
 +    for (StartupTab& tab : startupTabs) {
@@ -115,7 +115,7 @@
 +    return false;
 +  }
 +  profile = profile->GetOriginalProfile();
-+  // Only once Uranus Browser's window is up; at launch the link opens as usual.
++  // Only once UrAnus Browser's window is up; at launch the link opens as usual.
 +  if (!AnusFrameHost::Main(profile) ||
 +      GetBrowserWindowCreationStatusForProfile(*profile) !=
 +          BrowserWindowInterface::CreationStatus::kOk) {
@@ -188,7 +188,7 @@
 +  }
 +  AnusFrameHost* main = AnusFrameHost::Main(anusmini->GetBrowserContext());
 +  if (!main) {
-+    return RespondNow(Error("Uranus Browser has no main window."));
++    return RespondNow(Error("UrAnus Browser has no main window."));
 +  }
 +  BrowserWindowInterface* source = anusmini->GetBrowserWindowInterface();
 +  BrowserWindowInterface* target = main->GetBrowserWindowInterface();
@@ -232,7 +232,7 @@
 +
  namespace extensions {
  
- // chrome.anusPrivate: what Uranus Browser's browser gives its shell, and only the
+ // chrome.anusPrivate: what UrAnus Browser's browser gives its shell, and only the
 @@ -67,6 +70,49 @@
    ResponseAction Run() override;
  };
@@ -267,7 +267,7 @@
 +// Whether links from other apps open in a AnusMini (setOpenLinksInAnusMini).
 +bool& AnusLinksOpenInAnusMini();
 +
-+// Opens `url`, a link from another app, in a new AnusMini if Uranus Browser wants
++// Opens `url`, a link from another app, in a new AnusMini if UrAnus Browser wants
 +// that and its window is up. Returns whether it did.
 +bool MaybeOpenLinkInAnusMini(Profile* profile, const GURL& url);
 +
@@ -407,7 +407,7 @@
  
 +  // The host of window `window_id`, or null.
 +  static AnusFrameHost* ForWindow(int window_id);
-+  // The window Uranus Browser's tabs live in: the last active window of `context`'s
++  // The window UrAnus Browser's tabs live in: the last active window of `context`'s
 +  // profile that is not a AnusMini, or null.
 +  static AnusFrameHost* Main(content::BrowserContext* context);
 +  // True while chrome.anusPrivate.openAnusMini() creates its window: the
@@ -421,7 +421,7 @@
    virtual void FocusPage() = 0;
    // Takes the keys in Shortcuts() from now on, and lets go of any others.
    virtual void UpdateShortcuts() = 0;
-+  // Whether the window is a AnusMini, Uranus Browser's small window for one page.
++  // Whether the window is a AnusMini, UrAnus Browser's small window for one page.
 +  virtual bool IsAnusMini() const = 0;
 +  // The window itself.
 +  virtual BrowserWindowInterface* GetBrowserWindowInterface() = 0;
@@ -443,14 +443,14 @@
  
  namespace {
 +
-+// Uranus Browser: whether `disposition` opens a new tab.
++// UrAnus Browser: whether `disposition` opens a new tab.
 +bool IsAnusNewTab(WindowOpenDisposition disposition) {
 +  return disposition == WindowOpenDisposition::kNewForegroundTab ||
 +         disposition == WindowOpenDisposition::kNewBackgroundTab ||
 +         disposition == WindowOpenDisposition::kSingletonTab;
 +}
 +
-+// Uranus Browser: when `browser` is a AnusMini, the window its new tabs go to.
++// UrAnus Browser: when `browser` is a AnusMini, the window its new tabs go to.
 +BrowserWindowInterface* AnusMiniMainWindow(BrowserWindowInterface& browser) {
 +  AnusFrameHost* host =
 +      AnusFrameHost::ForWindow(browser.GetSessionID().id());
@@ -469,7 +469,7 @@
                                    std::move(navigation_handle_callback));
 +  }
 +
-+  // Uranus Browser: a AnusMini is about its one page; the tabs it opens are Uranus Browser's.
++  // UrAnus Browser: a AnusMini is about its one page; the tabs it opens are UrAnus Browser's.
 +  if (source && IsAnusNewTab(params.disposition)) {
 +    if (BrowserWindowInterface* main = AnusMiniMainWindow(*browser_)) {
 +      return main->OpenURL(params, std::move(navigation_handle_callback));
@@ -481,7 +481,7 @@
      }
    }
  
-+  // Uranus Browser: a AnusMini's new tabs open in Uranus Browser's main window (real popups,
++  // UrAnus Browser: a AnusMini's new tabs open in UrAnus Browser's main window (real popups,
 +  // which need window.opener, stay popups).
 +  if (IsAnusNewTab(disposition)) {
 +    if (BrowserWindowInterface* main = AnusMiniMainWindow(*browser_)) {
@@ -612,21 +612,21 @@
          double ratio,
          optional DoneCallback callback);
 +
-+    // Opens a AnusMini, Uranus Browser's small window for one page: a normal window
++    // Opens a AnusMini, UrAnus Browser's small window for one page: a normal window
 +    // whose frame page is window.html?window=<id>&kind=anusmini, drawn as a
-+    // toolbar across the top. The tabs its page opens go to Uranus Browser's main
++    // toolbar across the top. The tabs its page opens go to UrAnus Browser's main
 +    // window. Calls back with the new window's id.
 +    static void openAnusMini(
 +        optional AnusMiniOptions options,
 +        optional WindowIdCallback callback);
 +
-+    // "Open in Uranus Browser": moves the AnusMini's page to Uranus Browser's main window
++    // "Open in UrAnus Browser": moves the AnusMini's page to UrAnus Browser's main window
 +    // (activated and in front) and closes the AnusMini. Calls back with the
 +    // page's tab id.
 +    static void openInAnus(long windowId, optional TabIdCallback callback);
 +
-+    // Whether links from other apps (Uranus Browser as the default browser) open in
-+    // a AnusMini, once Uranus Browser's window is up. On by default.
++    // Whether links from other apps (UrAnus Browser as the default browser) open in
++    // a AnusMini, once UrAnus Browser's window is up. On by default.
 +    static void setOpenLinksInAnusMini(
 +        boolean enabled,
 +        optional DoneCallback callback);

@@ -63,7 +63,7 @@ async function emit(started?: chrome.downloads.DownloadItem) {
 }
 
 export function registerDownloads() {
-  // The sidebar is Uranus Browser's download UI.
+  // The sidebar is UrAnus Browser's download UI.
   void chrome.downloads.setUiOptions({ enabled: false }).catch(() => undefined);
   chrome.downloads.onCreated.addListener((item) => void emit(item));
   chrome.downloads.onChanged.addListener(() => void emit());

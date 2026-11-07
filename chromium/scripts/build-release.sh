@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds the release (non-component, optimized) Uranus Browser.app and packages it.
+# Builds the release (non-component, optimized) UrAnus Browser.app and packages it.
 #
 #   chromium/scripts/build-release.sh [--dmg] [--no-package] [autoninja arguments...]
 #
@@ -15,22 +15,22 @@
 #      build (siso) only tracks files under the source root; it is not part of Chromium's git;
 #      Sparkle.framework (fetch-sparkle.sh) is staged the same way, at //anus/Sparkle.framework,
 #      for the app's Contents/Frameworks (patch 0053);
-#   4. writes out/Release/args.gn from chromium/build/release.gn plus Uranus Browser's version
+#   4. writes out/Release/args.gn from chromium/build/release.gn plus UrAnus Browser's version
 #      (package.json) and build number (see below), only when it changes, so a re-run doesn't
 #      regenerate. ANUS_OFFICIAL=1 adds is_official_build = true: ThinLTO, slower still,
 #      and a full rebuild when switched;
 #   5. autoninja -C out/Release chrome, under caffeinate so the Mac doesn't sleep;
-#   6. package-release.sh: copies the app to out/Release/anus-release/Uranus Browser, adds the
+#   6. package-release.sh: copies the app to out/Release/anus-release/UrAnus Browser, adds the
 #      native host (with its Node) and signs it all, ad hoc unless ANUS_SIGN_IDENTITY names
-#      an identity; --dmg also makes Uranus-Browser-<version>.dmg there. See that script.
-# Then copy Uranus Browser.app to /Applications and run
-#   chromium/scripts/install-native-host.sh --app "/Applications/Uranus Browser.app"
+#      an identity; --dmg also makes UrAnus-Browser-<version>.dmg there. See that script.
+# Then copy UrAnus Browser.app to /Applications and run
+#   chromium/scripts/install-native-host.sh --app "/Applications/UrAnus Browser.app"
 #
 # ANUS_ARCH=x64 builds for Intel Macs instead, into out/Release-x64 (see env.sh); its
 # package step needs an Intel Node in ANUS_NODE.
 #
 # Dev builds (build.sh, out/Dev) share the checkout: don't run both at once. The release app
-# uses the default profile folder, ~/Library/Application Support/Uranus Browser.
+# uses the default profile folder, ~/Library/Application Support/UrAnus Browser.
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=env.sh

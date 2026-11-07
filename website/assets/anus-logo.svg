@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <title>Uranus Browser</title>
-  <!-- Master of the Uranus Browser logo: a bright squircle tile (the ScienceOS desktop icon's plate), a bold ink arrow
+  <title>UrAnus Browser</title>
+  <!-- Master of the UrAnus Browser logo: a bright squircle tile (the ScienceOS desktop icon's plate), a bold ink arrow
        whose tail runs off the tile edge, an orange head. 1024 grid, tile 824 wide at 100,100 (macOS
        icon template). Everything else in chromium/branding is rendered from this by build-logo.sh. -->
   <defs>

@@ -1,4 +1,4 @@
-// End-to-end check of the central AI provider's UI in a real Uranus Browser (docs/ai-providers.md):
+// End-to-end check of the central AI provider's UI in a real UrAnus Browser (docs/ai-providers.md):
 //   - Settings › AI shows the ChatGPT, API key and on-device rows and a picker per feature;
 //     the settings search finds it; ChatGPT is greyed out for transcription, with the reason;
 //   - the Agent panel's model button names the chat's model, and its menu lists the models and
@@ -6,7 +6,7 @@
 //   - nothing in either page carries an API key.
 // Changes nothing: no key is saved, no sign-in started, no model picked.
 //
-//   node chromium/tests/e2e-ai.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--dev-host] [--shots <dir>]
+//   node chromium/tests/e2e-ai.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--dev-host] [--shots <dir>]
 import { spawn, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -20,7 +20,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = arg('--shell-dir');
 const shots = arg('--shots');
 const profile = path.join(here, '.scratch', `ai-profile-${Date.now()}`);
@@ -34,7 +34,7 @@ if (shots) fs.mkdirSync(shots, { recursive: true });
 fs.mkdirSync(profile, { recursive: true });
 const flags = [`--user-data-dir=${profile}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900'];
 if (shellDir) flags.push(`--anus-shell-dir=${path.resolve(shellDir)}`);
-const browser = spawn(path.join(app, 'Contents/MacOS/Uranus Browser'), flags, { stdio: 'ignore' });
+const browser = spawn(path.join(app, 'Contents/MacOS/UrAnus Browser'), flags, { stdio: 'ignore' });
 reap(browser);
 process.on('exit', () => browser.kill());
 

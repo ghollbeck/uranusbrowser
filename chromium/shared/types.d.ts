@@ -81,7 +81,7 @@ export interface HistoryEntry {
   lastVisit: number;
 }
 
-/** Another browser on this Mac with data Uranus Browser can bring over. */
+/** Another browser on this Mac with data UrAnus Browser can bring over. */
 export interface DetectedBrowser {
   id: string;
   name: string;
@@ -189,7 +189,7 @@ export interface ShortcutInfo {
   label: string;
   /** For display ("⇧⌘T"); empty when the command has no shortcut. */
   keys: string;
-  /** Differs from Uranus Browser's default. */
+  /** Differs from UrAnus Browser's default. */
   changed?: boolean;
   /** A family of keys like ⌘1…⌘9, shown but not recordable. */
   fixed?: boolean;
@@ -268,7 +268,7 @@ export interface AnusMiniState {
   loading: boolean;
   /** The active Space's colour, darkened in dark mode; the toolbar wears it. */
   tint: string;
-  /** Where "Open in Uranus Browser" puts the page. */
+  /** Where "Open in UrAnus Browser" puts the page. */
   space: { name: string; emoji?: string };
   searchEngineName: string;
 }
@@ -305,7 +305,7 @@ export interface SettingsView {
   /** Edited as text: one `label origin` per line. */
   environments: Array<{ id: string; name: string; targetsText: string }>;
   agent: { enabled: boolean; endpoint?: string; token?: string };
-  /** Why Uranus Browser's native host (imports, the agent bridge) last failed; undefined while it works. */
+  /** Why UrAnus Browser's native host (imports, the agent bridge) last failed; undefined while it works. */
   hostError?: string;
   theme: 'system' | 'light' | 'dark';
   archiveAfterHours: number;
@@ -319,7 +319,7 @@ export interface SettingsView {
 /** The downloads folder is only changed through the folder picker, never set directly. */
 export type SettingsPatch = Partial<Omit<SettingsView, 'searchEngines' | 'downloadsFolder' | 'defaultBrowser' | 'agent' | 'shortcuts' | 'notice'>> & {
   agentEnabled?: boolean;
-  /** An accelerator, null for no shortcut, or 'default' to go back to Uranus Browser's. */
+  /** An accelerator, null for no shortcut, or 'default' to go back to UrAnus Browser's. */
   shortcut?: { id: string; keys: string | null };
   resetShortcuts?: boolean;
 };
@@ -469,7 +469,7 @@ export interface AnusApi {
   clearToday(): void;
   /** Puts back the tabs the last close or delete took away, where they were (⌘Z in the sidebar). */
   undoClose(): void;
-  /** Brings over the Spaces and tabs of Uranus Browser's Electron version. */
+  /** Brings over the Spaces and tabs of UrAnus Browser's Electron version. */
   importMenu(): void;
   openPalette(mode: PaletteMode): void;
   closePalette(): void;

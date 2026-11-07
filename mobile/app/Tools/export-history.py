@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export desktop browser history (Arc, Chrome, Uranus Browser; any Chromium `History` file) as JSON for the
+"""Export desktop browser history (Arc, Chrome, UrAnus Browser; any Chromium `History` file) as JSON for the
 Algorithm Diet importer in the iOS app.
 
   python3 Tools/export-history.py --arc -o ./history.json          every Arc profile

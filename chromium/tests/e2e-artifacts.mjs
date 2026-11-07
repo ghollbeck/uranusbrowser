@@ -1,4 +1,4 @@
-// End-to-end test of visual artifacts in the Agent panel, in a real Uranus Browser (no OpenAI calls):
+// End-to-end test of visual artifacts in the Agent panel, in a real UrAnus Browser (no OpenAI calls):
 //   - each kind (table, bar/line/pie chart, cards, one-pager) is drawn from a chat snapshot with
 //     the right structure, text alternatives, a legend, and nothing clickable but the toolbar;
 //   - page-looking text (HTML, links, formulas) stays text;
@@ -6,7 +6,7 @@
 //   - the layout holds from 320 to 720 px, in light and dark, with reduced motion off and on;
 //   - Copy (real clipboard) and the downloads (CSV, SVG, PNG, Markdown) work on real clicks.
 //
-//   node chromium/tests/e2e-artifacts.mjs [--app /Applications/Uranus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>]
+//   node chromium/tests/e2e-artifacts.mjs [--app /Applications/UrAnus Browser.app] [--shell-dir chromium/shell/dist] [--shots <dir>]
 //
 // The installed app's bundled host is old and knows no show_artifact, so the chat entries are
 // handed to the panel the way the shell hub would: the test wraps the panel page's own port
@@ -24,7 +24,7 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const app = arg('--app', '/Applications/Uranus Browser.app');
+const app = arg('--app', '/Applications/UrAnus Browser.app');
 const shellDir = path.resolve(arg('--shell-dir', path.join(here, '../shell/dist')));
 const shots = arg('--shots');
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -170,7 +170,7 @@ const baseEntries = (kinds) => [
 async function launch() {
   fs.mkdirSync(profile, { recursive: true });
   const browser = spawn(
-    path.join(app, 'Contents/MacOS/Uranus Browser'),
+    path.join(app, 'Contents/MacOS/UrAnus Browser'),
     [`--user-data-dir=${profile}`, `--anus-shell-dir=${shellDir}`, '--remote-debugging-port=0', '--use-mock-keychain', '--disable-features=MacAppCodeSignClone', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900', '--window-position=60,40'],
     { stdio: 'ignore' },
   );

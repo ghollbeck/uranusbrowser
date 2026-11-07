@@ -1,7 +1,7 @@
 // Meeting notes, the pure parts: transcript cleaning, the grounded summary, titles, names from
 // the meeting page, and the WAV the capture page makes. Most cases are ported from OpenWhisper's
 // unit tests (src/main/meetings/*.test.mjs and src/main/recorder/names.test.mjs, MIT licensed,
-// the user's own app), re-pointed at Uranus Browser's shared modules.
+// the user's own app), re-pointed at UrAnus Browser's shared modules.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {

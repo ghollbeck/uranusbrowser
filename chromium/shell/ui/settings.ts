@@ -502,7 +502,7 @@ function render(view: SettingsView) {
   endpoint.textContent = agent.endpoint ?? (agent.enabled ? view.hostError : undefined) ?? 'Starting…';
   endpoint.classList.toggle('host-error', !agent.endpoint && !!view.hostError);
   for (const id of ['copyClaudeCommand', 'copyAgentJson']) (document.getElementById(id) as HTMLButtonElement).disabled = !agent.endpoint;
-  // Look for browsers again once the host works (Uranus Browser was reopened, say).
+  // Look for browsers again once the host works (UrAnus Browser was reopened, say).
   const hostWorksNow = !!hostError && !view.hostError;
   hostError = view.hostError;
   if (hostWorksNow && browsers && !browsers.length) detectBrowsers();
@@ -516,10 +516,10 @@ function render(view: SettingsView) {
   makeDefault.hidden = isDefault;
   makeDefault.disabled = !canSet;
   defaultStatus.textContent = isDefault
-    ? 'Uranus Browser is your default browser.'
+    ? 'UrAnus Browser is your default browser.'
     : canSet
       ? 'Links from other apps open in your current default browser.'
-      : 'Not available in this build of Uranus Browser.';
+      : 'Not available in this build of UrAnus Browser.';
 }
 
 makeDefault.addEventListener('click', async () => render(await api.makeDefaultBrowser()));
