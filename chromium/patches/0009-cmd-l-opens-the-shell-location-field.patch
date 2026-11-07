@@ -1,0 +1,110 @@
+--- /dev/null
++++ b/chrome/browser/anus/anus_shell_commands.h
+@@ -0,0 +1,44 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_ANUS_ANUS_SHELL_COMMANDS_H_
++#define CHROME_BROWSER_ANUS_ANUS_SHELL_COMMANDS_H_
++
++#include <memory>
++#include <string_view>
++#include <utility>
++
++#include "base/memory/scoped_refptr.h"
++#include "chrome/browser/anus/anus_shell.h"
++#include "chrome/browser/profiles/profile.h"
++#include "extensions/browser/event_router.h"
++#include "extensions/browser/extension_event_histogram_value.h"
++#include "extensions/browser/extension_registry.h"
++#include "extensions/common/event_args.h"
++
++// Browser commands that Uranus Browser hands to the shell (chromium/shell) instead of
++// Chromium's own UI. Each is one of the "commands" in the shell's manifest,
++// and reaches it as chrome.commands.onCommand(name), the way an extension
++// keyboard shortcut would.
++inline constexpr char kAnusOpenLocationCommand[] = "anus-open-location";
++
++inline void DispatchAnusShellCommand(Profile* profile,
++                                       std::string_view command) {
++  profile = profile->GetOriginalProfile();
++  if (!extensions::ExtensionRegistry::Get(profile)
++           ->enabled_extensions()
++           .Contains(kAnusShellExtensionId)) {
++    return;
++  }
++  auto args = base::MakeRefCounted<extensions::EventArgs>();
++  args->data.Append(command);
++  auto event = std::make_unique<extensions::Event>(
++      extensions::events::COMMANDS_ON_COMMAND, "commands.onCommand",
++      std::move(args), profile);
++  event->user_gesture = extensions::EventRouter::UserGestureState::kEnabled;
++  extensions::EventRouter::Get(profile)->DispatchEventToExtension(
++      kAnusShellExtensionId, std::move(event));
++}
++
++#endif  // CHROME_BROWSER_ANUS_ANUS_SHELL_COMMANDS_H_
+--- a/chrome/browser/ui/browser_actions.cc
++++ b/chrome/browser/ui/browser_actions.cc
+@@ -78,6 +78,7 @@
+ #include "chrome/browser/devtools/devtools_policy_dialog.h"
+ #include "chrome/browser/devtools/devtools_window.h"
+ #include "chrome/browser/feedback/show_feedback_page.h"
++#include "chrome/browser/anus/anus_shell_commands.h"
+ #include "chrome/browser/glic/public/glic_enabling.h"
+ #include "chrome/browser/indigo/resources/grit/indigo_strings.h"
+ #include "chrome/browser/lifetime/application_lifetime_desktop.h"
+@@ -168,6 +169,7 @@
+ #include "chrome/browser/ui/views/commerce/discounts_page_action_view_controller.h"
+ #include "chrome/browser/ui/views/file_system_access/file_system_access_bubble_controller.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
++#include "chrome/browser/ui/views/frame/anus_top_chrome.h"
+ #include "chrome/browser/ui/views/frame/toolbar_button_provider.h"
+ #include "chrome/browser/ui/views/js_optimization/js_optimizations_page_action_controller.h"
+ #include "chrome/browser/ui/views/location_bar/cookie_controls/cookie_controls_page_action_controller.h"
+@@ -3584,6 +3586,13 @@
+           base::BindRepeating(
+               [](BrowserWindowInterface* bwi, actions::ActionItem* item,
+                  actions::ActionInvocationContext context) {
++                // Uranus Browser: the sidebar owns the URL, so Cmd+L opens the shell's
++                // location field instead of focusing the hidden omnibox.
++                if (AnusHidesTopChrome(bwi)) {
++                  DispatchAnusShellCommand(bwi->GetProfile(),
++                                             kAnusOpenLocationCommand);
++                  return;
++                }
+                 if (!BrowserWindow::FromBrowser(bwi)->IsLocationBarVisible()) {
+                   return;
+                 }
+--- a/chrome/browser/ui/browser_command_controller.cc
++++ b/chrome/browser/ui/browser_command_controller.cc
+@@ -34,6 +34,7 @@
+ #include "chrome/browser/enterprise/isolated_mode/isolated_mode_settings_service_factory.h"
+ #include "chrome/browser/feedback/public/feedback_source.h"
+ #include "chrome/browser/feedback/show_feedback_page.h"
++#include "chrome/browser/anus/anus_shell_commands.h"
+ #include "chrome/browser/glic/glic_enums.h"
+ #include "chrome/browser/glic/glic_pref_names.h"
+ #include "chrome/browser/glic/glic_profile_manager.h"
+@@ -97,6 +98,7 @@
+ #include "chrome/browser/ui/ui_features.h"
+ #include "chrome/browser/ui/user_education/browser_user_education_interface.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
++#include "chrome/browser/ui/views/frame/anus_top_chrome.h"
+ #include "chrome/browser/ui/views/side_panel/tabs_from_other_devices/tabs_from_other_devices_side_panel_coordinator.h"
+ #include "chrome/browser/ui/web_applications/app_browser_controller.h"
+ #include "chrome/browser/ui/web_applications/web_app_dialog_utils.h"
+@@ -1148,6 +1150,12 @@
+       FocusToolbar(browser_);
+       break;
+     case IDC_FOCUS_LOCATION:
++      // Uranus Browser: the sidebar owns the URL, so Cmd+L opens the shell's location
++      // field instead of focusing the hidden omnibox.
++      if (AnusHidesTopChrome(browser_)) {
++        DispatchAnusShellCommand(profile(), kAnusOpenLocationCommand);
++        break;
++      }
+       if (!window()->IsLocationBarVisible()) {
+         break;
+       }

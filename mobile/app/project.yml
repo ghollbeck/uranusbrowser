@@ -1,0 +1,74 @@
+name: Flecha
+options:
+  bundleIdPrefix: dev.oprimo.flecha
+  deploymentTarget: { iOS: "26.0" }
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  Flecha:
+    type: application
+    platform: iOS
+    scheme:
+      testTargets: [FlechaUITests]
+    sources:
+      - path: Sources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: Uranus Browser
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        ITSAppUsesNonExemptEncryption: false   # only Apple's HTTPS, so no export compliance questions per build
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSCameraUsageDescription: Websites you open can ask to use the camera.
+        NSMicrophoneUsageDescription: Websites you open can ask to use the microphone.
+        NSLocationWhenInUseUsageDescription: Websites you open can ask for your location.
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.oprimo.anus.mobile
+            CFBundleURLSchemes: [flecha]
+          # Required for the default-browser entitlement; iOS only routes web links here once Apple grants it.
+          - CFBundleURLName: dev.oprimo.anus.mobile.web
+            CFBundleURLSchemes: [http, https]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.oprimo.anus.mobile
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon   # rendered by Tools/make-icon.sh
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1"
+        # Algorithm Diet: llama.cpp (Tools/fetch-llama.sh) runs Underdog Woof on the iPhone. The release has no
+        # Simulator slice, so only iphoneos builds see and link it (Simulator builds use the Mac bridge).
+        "FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]": "$(inherited) $(SRCROOT)/Vendor/llama.xcframework/ios-arm64"
+        "OTHER_LDFLAGS[sdk=iphoneos*]": "$(inherited) -framework llama"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
+        ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+    postBuildScripts:
+      - name: Embed llama.framework (device)
+        basedOnDependencyAnalysis: false
+        script: |
+          FW="$SRCROOT/Vendor/llama.xcframework/ios-arm64/llama.framework"
+          [ "$PLATFORM_NAME" = iphoneos ] && [ -d "$FW" ] || exit 0
+          DEST="$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH"
+          mkdir -p "$DEST"
+          rsync -a --delete "$FW" "$DEST/"
+          if [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ] && [ "${CODE_SIGNING_ALLOWED:-YES}" != NO ]; then
+            codesign --force --sign "$EXPANDED_CODE_SIGN_IDENTITY" --timestamp=none "$DEST/llama.framework"
+          fi
+  # Device/Simulator UI tests (UITests/): the Share › Save as Web App flow, tapped for real.
+  FlechaUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: Flecha
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.oprimo.anus.mobile.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Flecha
+        TARGETED_DEVICE_FAMILY: "1"

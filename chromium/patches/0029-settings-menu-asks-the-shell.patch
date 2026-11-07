@@ -1,0 +1,30 @@
+--- a/chrome/browser/ui/chrome_pages.cc
++++ b/chrome/browser/ui/chrome_pages.cc
+@@ -27,6 +27,7 @@
+ #include "chrome/browser/extensions/extension_util.h"
+ #include "chrome/browser/file_system_access/file_system_access_features.h"
+ #include "chrome/browser/anus/anus_shell.h"
++#include "chrome/browser/anus/anus_shell_events.h"
+ #include "chrome/browser/policy/profile_policy_connector.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/signin/account_consistency_mode_manager.h"
+@@ -471,12 +472,13 @@
+           ->enabled_extensions()
+           .Contains(kAnusShellExtensionId)) {
+     base::RecordAction(UserMetricsAction("ShowOptions"));
+-    FocusWebContents(browser);
+-    ShowSingletonTabOverwritingNTP(
+-        browser,
+-        GURL(base::StrCat({extensions::kExtensionScheme,
+-                           url::kStandardSchemeSeparator,
+-                           kAnusShellExtensionId, "/settings.html"})));
++    // The shell opens Settings its own way (a window of its own, like the
++    // spike): it gets the "settings" command as if its shortcut was pressed.
++    base::ListValue args;
++    args.Append("settings");
++    args.Append(browser->GetSessionID().id());
++    DispatchAnusShellEvent(browser->GetProfile(), "anusPrivate.onShortcut",
++                             std::move(args));
+     return;
+   }
+   ShowSettingsSubPage(browser, std::string());

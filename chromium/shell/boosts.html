@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self'; img-src * data:; style-src 'self'; script-src 'self'; object-src 'none'" />
+    <title>Boosts</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="select.css" />
+    <link rel="stylesheet" href="boosts.css" />
+  </head>
+  <body>
+    <nav>
+      <h1>Boosts</h1>
+      <p class="lead">Your own TypeScript and CSS for any site. Named after the host; <code>all.css</code> styles every site.</p>
+      <form id="new">
+        <input id="new-host" placeholder="github.com" spellcheck="false" autocomplete="off" aria-label="Site" />
+        <select id="new-kind" aria-label="Kind">
+          <option value="script">Script</option>
+          <option value="styles">Styles</option>
+        </select>
+        <button class="button">Add</button>
+      </form>
+      <ul id="list"></ul>
+      <p id="empty" class="hint" hidden>No boosts yet. Press <kbd>⌥⌘B</kbd> on any site, or add one above.</p>
+    </nav>
+    <main>
+      <header>
+        <strong id="name"></strong>
+        <span id="status" class="hint"></span>
+        <span class="spacer"></span>
+        <button id="delete" class="button danger">Delete</button>
+        <button id="save" class="button primary">Save <kbd>⌘S</kbd></button>
+      </header>
+      <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      <p id="nothing" class="hint">Pick a boost on the left.</p>
+    </main>
+    <script type="module" src="boostsPage.js"></script>
+  </body>
+</html>

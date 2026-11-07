@@ -1,0 +1,25 @@
+--- a/chrome/browser/ui/views/session_crashed_bubble_view.cc
++++ b/chrome/browser/ui/views/session_crashed_bubble_view.cc
+@@ -32,6 +32,7 @@
+ #include "chrome/browser/ui/views/chrome_typography.h"
+ #include "chrome/browser/ui/views/frame/app_menu_button.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
++#include "chrome/browser/ui/views/frame/anus_top_chrome.h"
+ #include "chrome/browser/ui/views/frame/toolbar_button_provider.h"
+ #include "chrome/browser/ui/views/toolbar/app_menu_control.h"
+ #include "chrome/browser/ui/views/toolbar/toolbar_view.h"
+@@ -285,6 +286,14 @@
+     return nullptr;
+   }
+ 
++  // Uranus Browser: the bubble hangs off the app menu button, which Uranus Browser's windows
++  // never draw, and before the window is shown there is no fallback anchor
++  // either (AppMenuButton::GetAnchor() CHECKs), so the next launch after a
++  // crash would crash too. Skip the "Restore pages?" bubble instead.
++  if (AnusHidesTopChrome(browser)) {
++    return nullptr;
++  }
++
+   auto* control = browser_view->toolbar_button_provider()->GetAppMenuControl();
+   views::BubbleAnchor anchor =
+       control ? control->GetAnchor() : views::BubbleAnchor();

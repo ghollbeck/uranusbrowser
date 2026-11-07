@@ -1,0 +1,150 @@
+/* Uranus Browser's dropdown (ui/select.ts): replaces the OS menu of every <select>. The button takes the
+   classes of the select it replaces (.select, .mt-mic, .field …) for size and surface; the rules
+   here only add what a button needs and a fallback look when the host class says nothing. */
+
+.fs-wrap {
+  display: contents;
+}
+
+.fs-native {
+  display: none !important;
+}
+
+button.fs-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+  text-align: left;
+  cursor: default;
+  user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+:where(button.fs-trigger) {
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--ds-r-sm);
+  background: var(--settings-control);
+  box-shadow: 0 0 0 1px var(--surface-line);
+  color: var(--text);
+  font: 500 var(--text-md) var(--font);
+}
+
+button.fs-trigger:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+button.fs-trigger:disabled {
+  opacity: 0.55;
+}
+
+.fs-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fs-chevron {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--text-2);
+  transition: transform var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+
+button.fs-trigger:not(:disabled):hover .fs-chevron,
+button.fs-trigger[aria-expanded='true'] .fs-chevron {
+  color: var(--text);
+}
+
+button.fs-trigger[aria-expanded='true'] .fs-chevron {
+  transform: rotate(180deg);
+}
+
+/* The list: in the top layer, so no sheet, popover or scroll area clips it. */
+.fs-menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  box-sizing: border-box;
+  padding: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  border: 0;
+  border-radius: var(--ds-r-md);
+  background: var(--settings-page);
+  color: var(--text);
+  box-shadow: var(--shadow-pop);
+  font: 500 var(--text-md) var(--font);
+  outline: none;
+}
+
+.fs-menu:popover-open {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--fast) var(--ease), transform var(--fast) var(--ease);
+}
+
+@starting-style {
+  .fs-menu:popover-open {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.fs-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: var(--ds-h-sm);
+  padding: 0 8px;
+  border-radius: var(--ds-r-sm);
+  cursor: default;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.fs-item > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fs-item[data-active='true'] {
+  background: var(--settings-soft);
+}
+
+.fs-item[aria-disabled='true'] {
+  opacity: 0.45;
+}
+
+.fs-check {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  visibility: hidden;
+}
+
+.fs-item[aria-selected='true'] .fs-check {
+  visibility: visible;
+}

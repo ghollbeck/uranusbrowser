@@ -1,0 +1,63 @@
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -15,6 +15,7 @@
+ #include "chrome/browser/shell_integration.h"
+ #include "chrome/browser/extensions/extension_tab_util.h"
+ #include "chrome/browser/ui/browser.h"
++#include "chrome/browser/ui/browser_commands.h"
+ #include "chrome/browser/ui/browser_tabstrip.h"
+ #include "chrome/browser/ui/browser_window/public/create_browser_window.h"
+ #include "chrome/common/webui_url_constants.h"
+@@ -479,6 +480,21 @@
+                : DevToolsToggleAction::Show(),
+       console ? DevToolsOpenedByAction::kConsoleShortcut
+               : DevToolsOpenedByAction::kMainMenuOrMainShortcut);
++  return RespondNow(NoArguments());
++}
++
++ExtensionFunction::ResponseAction AnusPrivateShowFindBarFunction::Run() {
++  auto params = anus_private::ShowFindBar::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  AnusFrameHost* host =
++      params->window_id ? HostForWindow(*params->window_id, browser_context())
++                        : AnusFrameHost::Main(Profile::FromBrowserContext(
++                                                    browser_context())
++                                                    ->GetOriginalProfile());
++  if (!host) {
++    return RespondNow(Error(kNoWindowError, "(find)"));
++  }
++  chrome::Find(host->GetBrowserWindowInterface());
+   return RespondNow(NoArguments());
+ }
+ 
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -142,6 +142,15 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateShowFindBarFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.showFindBar", UNKNOWN)
++
++ protected:
++  ~AnusPrivateShowFindBarFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ class AnusPrivateIsDefaultBrowserFunction : public ExtensionFunction {
+  public:
+   DECLARE_EXTENSION_FUNCTION("anusPrivate.isDefaultBrowser", UNKNOWN)
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -167,6 +167,10 @@
+         optional DevToolsOptions options,
+         optional DoneCallback callback);
+ 
++    // Chromium's find bar (find in page) in the given window or the main
++    // one, at the page area's top right.
++    static void showFindBar(optional long windowId, optional DoneCallback callback);
++
+     static void isDefaultBrowser(DefaultBrowserCallback callback);
+     // Asks macOS to make Uranus Browser the default browser (it shows its own
+     // confirmation), then calls back with the result.

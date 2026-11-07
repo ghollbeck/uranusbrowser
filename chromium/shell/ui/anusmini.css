@@ -1,0 +1,414 @@
+/* AnusMini: the small window for links from other apps. Values come from tokens.css. */
+
+:root {
+  --toolbar: 44px;
+  /* The one loud control: moving the page into Uranus Browser. */
+  --cta: var(--ink);
+  --cta-text: #fff;
+  --cta-hover: #3a3b3e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cta: #ececec;
+    --cta-text: #202123;
+    --cta-hover: #ffffff;
+  }
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  color: var(--text);
+  font: 400 var(--text-md) / 1.35 var(--font);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  /* Opaque, like the sidebar: the window behind wears the same tint. */
+  background: var(--tint, #cdd9f7);
+}
+
+/* ---- toolbar -------------------------------------------------------------- */
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: var(--toolbar);
+  flex: none;
+  padding: 0 8px 0 6px;
+  -webkit-app-region: drag;
+}
+
+#toolbar button,
+#address {
+  -webkit-app-region: no-drag;
+}
+
+.traffic-lights {
+  width: 72px;
+  flex: none;
+}
+
+/* In fullscreen the traffic lights aren't in the toolbar (patch 0039). */
+@media (display-mode: fullscreen) {
+  .traffic-lights {
+    display: none;
+  }
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.icon-button:active:not(:disabled) {
+  background: var(--fill-active);
+}
+
+.icon-button:disabled {
+  color: var(--text-3);
+  opacity: 0.55;
+}
+
+/* ---- address -------------------------------------------------------------- */
+
+#address {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  /* Every toolbar control is 28 tall, 8 from the toolbar's top and bottom: the page's 8px gap. */
+  height: 28px;
+  margin: 0 6px;
+  padding-right: 2px;
+  /* 8px in from the window's edge like the page, so concentric with the window's corners. */
+  border-radius: var(--page-radius);
+  background: var(--fill-subtle);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+  transition: background var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
+}
+
+#address:hover {
+  background: var(--fill-hover);
+}
+
+#address.editing {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--settings-soft);
+}
+
+#address-show {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  padding: 0 4px 0 10px;
+  text-align: left;
+  transition: opacity var(--fast) var(--ease);
+}
+
+#address-show[hidden],
+#address-edit[hidden] {
+  display: none;
+}
+
+#site-icon {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--text-3);
+}
+
+#site-icon img {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px; /* a favicon-sized square, not a control */
+}
+
+#site-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+#site-icon.insecure {
+  color: var(--amber);
+}
+
+#host {
+  flex: none;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+#page-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-3);
+}
+
+#page-title:not(:empty)::before {
+  content: '—';
+  margin-right: 6px;
+  color: var(--text-3);
+  opacity: 0.6;
+}
+
+#address-edit {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  margin: 0;
+  padding: 0 8px 0 10px;
+  color: var(--text-3);
+}
+
+#address-edit svg {
+  width: 14px;
+  height: 14px;
+}
+
+#address-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#address-input::placeholder {
+  color: var(--text-3);
+}
+
+.address-action {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--fast) var(--ease), background var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+
+#address:hover .address-action:not(:disabled),
+.address-action:focus-visible {
+  opacity: 1;
+}
+
+.address-action:hover {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.address-action svg {
+  width: 15px;
+  height: 15px;
+}
+
+#address.editing .address-action {
+  display: none;
+}
+
+/* Loading: a thin line running along the bottom of the address. */
+#address.loading::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 30%;
+  border-radius: 999px;
+  background: var(--blue);
+  animation: loading 1.1s var(--ease) infinite;
+  pointer-events: none;
+}
+
+@keyframes loading {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+/* A short confirmation ("Link copied") in place of the address, which steps aside for it. */
+#address.flashing #address-show,
+#address.flashing .address-action {
+  opacity: 0;
+}
+
+#address.flashing::after {
+  content: '✓  ' attr(data-flash);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  white-space: pre;
+  pointer-events: none;
+  animation: flash-in var(--medium) var(--ease);
+}
+
+@keyframes flash-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* ---- Open in Uranus Browser ------------------------------------------------------ */
+
+#open-in-anus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  flex: none;
+  padding: 0 12px 0 10px;
+  border-radius: var(--page-radius);
+  background: var(--cta);
+  color: var(--cta-text);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  transition: background var(--fast) var(--ease), transform var(--fast) var(--ease), opacity var(--fast) var(--ease);
+}
+
+#open-in-anus:hover:not(:disabled) {
+  background: var(--cta-hover);
+}
+
+#open-in-anus:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Nothing to keep until something is open. */
+body.is-empty #open-in-anus {
+  display: none;
+}
+
+#open-in-anus svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Narrow windows keep the icon only. */
+@media (max-width: 560px) {
+  #open-in-anus {
+    padding: 0 8px;
+  }
+
+  #open-in-anus span {
+    display: none;
+  }
+}
+
+/* ---- empty ----------------------------------------------------------------- */
+
+#empty {
+  flex: 1;
+  display: flex;
+  padding: 0 8px 8px;
+}
+
+#empty[hidden] {
+  display: none;
+}
+
+.empty-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-bottom: 8vh;
+  border-radius: var(--ds-r-md);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  text-align: center;
+  animation: rise var(--medium) var(--ease);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.empty-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--tint, var(--surface-2));
+  color: var(--text-2);
+}
+
+.empty-mark svg {
+  width: 20px;
+  height: 20px;
+}
+
+.empty-card h1 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.empty-card p {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.empty-card .keys {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}

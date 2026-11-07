@@ -1,0 +1,163 @@
+/* The Boosts page: a list of boosts and a plain code editor. Values come from tokens.css. */
+
+html {
+  background: var(--surface-2);
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  font: var(--text-md, 13px) / 1.45 var(--font);
+  color: var(--text);
+}
+
+nav {
+  padding: 20px 16px;
+  border-right: 1px solid var(--surface-line);
+  overflow-y: auto;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.lead,
+.hint {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+code,
+kbd {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+#new {
+  display: flex;
+  gap: 6px;
+  margin: 14px 0;
+}
+
+#new-host {
+  flex: 1;
+  min-width: 0;
+}
+
+input,
+select,
+.button {
+  font: inherit;
+  color: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--surface-line);
+  border-radius: var(--ds-r-sm);
+  background: var(--surface);
+}
+
+.button {
+  cursor: default;
+}
+
+.button.primary {
+  background: var(--selection);
+  border-color: transparent;
+  color: var(--selection-text);
+}
+
+.button.danger {
+  color: var(--red);
+}
+
+#list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#list button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: var(--ds-r-sm);
+  background: none;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: inherit;
+  text-align: left;
+}
+
+#list button:hover {
+  background: var(--surface);
+}
+
+#list button.current {
+  background: var(--selection);
+  color: var(--selection-text);
+}
+
+#list .kind {
+  opacity: 0.6;
+}
+
+#list .broken::after {
+  content: ' ●';
+  color: var(--red);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--surface);
+}
+
+main header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--surface-line);
+}
+
+#name {
+  font-family: var(--mono);
+}
+
+#status.error {
+  color: var(--red);
+  white-space: pre-wrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+#code {
+  flex: 1;
+  margin: 0;
+  padding: 14px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: inherit;
+  font: 12.5px / 1.55 var(--mono);
+  tab-size: 2;
+}
+
+#nothing {
+  padding: 20px;
+}
+
+main.empty header,
+main.empty #code,
+main:not(.empty) #nothing {
+  display: none;
+}

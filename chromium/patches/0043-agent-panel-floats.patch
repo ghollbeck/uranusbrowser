@@ -1,0 +1,212 @@
+--- a/chrome/browser/anus/anus_frame_host.h
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -15,6 +15,7 @@
+ 
+ #include "third_party/skia/include/core/SkColor.h"
+ #include "ui/base/accelerators/accelerator.h"
++#include "ui/base/class_property.h"
+ #include "ui/gfx/geometry/insets.h"
+ #include "ui/gfx/geometry/point.h"
+ #include "ui/gfx/geometry/rect.h"
+@@ -72,7 +73,14 @@
+ // margins included, between these widths (and at most half the window).
+ inline constexpr int kAnusAgentPanelMinWidth = 280;
+ inline constexpr int kAnusAgentPanelMaxWidth = 800;
++// Uranus Browser: a floating Agent panel is at least this tall.
++inline constexpr int kAnusAgentPanelMinHeight = 240;
+ 
++// Uranus Browser: set on the Agent panel's view while it floats over the page: where,
++// in the browser view's coordinates (anus_frame_view.cc defines it; the
++// layout reads it).
++extern const ui::ClassProperty<gfx::Rect*>* const kAnusFloatingAgentPanelKey;
++
+ // AnusMini (src/main/anusmini.ts): the frame page is a toolbar this tall
+ // across the top, and the page sits under it, kAnusGap from the other edges.
+ inline constexpr int kAnusMiniToolbarHeight = 44;
+@@ -211,7 +219,13 @@
+   // Uranus Browser: shows or hides the Agent panel beside the page area, on its left
+   // (between the sidebar and the page) or its right, `width` px wide; `focus`
+   // moves keyboard focus into it. The page area shrinks to make room.
+-  virtual void SetAgentPanel(bool open, bool left, int width, bool focus) = 0;
++  // `floating`: the panel floats over the page at this rect (window
++  // coordinates) instead, and the page area keeps its size.
++  virtual void SetAgentPanel(bool open,
++                             bool left,
++                             int width,
++                             bool focus,
++                             const std::optional<gfx::Rect>& floating) = 0;
+   // Takes the keys in Shortcuts() from now on, and lets go of any others.
+   virtual void UpdateShortcuts() = 0;
+   // Whether the window is a AnusMini, Uranus Browser's small window for one page.
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -47,6 +47,15 @@
+   enum AgentPanelSide {
+     left,
+     right
++  };
++
++  // Uranus Browser: where a floating Agent panel sits, in the window's coordinates
++  // (px from its top left corner); kept inside the window.
++  dictionary AgentPanelFloat {
++    long x;
++    long y;
++    long width;
++    long height;
+   };
+ 
+   // Uranus Browser: the Agent panel (the shell's agent.html?window=<id>) beside the
+@@ -59,6 +68,9 @@
+     long width;
+     // Moves keyboard focus into the panel; otherwise focus stays put.
+     boolean? focus;
++    // Floats the panel over the page at this rect instead of docking it
++    // beside the page; the page area keeps its full size.
++    AgentPanelFloat? floating;
+   };
+ 
+   callback DoneCallback = void();
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -198,6 +198,14 @@
+       std::clamp(params->state.width, kAnusAgentPanelMinWidth,
+                  kAnusAgentPanelMaxWidth);
+   const bool focus = params->state.focus.value_or(false);
++  std::optional<gfx::Rect> floating;
++  if (params->state.floating) {
++    const auto& f = *params->state.floating;
++    floating = gfx::Rect(f.x, f.y,
++                         std::clamp(f.width, kAnusAgentPanelMinWidth,
++                                    kAnusAgentPanelMaxWidth),
++                         std::max(f.height, kAnusAgentPanelMinHeight));
++  }
+ 
+   if (params->window_id) {
+     AnusFrameHost* host = HostForWindow(*params->window_id, browser_context());
+@@ -205,12 +213,12 @@
+       return RespondNow(Error(kNoWindowError,
+                               base::NumberToString(*params->window_id)));
+     }
+-    host->SetAgentPanel(params->state.open, left, width, focus);
++    host->SetAgentPanel(params->state.open, left, width, focus, floating);
+     return RespondNow(NoArguments());
+   }
+   for (AnusFrameHost* host : AnusFrameHost::All()) {
+     if (SameProfile(host, browser_context())) {
+-      host->SetAgentPanel(params->state.open, left, width, focus);
++      host->SetAgentPanel(params->state.open, left, width, focus, floating);
+     }
+   }
+   return RespondNow(NoArguments());
+--- a/chrome/browser/ui/views/frame/anus_frame_view.h
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -105,7 +105,11 @@
+   void SetFrameState(const AnusFrameState& state) override;
+   void FocusFrame() override;
+   void FocusPage() override;
+-  void SetAgentPanel(bool open, bool left, int width, bool focus) override;
++  void SetAgentPanel(bool open,
++                     bool left,
++                     int width,
++                     bool focus,
++                     const std::optional<gfx::Rect>& floating) override;
+   void UpdateShortcuts() override;
+   void OpenPeek(const GURL& url, content::WebContents* source) override;
+   void OpenPeekWithContents(
+@@ -189,6 +193,8 @@
+   bool agent_panel_open_ = false;
+   bool agent_panel_left_ = false;
+   int agent_panel_width_ = 400;
++  // Where the panel floats over the page, if it does (window coordinates).
++  std::optional<gfx::Rect> agent_panel_float_;
+   // The width ApplyState() last made room for.
+   int applied_agent_panel_width_ = 0;
+ 
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -34,6 +34,7 @@
+ #include "content/public/browser/render_frame_host.h"
+ #include "content/public/browser/render_widget_host.h"
+ #include "content/public/browser/render_widget_host_view.h"
++#include "ui/views/view_class_properties.h"
+ #include "content/public/browser/site_instance.h"
+ #include "content/public/browser/web_contents.h"
+ #include "extensions/browser/event_router.h"
+@@ -423,10 +424,14 @@
+   SetWebContents(nullptr);
+ }
+ 
+-void AnusFrameView::SetAgentPanel(bool open, bool left, int width,
+-                                    bool focus) {
++void AnusFrameView::SetAgentPanel(bool open,
++                                    bool left,
++                                    int width,
++                                    bool focus,
++                                    const std::optional<gfx::Rect>& floating) {
+   agent_panel_open_ = open;
+   agent_panel_left_ = left;
++  agent_panel_float_ = floating;
+   agent_panel_width_ = std::clamp(width, kAnusAgentPanelMinWidth,
+                                   kAnusAgentPanelMaxWidth);
+   UpdateAgentPanelPage();
+@@ -440,8 +445,10 @@
+ }
+ 
+ int AnusFrameView::AgentPanelWidth() const {
+-  // AnusMinis have no panel, and it waits for the frame page (the shell).
+-  if (!agent_panel_open_ || !agent_panel_ || state_.anusmini) {
++  // AnusMinis have no panel, and it waits for the frame page (the shell). A
++  // floating panel takes no room beside the page.
++  if (!agent_panel_open_ || !agent_panel_ || state_.anusmini ||
++      agent_panel_float_) {
+     return 0;
+   }
+   const int half_window = browser_view_->width() / 2;
+@@ -926,7 +933,16 @@
+   }
+   if (auto* panel_view = views::AsViewClass<AnusAgentPanelWebView>(
+           agent_panel_view_.view())) {
+-    panel_view->SetWidth(applied_agent_panel_width_);
++    // Floating: the layout puts it where the shell asked, over the page.
++    if (agent_panel_float_ && agent_panel_open_ && agent_panel_ &&
++        !state_.anusmini) {
++      panel_view->SetProperty(kAnusFloatingAgentPanelKey,
++                              *agent_panel_float_);
++      panel_view->SetWidth(agent_panel_float_->width());
++    } else {
++      panel_view->ClearProperty(kAnusFloatingAgentPanelKey);
++      panel_view->SetWidth(applied_agent_panel_width_);
++    }
+   }
+   if (views::View* background = background_view()) {
+     background->SetBackground(std::make_unique<AnusFrameBackground>(state_));
+@@ -938,5 +954,8 @@
+   SetAnusTrafficLights(GetWidget(), IsActive() ? &state_ : nullptr);
+ }
+ 
++// Uranus Browser: where a floating Agent panel sits (anus_frame_host.h).
++DEFINE_OWNED_UI_CLASS_PROPERTY_KEY(gfx::Rect, kAnusFloatingAgentPanelKey)
++
+ BEGIN_METADATA(AnusFrameView)
+ END_METADATA
+--- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
++++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
+@@ -1490,7 +1490,17 @@
+     // right (where the page's inset is the panel's width) or else on the left,
+     // just before the page.
+     if (IsParentedToAndVisible(views().anus_agent_panel,
+-                               views().browser_view)) {
++                               views().browser_view) &&
++        views().anus_agent_panel->GetProperty(kAnusFloatingAgentPanelKey)) {
++      // Floating: over the page where the shell put it, kept in the window.
++      gfx::Rect panel =
++          *views().anus_agent_panel->GetProperty(kAnusFloatingAgentPanelKey);
++      panel.set_width(std::min(panel.width(), window.width()));
++      panel.set_height(std::min(panel.height(), window.height()));
++      panel.AdjustToFit(window);
++      layout.AddChild(views().anus_agent_panel, panel);
++    } else if (IsParentedToAndVisible(views().anus_agent_panel,
++                                      views().browser_view)) {
+       const int panel_width =
+           views().anus_agent_panel->GetPreferredSize().width();
+       const int right_strip = window.right() - (page.right());

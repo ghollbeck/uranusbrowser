@@ -1,0 +1,55 @@
+--- a/chrome/browser/ui/window_sizer/window_sizer.cc
++++ b/chrome/browser/ui/window_sizer/window_sizer.cc
+@@ -10,6 +10,7 @@
+ #include "base/command_line.h"
+ #include "base/functional/function_ref.h"
+ #include "base/memory/raw_ptr.h"
++#include "base/numerics/safe_conversions.h"
+ #include "build/build_config.h"
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/profiles/profile.h"
+@@ -319,6 +320,36 @@
+     const display::Display& display) const {
+   gfx::Rect work_area = display.work_area();
+ 
++#if BUILDFLAG(IS_MAC)
++  // Uranus Browser: a window with no saved placement (a new profile's first window)
++  // fills a laptop-sized screen's work area (not macOS full screen), and on a
++  // bigger screen takes 60% of the work area each way, centred, but never
++  // less than the laptop-sized 1600x1000 points (nor more than the work
++  // area). Laptop-sized is a work area under 1600x1000 points: every 13" and
++  // 14" MacBook at its default scaling (1470x956, 1512x982 less the menu bar
++  // and Dock) fills; a 16" MacBook (1728x1117) gets a centred 1600x1000, a
++  // 2560x1440 display 1600x1000, a 3440x1440 ultrawide 2064x1000, a 5K
++  // display at 2560x1440 likewise 1600x1000, and a 6K at 3008x1692
++  // 1805x1000. Saved and last-active placements never get here.
++  {
++    constexpr int kAnusSmallWorkAreaWidth = 1600;
++    constexpr int kAnusSmallWorkAreaHeight = 1000;
++    constexpr float kAnusDefaultWindowFraction = 0.6f;
++    if (work_area.width() < kAnusSmallWorkAreaWidth ||
++        work_area.height() < kAnusSmallWorkAreaHeight) {
++      return work_area;
++    }
++    gfx::Rect bounds = work_area;
++    bounds.ClampToCenteredSize(gfx::Size(
++        std::max(kAnusSmallWorkAreaWidth,
++                 base::ClampRound(work_area.width() *
++                                  kAnusDefaultWindowFraction)),
++        std::max(kAnusSmallWorkAreaHeight,
++                 base::ClampRound(work_area.height() *
++                                  kAnusDefaultWindowFraction))));
++    return bounds;
++  }
++#else
+   // The default size is either some reasonably wide width, or if the work
+   // area is narrower, then the work area width less some aesthetic padding.
+   int default_width = std::min(work_area.width() - 2 * kWindowTilePixels,
+@@ -357,6 +388,7 @@
+   return gfx::Rect(kWindowTilePixels + work_area.x(),
+                    kWindowTilePixels + work_area.y(), default_width,
+                    default_height);
++#endif  // BUILDFLAG(IS_MAC)
+ }
+ 
+ void WindowSizer::AdjustBoundsToBeVisibleOnDisplay(

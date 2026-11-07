@@ -1,0 +1,340 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!-- MV3 extension page: scripts only from the extension itself, no inline code. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self'; img-src * data:; style-src 'self'; script-src 'self'; object-src 'none'" />
+    <title>Settings</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="select.css" />
+    <link rel="stylesheet" href="settings.css" />
+    <link rel="stylesheet" href="settings-shell.css" />
+    <link rel="stylesheet" href="shell.css" />
+  </head>
+  <body>
+    <nav id="nav">
+      <div class="nav-titlebar"></div>
+      <label class="nav-search">
+        <i data-icon="search"></i>
+        <input id="search" type="search" placeholder="Search" spellcheck="false" autocomplete="off" />
+      </label>
+      <button class="nav-item" data-pane="general"><span class="nav-icon gray"><i data-icon="settings"></i></span>General</button>
+      <button class="nav-item" data-pane="import"><span class="nav-icon cyan"><i data-icon="import"></i></span>Import</button>
+      <button class="nav-item" data-pane="appearance"><span class="nav-icon pink"><i data-icon="palette"></i></span>Appearance</button>
+      <button class="nav-item" data-pane="tabs"><span class="nav-icon teal"><i data-icon="tab"></i></span>Tabs</button>
+      <button class="nav-item" data-pane="tabs-spaces"><span class="nav-icon indigo"><i data-icon="stack"></i></span>Tabs &amp; Spaces</button>
+      <button class="nav-item" data-pane="privacy"><span class="nav-icon blue"><i data-icon="lock"></i></span>Privacy</button>
+      <button class="nav-item" data-pane="downloads"><span class="nav-icon green"><i data-icon="download"></i></span>Downloads</button>
+      <button class="nav-item" data-pane="ai"><span class="nav-icon indigo"><i data-icon="agent"></i></span>AI</button>
+      <div class="nav-label">Developer</div>
+      <button class="nav-item" data-pane="environments"><span class="nav-icon amber"><i data-icon="code"></i></span>Environments</button>
+      <button class="nav-item" data-pane="boosts"><span class="nav-icon orange"><i data-icon="zap"></i></span>Boosts</button>
+      <button class="nav-item" data-pane="agents"><span class="nav-icon purple"><i data-icon="sparkle"></i></span>Coding Agents</button>
+      <div class="nav-label">Help</div>
+      <button class="nav-item" data-pane="shortcuts"><span class="nav-icon gray"><i data-icon="keyboard"></i></span>Keyboard Shortcuts</button>
+    </nav>
+
+    <main>
+      <header class="pane-titlebar"><h1 id="pane-title"></h1></header>
+
+      <section id="search-results" class="pane" hidden></section>
+
+      <section class="pane" data-pane="general">
+        <div class="card">
+          <div class="row">
+            <div class="row-text">
+              <strong>Default browser</strong>
+              <small id="defaultBrowserStatus"></small>
+            </div>
+            <button id="makeDefault" class="button">Make Default</button>
+          </div>
+          <label class="row">
+            <div class="row-text">
+              <strong>Search engine</strong>
+              <small>Used when what you type in the command bar isn't a web address.</small>
+            </div>
+            <select id="searchEngine" class="select"></select>
+          </label>
+          <div class="row">
+            <div class="row-text">
+              <strong>Onboarding</strong>
+              <small>Walk through setup again. Your tabs, Spaces, passwords and settings are preserved.</small>
+            </div>
+            <button id="showTour" class="button">Replay onboarding</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="pane" data-pane="import">
+        <p class="lead">Bring your browser with you. Arc keeps its Spaces, favorites, pinned folders and open tabs. Other browsers’ bookmarks become pinned tabs in a new Space.</p>
+        <div id="arcImportDetails" class="card">
+          <div class="row"><div class="row-text"><strong>Move from Arc</strong><small id="arcMapping"></small></div></div>
+          <div class="row"><label class="row-text"><input id="arcPasswords" type="checkbox" checked /> <span id="arcPasswordsLabel"></span></label></div>
+          <div class="row"><div class="row-text"><small id="arcLimits"></small></div></div>
+        </div>
+        <div id="browserList" class="card"></div>
+        <div class="card">
+          <div class="row">
+            <div class="browser-info">
+              <span class="browser-badge"><i data-icon="import"></i></span>
+              <div class="row-text">
+                <strong>Bookmarks File</strong>
+                <small id="bookmarksFileStatus">For a browser not listed above: export its bookmarks as an HTML file, then choose it here.</small>
+              </div>
+            </div>
+            <button id="chooseBookmarksFile" class="button">Choose File…</button>
+            <input id="bookmarksFile" type="file" accept=".html,.htm,text/html" hidden />
+          </div>
+        </div>
+        <p class="footnote">Browsers can export bookmarks but not history, so a file brings over bookmarks only.</p>
+      </section>
+
+      <section class="pane" data-pane="appearance">
+        <div class="theme-cards" role="radiogroup" aria-label="Theme">
+          <button class="theme-card" data-theme="system" role="radio">
+            <span class="theme-preview system"><span></span><span></span></span>
+            <span>System</span>
+          </button>
+          <button class="theme-card" data-theme="light" role="radio">
+            <span class="theme-preview light"><span></span><span></span></span>
+            <span>Light</span>
+          </button>
+          <button class="theme-card" data-theme="dark" role="radio">
+            <span class="theme-preview dark"><span></span><span></span></span>
+            <span>Dark</span>
+          </button>
+        </div>
+        <p class="footnote">Each Space keeps its own colour; in dark mode it becomes a deep tint of that colour.</p>
+      </section>
+
+      <section class="pane" data-pane="tabs">
+        <div class="card">
+          <label class="row">
+            <div class="row-text">
+              <strong>Archive Today tabs after</strong>
+              <small>Tabs you haven't looked at in a while tidy themselves away. Find them again in the command bar or the Archive menu.</small>
+            </div>
+            <select id="archiveAfter" class="select">
+              <option value="12">12 hours</option>
+              <option value="24">1 day</option>
+              <option value="168">7 days</option>
+              <option value="720">30 days</option>
+              <option value="0">Never</option>
+            </select>
+          </label>
+          <label class="row">
+            <div class="row-text">
+              <strong>Open links from pinned tabs in Peek</strong>
+              <small>Links that leave a pinned tab or favorite preview over the page instead of adding a tab.</small>
+            </div>
+            <input type="checkbox" id="peekPinnedLinks" class="switch" />
+          </label>
+          <label class="row">
+            <div class="row-text">
+              <strong>Open links from other apps in Uranus Mini</strong>
+              <small>Links from Slack, Mail or the terminal open in a small window of their own, so they don't clutter your Spaces. Keep one with Open in Uranus Browser.</small>
+            </div>
+            <input type="checkbox" id="openLinksInAnusMini" class="switch" />
+          </label>
+        </div>
+      </section>
+
+      <section class="pane tm-pane" data-pane="tabs-spaces">
+        <div class="tm-toolbar">
+          <label class="tm-search">
+            <i data-icon="search"></i>
+            <input id="tm-search" type="search" placeholder="Search tabs" spellcheck="false" autocomplete="off" />
+          </label>
+          <div id="tm-selection" class="tm-selection" hidden>
+            <span id="tm-selection-count"></span>
+            <button id="tm-move" class="button">Move to…</button>
+            <button id="tm-delete" class="button danger">Delete</button>
+          </div>
+          <button id="tm-new-space" class="button">New Space</button>
+        </div>
+        <div id="tm-tree" class="tm-tree"></div>
+        <p class="footnote">
+          Drag tabs and folders to reorder them or move them between Spaces. <kbd>⌘</kbd>-click or <kbd>⇧</kbd>-click
+          selects several; <kbd>↩</kbd> edits, <kbd>⌫</kbd> deletes. Deleted tabs stay findable in the Archive.
+        </p>
+      </section>
+
+      <section class="pane" data-pane="privacy">
+        <h2 class="section-title">Safety and privacy notice</h2>
+        <div class="card">
+          <div class="row"><div class="row-text">
+            <strong>Early release and data loss</strong>
+            <small>Uranus Browser is provided as is under the MIT License. Bugs or security flaws can expose data or cause data loss. Back up important browser data and keep your original profile until you’ve checked the import.</small>
+          </div></div>
+          <div class="row"><div class="row-text">
+            <strong>Browser agent and cloud AI</strong>
+            <small>The agent can read pages and act in signed-in tabs. Keep it away from sensitive accounts and review actions before approving them. Cloud features can send prompts, page content, parts of files, or meeting audio and transcripts to the selected provider.</small>
+          </div></div>
+          <div class="row"><div class="row-text">
+            <strong>Meeting recording</strong>
+            <small>Get permission from everyone before recording or inviting a bot that listens. Make sure your workplace permits it.</small>
+          </div></div>
+        </div>
+        <div class="card">
+          <label class="row">
+            <div class="row-text">
+              <strong>Block ads and trackers</strong>
+              <small>Uses the EasyList and EasyPrivacy filter lists, in every Space.</small>
+            </div>
+            <input type="checkbox" id="adBlock" class="switch" />
+          </label>
+        </div>
+        <p class="footnote">
+          To keep a Space's cookies and logins apart from the others, open its editor (double-click the Space name)
+          and turn on <em>Separate cookies and logins</em>.
+        </p>
+      </section>
+
+      <section class="pane" data-pane="downloads">
+        <div class="card">
+          <div class="row">
+            <div class="row-text">
+              <strong>Save files to</strong>
+              <small id="downloadsFolder" class="mono"></small>
+            </div>
+            <button id="chooseFolder" class="button">Change…</button>
+          </div>
+          <label class="row">
+            <div class="row-text">
+              <strong>Ask where to save each file</strong>
+              <small>Otherwise files go straight to the folder above.</small>
+            </div>
+            <input type="checkbox" id="askWhereToSave" class="switch" />
+          </label>
+        </div>
+      </section>
+
+      <section class="pane" data-pane="ai">
+        <p class="lead">
+          Choose how Uranus Browser reaches a model: your ChatGPT plan, an OpenAI API key, or the small model on this Mac.
+          Each AI feature can use a different one.
+        </p>
+        <p class="lead">
+          <strong>Before connecting a cloud provider:</strong> Using cloud AI can send prompts, page content, parts of
+          files, or meeting audio and transcripts to that provider, depending on the feature. Avoid using cloud AI
+          with sensitive content you don’t have permission to share.
+        </p>
+        <div class="card">
+          <div class="row" id="ai-chatgpt-row">
+            <div class="row-text">
+              <strong>ChatGPT account</strong>
+              <small id="ai-chatgpt-status">Checking…</small>
+              <small id="ai-chatgpt-limits" class="ai-limits" hidden></small>
+            </div>
+            <div class="ai-actions">
+              <button id="ai-chatgpt-cancel" class="button" hidden>Cancel</button>
+              <button id="ai-chatgpt-action" class="button" disabled>Sign In</button>
+            </div>
+          </div>
+          <div class="row" id="ai-key-row">
+            <div class="row-text">
+              <strong>OpenAI API key</strong>
+              <small id="ai-key-status">Checking…</small>
+            </div>
+            <form id="ai-key-form" class="ai-actions" autocomplete="off">
+              <label for="ai-key-input" class="visually-hidden">OpenAI API key</label>
+              <input id="ai-key-input" class="field" type="password" placeholder="sk-…" spellcheck="false" autocomplete="off" />
+              <button id="ai-key-save" class="button" type="submit" disabled>Save</button>
+              <button id="ai-key-remove" class="button" type="button" hidden>Remove</button>
+            </form>
+          </div>
+          <div class="row" id="ai-underdog-row">
+            <div class="row-text">
+              <strong>On this Mac (Underdog)</strong>
+              <small id="ai-underdog-status">Checking…</small>
+            </div>
+          </div>
+        </div>
+        <p id="ai-error" class="notice" role="alert" hidden></p>
+        <h2 class="section-title">Models for each feature</h2>
+        <div id="ai-features" class="card"></div>
+        <p class="footnote">
+          A ChatGPT plan covers the agent chat, routines and meeting notes, but not audio transcription: that needs an
+          API key, or on-device Whisper in the Meeting notes sheet. The API key is saved in the macOS Keychain and
+          Codex handles your ChatGPT sign-in. Neither credential is shown to web pages.
+        </p>
+      </section>
+
+      <section class="pane" data-pane="environments">
+        <p class="lead">
+          Group the places a project runs. <kbd>⌥⌘E</kbd> moves the page to the next one with the same path, and the
+          address bar shows a <span class="tone local">LOCAL</span> <span class="tone staging">STAGING</span>
+          <span class="tone production">PROD</span> badge so production never looks like a safe place to click around.
+        </p>
+        <div id="environmentList"></div>
+        <button id="addEnvironment" class="button">Add Project</button>
+      </section>
+
+      <section class="pane" data-pane="boosts">
+        <p class="lead">
+          Boosts are your own TypeScript and CSS for any site, kept in Uranus Browser and edited on the Boosts page. They're
+          named after the host: <code>github.com.ts</code>, <code>github.com.css</code>, or <code>all.css</code> for every site. Styles
+          apply as you save; scripts reload the page.
+        </p>
+        <div class="card">
+          <div class="row">
+            <div class="row-text">
+              <strong>Your boosts</strong>
+              <small>Every boost, and an editor for each</small>
+            </div>
+            <button id="openBoosts" class="button">Open Boosts</button>
+          </div>
+        </div>
+        <p class="footnote">Tip: press <kbd>⌥⌘B</kbd> on any site to create or edit its boost.</p>
+      </section>
+
+      <section class="pane" data-pane="agents">
+        <p class="lead">
+          Let Claude Code, Cursor and other MCP clients see and drive your tabs: read pages and their console, take
+          screenshots, click, type and run JavaScript. You'll see what an agent is doing in the sidebar.
+        </p>
+        <div class="card">
+          <label class="row">
+            <div class="row-text">
+              <strong>Let coding agents use Uranus Browser</strong>
+              <small>Full access. Only programs on this Mac that have the token can connect.</small>
+            </div>
+            <input type="checkbox" id="agentEnabled" class="switch" />
+          </label>
+        </div>
+        <div class="card" data-agent-only>
+          <div class="row">
+            <div class="row-text">
+              <strong>Claude Code</strong>
+              <small id="agentEndpoint" class="mono"></small>
+            </div>
+            <button id="copyClaudeCommand" class="button">Copy Command</button>
+          </div>
+          <div class="row">
+            <div class="row-text">
+              <strong>Other MCP clients</strong>
+              <small>JSON for Cursor, Windsurf and others.</small>
+            </div>
+            <button id="copyAgentJson" class="button">Copy Config</button>
+          </div>
+          <div class="row">
+            <div class="row-text">
+              <strong>Token</strong>
+              <small>A new token disconnects every agent using the old one.</small>
+            </div>
+            <button id="newAgentToken" class="button">New Token</button>
+          </div>
+        </div>
+      </section>
+      <section class="pane" data-pane="shortcuts">
+        <div class="shortcuts-head">
+          <p class="lead">Click a shortcut and press the keys you want. <kbd>⌫</kbd> removes it, <kbd>Esc</kbd> cancels.</p>
+          <button id="resetShortcuts" class="button">Restore Defaults</button>
+        </div>
+        <div id="shortcut-notice" class="notice" hidden></div>
+        <div id="shortcut-groups"></div>
+      </section>
+    </main>
+    <script type="module" src="settings.js"></script>
+  </body>
+</html>

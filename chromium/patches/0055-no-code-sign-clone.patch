@@ -1,0 +1,15 @@
+--- a/chrome/browser/mac/code_sign_clone_manager.mm
++++ b/chrome/browser/mac/code_sign_clone_manager.mm
+@@ -413,7 +413,11 @@
+ 
+ namespace code_sign_clone_manager {
+ 
+-BASE_FEATURE(kMacAppCodeSignClone, base::FEATURE_ENABLED_BY_DEFAULT);
++// Uranus Browser: no clone of the app per launch. Each clone is ~700 MB and only goes
++// away on a clean quit, so every crash or killed test run left one behind
++// (458 GB by 2026-11-01). Installs swap the app after quit, so it is never
++// replaced under a running browser.
++BASE_FEATURE(kMacAppCodeSignClone, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ BASE_FEATURE(kMacAppCodeSignCloneRenameAsBundle,
+              base::FEATURE_ENABLED_BY_DEFAULT);

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="165 230 660 660" width="660" height="660" fill="currentColor" stroke="currentColor">
+  <title>Uranus Browser</title>
+  <!-- Single-colour Uranus Browser arrow, the same geometry as anus-logo.svg, for the sidebar, the
+       toolbar and anywhere the colour comes from the text. The tail runs off the bottom edge of
+       the viewBox (as it runs off the tile in the logo), so keep the default overflow: hidden. -->
+  <path d="M270 1030C270 770 261 763 586 438" fill="none" stroke-width="160"/>
+  <path d="M770 254L677 585L439 347Z" stroke-width="24" stroke-linejoin="round"/>
+</svg>

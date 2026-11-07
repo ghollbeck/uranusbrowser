@@ -1,0 +1,567 @@
+--- a/chrome/browser/anus/anus_frame_host.h
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -68,6 +68,11 @@
+                    std::max(0, page.height() - 72));
+ }
+ 
++// Uranus Browser: the Agent panel (the shell's agent.html) beside the page area, its
++// margins included, between these widths (and at most half the window).
++inline constexpr int kAnusAgentPanelMinWidth = 280;
++inline constexpr int kAnusAgentPanelMaxWidth = 800;
++
+ // AnusMini (src/main/anusmini.ts): the frame page is a toolbar this tall
+ // across the top, and the page sits under it, kAnusGap from the other edges.
+ inline constexpr int kAnusMiniToolbarHeight = 44;
+@@ -203,6 +208,10 @@
+   virtual void SetFrameState(const AnusFrameState& state) = 0;
+   virtual void FocusFrame() = 0;
+   virtual void FocusPage() = 0;
++  // Uranus Browser: shows or hides the Agent panel beside the page area, on its left
++  // (between the sidebar and the page) or its right, `width` px wide; `focus`
++  // moves keyboard focus into it. The page area shrinks to make room.
++  virtual void SetAgentPanel(bool open, bool left, int width, bool focus) = 0;
+   // Takes the keys in Shortcuts() from now on, and lets go of any others.
+   virtual void UpdateShortcuts() = 0;
+   // Whether the window is a AnusMini, Uranus Browser's small window for one page.
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -43,6 +43,24 @@
+     DOMString background;
+   };
+ 
++  // Uranus Browser: which side of the page the Agent panel is on.
++  enum AgentPanelSide {
++    left,
++    right
++  };
++
++  // Uranus Browser: the Agent panel (the shell's agent.html?window=<id>) beside the
++  // page area, which shrinks to make room for it.
++  dictionary AgentPanelState {
++    boolean open;
++    AgentPanelSide side;
++    // Its width in px, margins included; kept between 280 and 800, and at
++    // most half the window.
++    long width;
++    // Moves keyboard focus into the panel; otherwise focus stays put.
++    boolean? focus;
++  };
++
+   callback DoneCallback = void();
+   callback WindowIdCallback = void(long windowId);
+   callback RejectedCallback = void(DOMString[] rejected);
+@@ -119,6 +137,13 @@
+     // The window the calling frame page belongs to.
+     static void getWindowId(WindowIdCallback callback);
+ 
++    // Shows, moves or hides the Agent panel in the given window, or in every
++    // window when <code>windowId</code> is omitted.
++    static void setAgentPanel(
++        AgentPanelState state,
++        optional long windowId,
++        optional DoneCallback callback);
++
+     // Uranus Browser's keyboard shortcuts: <code>shortcuts</code> maps Electron
+     // accelerators ("CmdOrCtrl+Shift+T") to the shell's command ids. Uranus Browser
+     // windows take these keys before the page and before Chromium's own
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -34,6 +34,15 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateSetAgentPanelFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.setAgentPanel", UNKNOWN)
++
++ protected:
++  ~AnusPrivateSetAgentPanelFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ class AnusPrivateGetWindowIdFunction : public ExtensionFunction {
+  public:
+   DECLARE_EXTENSION_FUNCTION("anusPrivate.getWindowId", UNKNOWN)
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -4,6 +4,7 @@
+ 
+ #include "chrome/browser/extensions/api/anus_private/anus_private_api.h"
+ 
++#include <algorithm>
+ #include <optional>
+ #include <string>
+ 
+@@ -182,6 +183,35 @@
+       break;
+     case anus_private::FocusTarget::kNone:
+       return RespondNow(BadMessage());
++  }
++  return RespondNow(NoArguments());
++}
++
++ExtensionFunction::ResponseAction AnusPrivateSetAgentPanelFunction::Run() {
++  auto params = anus_private::SetAgentPanel::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  if (params->state.side == anus_private::AgentPanelSide::kNone) {
++    return RespondNow(BadMessage());
++  }
++  const bool left = params->state.side == anus_private::AgentPanelSide::kLeft;
++  const int width =
++      std::clamp(params->state.width, kAnusAgentPanelMinWidth,
++                 kAnusAgentPanelMaxWidth);
++  const bool focus = params->state.focus.value_or(false);
++
++  if (params->window_id) {
++    AnusFrameHost* host = HostForWindow(*params->window_id, browser_context());
++    if (!host) {
++      return RespondNow(Error(kNoWindowError,
++                              base::NumberToString(*params->window_id)));
++    }
++    host->SetAgentPanel(params->state.open, left, width, focus);
++    return RespondNow(NoArguments());
++  }
++  for (AnusFrameHost* host : AnusFrameHost::All()) {
++    if (SameProfile(host, browser_context())) {
++      host->SetAgentPanel(params->state.open, left, width, focus);
++    }
+   }
+   return RespondNow(NoArguments());
+ }
+--- a/chrome/browser/ui/views/frame/anus_frame_view.h
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -18,6 +18,7 @@
+ #include "third_party/skia/include/core/SkRegion.h"
+ #include "ui/base/metadata/metadata_header_macros.h"
+ #include "ui/views/controls/webview/webview.h"
++#include "ui/views/view_observer.h"
+ #include "ui/views/view_tracker.h"
+ 
+ class BrowserView;
+@@ -44,7 +45,8 @@
+ // Chromium's layout (with top chrome hidden, see anus_top_chrome.h).
+ class AnusFrameView : public views::WebView,
+                         public AnusFrameHost,
+-                        public extensions::ExtensionRegistryObserver {
++                        public extensions::ExtensionRegistryObserver,
++                        public views::ViewObserver {
+   METADATA_HEADER(AnusFrameView, views::WebView)
+ 
+  public:
+@@ -67,6 +69,10 @@
+   // Peek's card (a web view above the frame), hidden unless a Peek is open.
+   views::View* peek_view() { return peek_view_.view(); }
+ 
++  // Uranus Browser: the Agent panel (a web view below the frame, beside the page
++  // area), hidden unless it is open.
++  views::View* agent_panel_view() { return agent_panel_view_.view(); }
++
+   const AnusFrameState& state() const { return state_; }
+ 
+   // Whether the frame lays out the window (the shell is loaded).
+@@ -82,6 +88,11 @@
+   gfx::Size CalculatePreferredSize(
+       const views::SizeBounds& available_size) const override;
+   void AddedToWidget() override;
++
++  // views::ViewObserver (the browser view): the Agent panel is at most half
++  // the window, so a resize may change its width.
++  void OnViewBoundsChanged(views::View* observed_view) override;
++  void OnViewIsDeleting(views::View* observed_view) override;
+   void RemovedFromWidget() override;
+ 
+   // AnusFrameHost:
+@@ -94,6 +105,7 @@
+   void SetFrameState(const AnusFrameState& state) override;
+   void FocusFrame() override;
+   void FocusPage() override;
++  void SetAgentPanel(bool open, bool left, int width, bool focus) override;
+   void UpdateShortcuts() override;
+   void OpenPeek(const GURL& url, content::WebContents* source) override;
+   void OpenPeekWithContents(
+@@ -141,6 +153,12 @@
+   void OpenFramePage();
+   void CloseFramePage();
+ 
++  // The Agent panel's width as laid out now: 0 while it's closed (or can't
++  // show), else its width kept to at most half the window.
++  int AgentPanelWidth() const;
++  // Opens or closes the panel's page to match `agent_panel_open_`.
++  void UpdateAgentPanelPage();
++
+   // Applies `state_` to the background, the layout and the window controls.
+   void ApplyState();
+ 
+@@ -164,10 +182,21 @@
+   friend class Peek;
+   std::unique_ptr<Peek> peek_;
+ 
++  // The Agent panel's page and its delegate (anus_frame_view.cc).
++  class AgentPanel;
++  friend class AgentPanel;
++  std::unique_ptr<AgentPanel> agent_panel_;
++  bool agent_panel_open_ = false;
++  bool agent_panel_left_ = false;
++  int agent_panel_width_ = 400;
++  // The width ApplyState() last made room for.
++  int applied_agent_panel_width_ = 0;
++
+   raw_ptr<BrowserView> browser_view_;
+   // Owned by `browser_view_`, like this view; it may go first.
+   views::ViewTracker background_view_;
+   views::ViewTracker peek_view_;
++  views::ViewTracker agent_panel_view_;
+   std::unique_ptr<content::WebContents> frame_contents_;
+   AnusFrameState state_;
+   // The frame page's -webkit-app-region: drag areas, in this view's
+@@ -182,6 +211,9 @@
+                           extensions::ExtensionRegistryObserver>
+       registry_observation_{this};
+ 
++  base::ScopedObservation<views::View, views::ViewObserver>
++      browser_view_observation_{this};
++
+   base::WeakPtrFactory<AnusFrameView> weak_factory_{this};
+ };
+ 
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -33,6 +33,7 @@
+ #include "content/public/browser/navigation_controller.h"
+ #include "content/public/browser/render_frame_host.h"
+ #include "content/public/browser/render_widget_host.h"
++#include "content/public/browser/render_widget_host_view.h"
+ #include "content/public/browser/site_instance.h"
+ #include "content/public/browser/web_contents.h"
+ #include "extensions/browser/event_router.h"
+@@ -141,8 +142,105 @@
+ BEGIN_METADATA(AnusPeekWebView)
+ END_METADATA
+ 
++// Uranus Browser: the Agent panel's view. Its preferred width is the strip it takes
++// beside the page area; the layout puts it on whichever side the page area
++// left room on (BrowserViewTabbedLayoutImpl).
++class AnusAgentPanelWebView : public views::WebView {
++  METADATA_HEADER(AnusAgentPanelWebView, views::WebView)
++
++ public:
++  explicit AnusAgentPanelWebView(content::BrowserContext* context)
++      : views::WebView(context) {
++    SetVisible(false);
++  }
++
++  void SetWidth(int width) {
++    if (width == width_) {
++      return;
++    }
++    width_ = width;
++    PreferredSizeChanged();
++  }
++
++  gfx::Size CalculatePreferredSize(
++      const views::SizeBounds& available_size) const override {
++    return gfx::Size(width_, 0);
++  }
++
++ private:
++  int width_ = 0;
++};
++
++BEGIN_METADATA(AnusAgentPanelWebView)
++END_METADATA
++
+ }  // namespace
+ 
++// Uranus Browser: the Agent panel's page, the shell's agent.html?window=<id>. Like the
++// frame page it is the shell's own (an extension view), keeps the window's
++// shortcuts working while focused, and sends links it opens to tabs.
++class AnusFrameView::AgentPanel : public content::WebContentsDelegate {
++ public:
++  AgentPanel(AnusFrameView* frame, const GURL& url) : frame_(frame) {
++    content::BrowserContext* context = frame->GetBrowserContext();
++    contents_ = content::WebContents::Create(content::WebContents::CreateParams(
++        context, content::SiteInstance::CreateForURL(context, url)));
++    // The window's colour shows around the panel's card.
++    views::WebContentsSetBackgroundColor::CreateForWebContentsWithColor(
++        contents_.get(), SK_ColorTRANSPARENT);
++    extensions::SetViewType(contents_.get(),
++                            extensions::mojom::ViewType::kComponent);
++    extensions::ChromeExtensionWebContentsObserver::CreateForWebContents(
++        contents_.get());
++    contents_->SetDelegate(this);
++    contents_->GetController().LoadURL(url, content::Referrer(),
++                                       ui::PAGE_TRANSITION_AUTO_TOPLEVEL,
++                                       std::string());
++  }
++  ~AgentPanel() override { contents_->SetDelegate(nullptr); }
++
++  content::WebContents* contents() { return contents_.get(); }
++
++  // content::WebContentsDelegate:
++  content::WebContents* OpenURLFromTab(
++      content::WebContents* source,
++      const content::OpenURLParams& params,
++      base::OnceCallback<void(content::NavigationHandle&)>
++          navigation_handle_callback) override {
++    if (params.disposition == WindowOpenDisposition::kCurrentTab &&
++        params.url.SchemeIs(extensions::kExtensionScheme) &&
++        IsAnusShell(params.url.host())) {
++      source->GetController().LoadURLWithParams(
++          content::NavigationController::LoadURLParams(params));
++      return source;
++    }
++    frame_->browser_view_->browser()->OpenGURL(
++        params.url, WindowOpenDisposition::kNewForegroundTab);
++    return nullptr;
++  }
++  content::KeyboardEventProcessingResult PreHandleKeyboardEvent(
++      content::WebContents* source,
++      const input::NativeWebKeyboardEvent& event) override {
++    // As in the frame page: keys without Command or Control are the panel's
++    // own (Escape closes it), the rest are the window's shortcuts.
++    constexpr int kShortcutModifiers =
++        blink::WebInputEvent::kMetaKey | blink::WebInputEvent::kControlKey;
++    if (!(event.GetModifiers() & kShortcutModifiers)) {
++      return content::KeyboardEventProcessingResult::NOT_HANDLED;
++    }
++    return frame_->browser_view_->PreHandleKeyboardEvent(event);
++  }
++  bool HandleKeyboardEvent(
++      content::WebContents* source,
++      const input::NativeWebKeyboardEvent& event) override {
++    return frame_->browser_view_->HandleKeyboardEvent(event);
++  }
++
++ private:
++  raw_ptr<AnusFrameView> frame_;
++  std::unique_ptr<content::WebContents> contents_;
++};
++
+ // The Peek's page: shown in the peek view, kept out of the tab strip until
+ // it's promoted. Its links to new tabs open in the window, as in the spike;
+ // Escape closes it.
+@@ -259,6 +357,12 @@
+   }
+   AnusFrameView* frame = browser_view->AddChildView(
+       std::make_unique<AnusFrameView>(browser_view));
++  // Uranus Browser: the Agent panel, just below the frame, so the frame's overlays
++  // (command bar, menus, Peek's backdrop) go over it.
++  frame->agent_panel_view_.SetView(browser_view->AddChildViewAt(
++      std::make_unique<AnusAgentPanelWebView>(
++          browser_view->browser()->GetProfile()),
++      browser_view->GetIndexOf(frame).value()));
+   // Above the frame.
+   frame->peek_view_.SetView(
+       browser_view->AddChildView(std::make_unique<AnusPeekWebView>(
+@@ -296,6 +400,7 @@
+     state_.overlay = false;
+   }
+   ApplyState();
++  browser_view_observation_.Observe(browser_view);
+ 
+   auto* registry = extensions::ExtensionRegistry::Get(GetBrowserContext());
+   registry_observation_.Observe(registry);
+@@ -310,9 +415,77 @@
+     peek_view->SetWebContents(nullptr);
+   }
+   peek_.reset();
++  if (auto* panel_view =
++          views::AsViewClass<views::WebView>(agent_panel_view_.view())) {
++    panel_view->SetWebContents(nullptr);
++  }
++  agent_panel_.reset();
+   SetWebContents(nullptr);
+ }
+ 
++void AnusFrameView::SetAgentPanel(bool open, bool left, int width,
++                                    bool focus) {
++  agent_panel_open_ = open;
++  agent_panel_left_ = left;
++  agent_panel_width_ = std::clamp(width, kAnusAgentPanelMinWidth,
++                                  kAnusAgentPanelMaxWidth);
++  UpdateAgentPanelPage();
++  ApplyState();
++  if (focus && agent_panel_ && open) {
++    if (views::View* panel_view = agent_panel_view_.view()) {
++      panel_view->RequestFocus();
++    }
++    agent_panel_->contents()->Focus();
++  }
++}
++
++int AnusFrameView::AgentPanelWidth() const {
++  // AnusMinis have no panel, and it waits for the frame page (the shell).
++  if (!agent_panel_open_ || !agent_panel_ || state_.anusmini) {
++    return 0;
++  }
++  const int half_window = browser_view_->width() / 2;
++  const int width = std::max(kAnusAgentPanelMinWidth,
++                             std::min(agent_panel_width_, half_window));
++  // A window too narrow for the panel and a usable page (beside the sidebar)
++  // leaves it out until the window is wider again.
++  constexpr int kMinPageWidth = 320;
++  if (browser_view_->width() - width < kAnusSidebarWidth + kMinPageWidth) {
++    return 0;
++  }
++  return width;
++}
++
++void AnusFrameView::UpdateAgentPanelPage() {
++  auto* panel_view = views::AsViewClass<AnusAgentPanelWebView>(agent_panel_view_.view());
++  if (!panel_view) {
++    return;
++  }
++  const bool wanted =
++      agent_panel_open_ && frame_contents_ && !state_.anusmini;
++  if (wanted && !agent_panel_) {
++    // Loaded once and kept while the window lives, so closing and reopening
++    // the panel keeps its scroll position and what's being typed.
++    agent_panel_ = std::make_unique<AgentPanel>(
++        this, extensions::Extension::GetBaseURLFromExtensionId(
++                  kAnusShellExtensionId)
++                  .Resolve("agent.html?window=" +
++                           base::NumberToString(GetWindowId())));
++    panel_view->SetWebContents(agent_panel_->contents());
++  }
++  const bool focused = panel_view->HasFocus() ||
++                       (agent_panel_ && agent_panel_->contents()
++                                            ->GetRenderWidgetHostView() &&
++                        agent_panel_->contents()
++                            ->GetRenderWidgetHostView()
++                            ->HasFocus());
++  panel_view->SetVisible(wanted);
++  // Closing the panel while it has the keyboard gives it back to the page.
++  if (!wanted && focused) {
++    FocusPage();
++  }
++}
++
+ void AnusFrameView::OpenPeek(const GURL& url, content::WebContents* source) {
+   content::BrowserContext* context = GetBrowserContext();
+   scoped_refptr<content::SiteInstance> space =
+@@ -494,8 +667,18 @@
+                    state.anusmini && !state.overlay
+                        ? state.FrameHeight(kOverlayWidth)
+                        : 0);
++}
++
++void AnusFrameView::OnViewBoundsChanged(views::View* observed_view) {
++  if (AgentPanelWidth() != applied_agent_panel_width_) {
++    ApplyState();
++  }
+ }
+ 
++void AnusFrameView::OnViewIsDeleting(views::View* observed_view) {
++  browser_view_observation_.Reset();
++}
++
+ bool AnusFrameView::IsAnusMini() const {
+   return state_.anusmini;
+ }
+@@ -629,6 +812,13 @@
+       peek && peek->GetVisible() && peek->bounds().Contains(point)) {
+     return HTCLIENT;
+   }
++  // Uranus Browser: the Agent panel takes its own clicks (unless the frame covers it),
++  // rather than moving the window as the background around the page would.
++  if (const views::View* panel = agent_panel_view_.view();
++      panel && panel->GetVisible() && panel->bounds().Contains(point) &&
++      !bounds().Contains(point)) {
++    return HTCLIENT;
++  }
+   if (bounds().Contains(point)) {
+     const gfx::Point local = point - bounds().OffsetFromOrigin();
+     return draggable_region_.contains(local.x(), local.y()) ? HTCAPTION
+@@ -698,6 +888,7 @@
+   if (views::View* background = background_view()) {
+     background->SetVisible(true);
+   }
++  UpdateAgentPanelPage();
+   ApplyState();
+ }
+ 
+@@ -711,13 +902,35 @@
+   }
+   SetWebContents(nullptr);
+   frame_contents_.reset();
++  // The panel is the shell's too: it goes with the frame page.
++  if (auto* panel_view =
++          views::AsViewClass<views::WebView>(agent_panel_view_.view())) {
++    panel_view->SetWebContents(nullptr);
++    panel_view->SetVisible(false);
++  }
++  agent_panel_.reset();
+   ApplyState();
+ }
+ 
+ void AnusFrameView::ApplyState() {
++  // Uranus Browser: room for the Agent panel beside the page area. On the right its
++  // strip replaces the gap there; on the left it sits after the sidebar.
++  gfx::Insets insets = state_.PageInsets();
++  applied_agent_panel_width_ = AgentPanelWidth();
++  if (applied_agent_panel_width_ > 0) {
++    if (agent_panel_left_) {
++      insets.set_left(insets.left() + applied_agent_panel_width_);
++    } else {
++      insets.set_right(applied_agent_panel_width_);
++    }
++  }
++  if (auto* panel_view = views::AsViewClass<AnusAgentPanelWebView>(
++          agent_panel_view_.view())) {
++    panel_view->SetWidth(applied_agent_panel_width_);
++  }
+   if (views::View* background = background_view()) {
+     background->SetBackground(std::make_unique<AnusFrameBackground>(state_));
+-    background->SetBorder(views::CreateEmptyBorder(state_.PageInsets()));
++    background->SetBorder(views::CreateEmptyBorder(insets));
+   }
+   PreferredSizeChanged();
+   browser_view_->InvalidateLayout();
+--- a/chrome/browser/ui/views/frame/layout/browser_view_layout.h
++++ b/chrome/browser/ui/views/frame/layout/browser_view_layout.h
+@@ -101,6 +101,9 @@
+   // Uranus Browser: Peek's card, above the frame, in AnusPeekBounds() of the page
+   // area while it is visible.
+   raw_ptr<views::View> anus_peek = nullptr;
++  // Uranus Browser: the Agent panel, beside the page area while it is visible, as
++  // wide as its preferred width (anus_frame_view.h).
++  raw_ptr<views::View> anus_agent_panel = nullptr;
+ };
+ 
+ // The layout manager used in chrome browser.
+--- a/chrome/browser/ui/views/frame/browser_view.cc
++++ b/chrome/browser/ui/views/frame/browser_view.cc
+@@ -5179,6 +5179,7 @@
+     layout_views.anus_frame = anus_frame;
+     layout_views.anus_frame_background = anus_frame->background_view();
+     layout_views.anus_peek = anus_frame->peek_view();
++    layout_views.anus_agent_panel = anus_frame->agent_panel_view();
+   }
+ 
+   SetLayoutManager(BrowserViewLayout::CreateLayout(
+--- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
++++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
+@@ -1486,6 +1486,23 @@
+                     gfx::Rect(window.x(), window.y(), frame_width,
+                               frame_height));
+ 
++    // Uranus Browser: the Agent panel fills the strip the page area left it, on the
++    // right (where the page's inset is the panel's width) or else on the left,
++    // just before the page.
++    if (IsParentedToAndVisible(views().anus_agent_panel,
++                               views().browser_view)) {
++      const int panel_width =
++          views().anus_agent_panel->GetPreferredSize().width();
++      const int right_strip = window.right() - (page.right());
++      const gfx::Rect panel =
++          right_strip >= panel_width
++              ? gfx::Rect(window.right() - panel_width, window.y(),
++                          panel_width, window.height())
++              : gfx::Rect(contents_layout.bounds.x() - panel_width,
++                          window.y(), panel_width, window.height());
++      layout.AddChild(views().anus_agent_panel, panel);
++    }
++
+     // Peek floats over the page area, above the frame page, which draws the
+     // backdrop and Peek's toolbar around it.
+     if (IsParentedToAndVisible(views().anus_peek, views().browser_view)) {

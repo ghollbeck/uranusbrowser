@@ -1,0 +1,57 @@
+--- a/chrome/BUILD.gn
++++ b/chrome/BUILD.gn
+@@ -72,6 +72,13 @@
+   # signing identity. If `include_branded_entitlements` is set to false, these
+   # entitlements will be skipped.
+   include_branded_entitlements = true
++
++  # Uranus Browser: a source-absolute path ("//...") to the built shell extension
++  # (chromium/shell/dist), copied into the framework's Resources as
++  # anus-shell, where ComponentLoader looks without --anus-shell-dir.
++  # chromium/scripts/build-release.sh stages the shell at //anus/shell and
++  # sets this. Empty (dev builds, which pass --anus-shell-dir) copies none.
++  anus_shell_dir = ""
+ }
+ 
+ assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
+@@ -1134,6 +1141,16 @@
+     }
+   }
+ 
++  # Uranus Browser's shell extension (chromium/shell/dist, staged by
++  # build-release.sh), as Resources/anus-shell: chrome::DIR_RESOURCES is the
++  # framework's Resources on Mac (chrome_paths.cc).
++  if (anus_shell_dir != "") {
++    bundle_data("anus_shell_resources") {
++      sources = [ anus_shell_dir ]
++      outputs = [ "{{bundle_resources_dir}}/anus-shell" ]
++    }
++  }
++
+   # Add the ANGLE .dylibs in the MODULE_DIR of Chromium.app
+   if (!use_static_angle) {
+     bundle_data("angle_binaries") {
+@@ -1420,6 +1437,10 @@
+     }
+ 
+     bundle_deps += [ ":vulkan_loader_binaries" ]
++
++    if (anus_shell_dir != "") {
++      bundle_deps += [ ":anus_shell_resources" ]
++    }
+ 
+     if (enable_separate_renderer_binary) {
+       bundle_deps += [ ":chrome_renderer_library" ]
+--- a/chrome/browser/extensions/component_loader.cc
++++ b/chrome/browser/extensions/component_loader.cc
+@@ -599,8 +599,8 @@
+       base::CommandLine::ForCurrentProcess();
+   base::FilePath dir = command_line->GetSwitchValuePath("anus-shell-dir");
+   if (dir.empty()) {
+-    // TODO(anus): copy chromium/shell/dist into the app's Resources as
+-    // anus-shell for release builds (a GN copy step); dev builds pass
++    // Release builds carry the shell in the framework's Resources (the
++    // anus_shell_dir GN arg in chrome/BUILD.gn); dev builds pass
+     // --anus-shell-dir (chromium/scripts/run.sh).
+     if (!base::PathService::Get(chrome::DIR_RESOURCES, &dir)) {
+       return;

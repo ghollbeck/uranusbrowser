@@ -1,0 +1,47 @@
+/* Mobile presentation of the lower Flights replay: one complete desktop canvas. */
+.mobile-flight-viewport { display: contents; }
+
+@media (max-width: 640px) {
+  .mobile-flight-viewport {
+    display: block;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1080 / 675;
+    overflow: hidden;
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-lift), 0 0 0 1px var(--soft);
+  }
+  .mobile-flight-viewport > #agentDemo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1080px;
+    height: 675px;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    transform: scale(var(--mobile-flight-scale, 1));
+    transform-origin: top left;
+    box-shadow: none;
+  }
+  #agentDemo .demo-body { min-height: 0; }
+  #agentDemo .demo-panel {
+    min-height: 0;
+    border-left: 1px solid var(--soft) !important;
+    border-top: 0;
+  }
+  #agentDemo .gf-fields { grid-template-columns: 1.15fr 1fr; }
+  #agentDemo .gf-tabs span:not(.on) { display: inline-flex; }
+  #agentDemo .gf-card { margin: 18px 20px 0; padding: 8px 16px 40px; }
+  #agentDemo .gf-opts span { padding: 0 10px; font-size: 14px; }
+  #agentDemo .fl-results { margin: 36px 20px 0; }
+  #agentDemo .fl-row {
+    grid-template-columns: 36px minmax(0, 1.6fr) 1fr .8fr auto;
+    gap: 14px;
+    padding: 10px 16px;
+  }
+  #agentDemo .fl-row .dur, #agentDemo .fl-row .stops { display: block; }
+  #agentDemo .demo-cursor {
+    transform: translate(var(--mobile-cursor-x, var(--cx, 60%)), var(--mobile-cursor-y, var(--cy, 60%)));
+  }
+}

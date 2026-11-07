@@ -1,0 +1,96 @@
+<!doctype html>
+<!--
+  The disk image window's background (render.sh turns it into background.tiff, 1x and 2x).
+  The window's content is 660 x 420 points (package-release.sh); the two icons sit centred at
+  (170, 196) and (490, 196), 128 points wide, with Finder's labels under them. The picture is
+  20 points taller than that: Finder's title bar is 32 points on macOS 26 and 28 before, so
+  older systems show a little more of it. The look is Uranus Browser's Blueprint identity
+  (chromium/shell/ui/tokens.css): paper, a drafting grid, the logo's arrow and its
+  marker-orange dimension tick.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --ink: #0b2545;
+        --paper: #eef2f6;
+        --blue: #3aa6d9;
+        --mark: #e4572e;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 660px;
+        height: 440px;
+        overflow: hidden;
+      }
+      body {
+        background:
+          radial-gradient(120% 90% at 50% 38%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 70%),
+          linear-gradient(180deg, #f3f6f9, #e8edf3);
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      svg {
+        position: absolute;
+        inset: 0;
+      }
+      .caption {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 346px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: -0.005em;
+        color: rgba(11, 37, 69, 0.62);
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="660" height="440" viewBox="0 0 660 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="minor" width="20" height="20" patternUnits="userSpaceOnUse" x="10" y="16">
+          <path d="M20 0H0V20" fill="none" stroke="#3aa6d9" stroke-opacity="0.075" stroke-width="1" />
+        </pattern>
+        <pattern id="major" width="80" height="80" patternUnits="userSpaceOnUse" x="10" y="36">
+          <path d="M80 0H0V80" fill="none" stroke="#3aa6d9" stroke-opacity="0.13" stroke-width="1" />
+        </pattern>
+        <!-- The grid fades out towards the edges, like a sheet under a desk lamp. -->
+        <radialGradient id="fade" cx="50%" cy="46%" r="62%">
+          <stop offset="0" stop-color="#fff" stop-opacity="1" />
+          <stop offset="0.7" stop-color="#fff" stop-opacity="0.55" />
+          <stop offset="1" stop-color="#fff" stop-opacity="0" />
+        </radialGradient>
+        <mask id="grid-mask">
+          <rect width="660" height="440" fill="url(#fade)" />
+        </mask>
+      </defs>
+
+      <g mask="url(#grid-mask)">
+        <rect width="660" height="440" fill="url(#minor)" />
+        <rect width="660" height="440" fill="url(#major)" />
+      </g>
+
+      <!-- Drafting circles behind each icon, as on the logo. -->
+      <g fill="none" stroke="#3aa6d9" stroke-width="1">
+        <circle cx="170" cy="196" r="100" stroke-opacity="0.22" />
+        <circle cx="490" cy="196" r="100" stroke-opacity="0.22" />
+        <path d="M170 84v12M170 296v12M58 196h12M270 196h12" stroke-opacity="0.3" />
+        <path d="M490 84v12M490 296v12M378 196h12M590 196h12" stroke-opacity="0.3" />
+      </g>
+
+      <!-- From the app to Applications: a dimension line, the logo's orange tick where it
+           starts and Uranus Browser's arrow where it ends. -->
+      <g transform="translate(0 196)">
+        <path d="M292 0H350" stroke="#0b2545" stroke-opacity="0.42" stroke-width="1.5" stroke-dasharray="5 5" stroke-linecap="round" />
+        <path d="M292 -8V8" stroke="#e4572e" stroke-width="2" stroke-linecap="round" />
+        <path d="M368 0L346 -12L352.5 0L346 12Z" fill="#0b2545" />
+      </g>
+    </svg>
+
+    <div class="caption">Drag Uranus Browser into Applications to install it.</div>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.DS_Store
+# Secrets never go in the repo (the Agent panel's key lives in the macOS Keychain).
+.env
+.env.*
+*.env
+.env2
+# Test scratch: bundled tests, end-to-end profiles and captures.
+chromium/tests/.cache/
+chromium/tests/.scratch/
+
+# Generated branding and local signing/diagnostic material.
+/chromium/branding/mac/
+/chromium/branding/dmg/background.tiff
+.claude/
+.codex/
+.run/
+*.log
+*.har
+*.sqlite*
+*.p8
+*.p12
+*.pem
+*.key
+*.mobileprovision
+*.xcarchive/
+*.ipa
+*.dmg

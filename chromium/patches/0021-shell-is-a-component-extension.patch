@@ -1,0 +1,117 @@
+--- a/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
++++ b/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
+@@ -12,6 +12,7 @@
+ #include "build/branding_buildflags.h"
+ #include "build/build_config.h"
+ #include "build/chromeos_buildflags.h"
++#include "chrome/browser/anus/anus_shell.h"
+ #include "chrome/common/buildflags.h"
+ #include "chrome/common/extensions/extension_constants.h"
+ #include "chrome/grit/aim_eligibility_extension_resources.h"
+@@ -70,6 +71,9 @@
+ #if !BUILDFLAG(IS_ANDROID)
+       extension_misc::kIndigoExtensionId,
+       extension_misc::kDictationConnectorExtensionId,
++      // Uranus Browser's shell (chromium/shell), a component extension so that it
++      // can't be removed or turned off (component_loader.cc).
++      kAnusShellExtensionId,
+ #endif  // !BUILDFLAG(IS_ANDROID)
+   });
+ 
+--- a/chrome/browser/extensions/component_loader.cc
++++ b/chrome/browser/extensions/component_loader.cc
+@@ -31,6 +31,7 @@
+ #include "chrome/browser/extensions/component_loader_prefs.h"
+ #include "chrome/browser/extensions/data_deleter.h"
+ #include "chrome/browser/extensions/glic_util.h"
++#include "chrome/browser/anus/anus_shell.h"
+ #include "chrome/browser/extensions/profile_util.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/common/channel_info.h"
+@@ -590,7 +591,59 @@
+   if (IsApiGlicPrivateEnabled()) {
+     Add(IDR_GLIC_EXTENSION_MANIFEST,
+         base::FilePath(FILE_PATH_LITERAL("glic_extension")));
++  }
++}
++
++void ComponentLoader::AddAnusShellExtension() {
++  const base::CommandLine* command_line =
++      base::CommandLine::ForCurrentProcess();
++  base::FilePath dir = command_line->GetSwitchValuePath("anus-shell-dir");
++  if (dir.empty()) {
++    // TODO(anus): copy chromium/shell/dist into the app's Resources as
++    // anus-shell for release builds (a GN copy step); dev builds pass
++    // --anus-shell-dir (chromium/scripts/run.sh).
++    if (!base::PathService::Get(chrome::DIR_RESOURCES, &dir)) {
++      return;
++    }
++    dir = dir.Append(FILE_PATH_LITERAL("anus-shell"));
++  }
++  if (!dir.IsAbsolute()) {
++    LOG(ERROR) << "--anus-shell-dir must be an absolute path: " << dir;
++    return;
++  }
++  // The manifest is read on the file thread; the reply comes after the
++  // extension system is ready (its Init runs in this task), so Add() loads the
++  // shell straight away. The window frame opens once it is ready.
++  GetExtensionFileTaskRunner()->PostTaskAndReplyWithResult(
++      FROM_HERE,
++      base::BindOnce(
++          [](const base::FilePath& dir) {
++            std::string error;
++            std::optional<base::DictValue> manifest =
++                file_util::LoadManifest(dir, &error);
++            if (!manifest) {
++              LOG(ERROR) << "Uranus Browser's shell couldn't load from " << dir << ": "
++                         << error;
++            }
++            return manifest;
++          },
++          dir),
++      base::BindOnce(&ComponentLoader::FinishAddAnusShell,
++                     weak_factory_.GetWeakPtr(), dir));
++}
++
++void ComponentLoader::FinishAddAnusShell(
++    const base::FilePath& dir,
++    std::optional<base::DictValue> manifest) {
++  if (!manifest) {
++    return;
+   }
++  const ExtensionId id =
++      Add(std::move(*manifest), dir, /*skip_allowlist=*/false);
++  if (id != kAnusShellExtensionId) {
++    LOG(ERROR) << "Uranus Browser's shell at " << dir << " has the id " << id
++               << "; its manifest key must give " << kAnusShellExtensionId;
++  }
+ }
+ 
+ void ComponentLoader::AddContextualTasksExtension() {
+@@ -819,6 +872,9 @@
+   AddNewTabPageExtension();
+   AddGlicExtension();
+   AddContextualTasksExtension();
++  if (!skip_session_components) {
++    AddAnusShellExtension();
++  }
+ 
+ // http://crbug.com/41070702
+ #if BUILDFLAG(GOOGLE_CHROME_BRANDING) && !BUILDFLAG(IS_CHROMEOS)
+--- a/chrome/browser/extensions/component_loader.h
++++ b/chrome/browser/extensions/component_loader.h
+@@ -239,6 +239,14 @@
+   void AddGlicExtension();
+ 
+   void AddContextualTasksExtension();
++
++  // Uranus Browser: Uranus Browser's shell (chromium/shell), from --anus-shell-dir=<dir>
++  // (dev: chromium/shell/dist, so shell changes need no C++ build) or else
++  // the app's Resources/anus-shell. As a component extension it can't be
++  // removed, turned off or seen in chrome://extensions.
++  void AddAnusShellExtension();
++  void FinishAddAnusShell(const base::FilePath& dir,
++                            std::optional<base::DictValue> manifest);
+ 
+   void AddWithNameAndDescription(int manifest_resource_id,
+                                  const base::FilePath& root_directory,

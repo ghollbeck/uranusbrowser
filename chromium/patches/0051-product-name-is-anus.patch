@@ -1,0 +1,51 @@
+--- a/chrome/app/chromium_strings.grd
++++ b/chrome/app/chromium_strings.grd
+@@ -294,10 +294,10 @@
+         </then>
+         <else>
+           <message name="IDS_PRODUCT_NAME" desc="The Chrome application name" translateable="false">
+-            Chromium
++            Uranus Browser
+           </message>
+           <message name="IDS_SHORT_PRODUCT_NAME" desc="The Chrome application short name." translateable="false">
+-            Chromium
++            Uranus Browser
+           </message>
+         </else>
+       </if>
+@@ -576,7 +576,7 @@
+         </message>
+       </if>
+       <message name="IDS_ACCNAME_APP" desc="The accessible name for the app menu." translateable="false">
+-        Chromium
++        Uranus Browser
+       </message>
+       <!-- Hung Browser Detector -->
+       <if expr="is_win">
+@@ -687,7 +687,7 @@
+         Chromium lets you know if your passwords are ever compromised
+       </message>
+       <message name="IDS_PASSWORD_MANAGER_TITLE_BRAND" desc="The product name used in the title of the password bubble." translateable="false">
+-        Chromium
++        Uranus Browser
+       </message>
+       <message name="IDS_PASSWORD_MANAGER_BRAND_NAME" desc="This string is used both as a standalone label and injected into sentences. Please translate this as a standalone noun in the Nominative case to ensure it looks correct in titles. Sentence structures surrounding it may read slightly awkwardly.">
+         Password Manager
+@@ -1183,7 +1183,7 @@
+ 
+       <if expr="is_macosx">
+         <message name="IDS_APP_MENU_PRODUCT_NAME" desc="The application's short name, used for the Mac's application menu, activity monitor, etc. This should be less than 16 characters. Example: Chrome, not Google Chrome." translateable="false">
+-          Chromium
++          Uranus Browser
+         </message>
+         <message name="IDS_HELPER_NAME" desc="The helper application's name.  Should contain the Chrome application name (IDS_PRODUCT_NAME). Example: Google Chrome Helper.">
+           Chromium Helper
+@@ -1212,7 +1212,7 @@
+ 
+       <!-- Chrome sign-in page -->
+       <message name="IDS_CHROME_SIGNIN_TITLE" desc="Title on the about:chrome-signin page" translateable="false">
+-        Chromium
++        Uranus Browser
+       </message>
+ 
+       <!-- DICE sign-in promo strings -->

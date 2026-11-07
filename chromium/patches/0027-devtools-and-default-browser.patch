@@ -1,0 +1,155 @@
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -9,7 +9,10 @@
+ 
+ #include "base/strings/string_number_conversions.h"
+ #include "base/auto_reset.h"
++#include "chrome/browser/devtools/devtools_toggle_action.h"
++#include "chrome/browser/devtools/devtools_window.h"
+ #include "chrome/browser/extensions/api/tabs/tabs_util.h"
++#include "chrome/browser/shell_integration.h"
+ #include "chrome/browser/extensions/extension_tab_util.h"
+ #include "chrome/browser/ui/browser.h"
+ #include "chrome/browser/ui/browser_tabstrip.h"
+@@ -456,8 +459,63 @@
+   AnusFrameHost::PeekTabs() =
+       std::set<int>(params->tab_ids.begin(), params->tab_ids.end());
+   return RespondNow(NoArguments());
++}
++
++ExtensionFunction::ResponseAction AnusPrivateOpenDevToolsFunction::Run() {
++  auto params = anus_private::OpenDevTools::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  content::WebContents* contents = nullptr;
++  if (!ExtensionTabUtil::GetTabById(params->tab_id, browser_context(),
++                                    /*include_incognito=*/false, &contents)) {
++    return RespondNow(Error(kNoTabError, base::NumberToString(params->tab_id)));
++  }
++  const bool toggle = params->options && params->options->toggle.value_or(false);
++  const bool console =
++      params->options && params->options->console.value_or(false);
++  DevToolsWindow::OpenDevToolsWindow(
++      contents,
++      console  ? DevToolsToggleAction::ShowConsolePanel()
++      : toggle ? DevToolsToggleAction::Toggle()
++               : DevToolsToggleAction::Show(),
++      console ? DevToolsOpenedByAction::kConsoleShortcut
++              : DevToolsOpenedByAction::kMainMenuOrMainShortcut);
++  return RespondNow(NoArguments());
++}
++
++namespace {
++
++base::DictValue DefaultBrowserState(
++    shell_integration::DefaultWebClientState state) {
++  return base::DictValue()
++      .Set("isDefault", state == shell_integration::IS_DEFAULT)
++      .Set("canSet", shell_integration::CanSetAsDefaultBrowser());
+ }
+ 
++}  // namespace
++
++ExtensionFunction::ResponseAction AnusPrivateIsDefaultBrowserFunction::Run() {
++  base::MakeRefCounted<shell_integration::DefaultBrowserWorker>()
++      ->StartCheckIsDefault(base::BindOnce(
++          [](scoped_refptr<AnusPrivateIsDefaultBrowserFunction> function,
++             shell_integration::DefaultWebClientState state) {
++            function->Respond(function->WithArguments(DefaultBrowserState(state)));
++          },
++          scoped_refptr<AnusPrivateIsDefaultBrowserFunction>(this)));
++  return RespondLater();
++}
++
++ExtensionFunction::ResponseAction
++AnusPrivateMakeDefaultBrowserFunction::Run() {
++  base::MakeRefCounted<shell_integration::DefaultBrowserWorker>()
++      ->StartSetAsDefault(base::BindOnce(
++          [](scoped_refptr<AnusPrivateMakeDefaultBrowserFunction> function,
++             shell_integration::DefaultWebClientState state) {
++            function->Respond(function->WithArguments(DefaultBrowserState(state)));
++          },
++          scoped_refptr<AnusPrivateMakeDefaultBrowserFunction>(this)));
++  return RespondLater();
++}
++
+ ExtensionFunction::ResponseAction AnusPrivateGetAnusMinisFunction::Run() {
+   base::ListValue ids;
+   for (AnusFrameHost* host : AnusFrameHost::All()) {
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -133,6 +133,33 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateOpenDevToolsFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.openDevTools", UNKNOWN)
++
++ protected:
++  ~AnusPrivateOpenDevToolsFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateIsDefaultBrowserFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.isDefaultBrowser", UNKNOWN)
++
++ protected:
++  ~AnusPrivateIsDefaultBrowserFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateMakeDefaultBrowserFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.makeDefaultBrowser", UNKNOWN)
++
++ protected:
++  ~AnusPrivateMakeDefaultBrowserFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ // Whether links from other apps open in a AnusMini (setOpenLinksInAnusMini).
+ bool& AnusLinksOpenInAnusMini();
+ 
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -64,6 +64,20 @@
+     Bounds bounds;
+   };
+ 
++  // Whether Uranus Browser is the default browser, and whether it can make itself so.
++  dictionary DefaultBrowserState {
++    boolean isDefault;
++    boolean canSet;
++  };
++  callback DefaultBrowserCallback = void(DefaultBrowserState state);
++
++  dictionary DevToolsOptions {
++    // Close them if they're open (the Alt+Cmd+I menu item).
++    boolean? toggle;
++    // On the Console panel (the sidebar's error badge).
++    boolean? console;
++  };
++
+   // What a new AnusMini shows.
+   dictionary AnusMiniOptions {
+     // A page to open (default: the new tab page).
+@@ -146,6 +160,18 @@
+     // instead, like the spike's pinned tabs. Replaces the previous list.
+     static void setPeekTabs(long[] tabIds, optional DoneCallback callback);
+ 
++    // Opens Developer Tools for a tab, docked or in their own window as last
++    // time.
++    static void openDevTools(
++        long tabId,
++        optional DevToolsOptions options,
++        optional DoneCallback callback);
++
++    static void isDefaultBrowser(DefaultBrowserCallback callback);
++    // Asks macOS to make Uranus Browser the default browser (it shows its own
++    // confirmation), then calls back with the result.
++    static void makeDefaultBrowser(DefaultBrowserCallback callback);
++
+     // The open AnusMinis' window ids.
+     static void getAnusMinis(WindowIdsCallback callback);
+   };

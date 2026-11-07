@@ -1,0 +1,25 @@
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -21,6 +21,7 @@
+ #include "extensions/browser/view_type_utils.h"
+ #include "extensions/common/extension.h"
+ #include "extensions/common/mojom/view_type.mojom.h"
++#include "third_party/blink/public/common/input/web_input_event.h"
+ #include "third_party/blink/public/mojom/page/draggable_region.mojom.h"
+ #include "ui/base/hit_test.h"
+ #include "ui/base/metadata/metadata_impl_macros.h"
+@@ -178,6 +179,14 @@
+     content::WebContents* source,
+     const input::NativeWebKeyboardEvent& event) {
+   // The window's shortcuts (Cmd+T, Cmd+L, ...) work with the frame focused.
++  // Keys without Command or Control are the frame page's own, as in a tab
++  // before the browser's accelerators: Escape closes the command bar rather
++  // than reaching the window (which swallows it).
++  constexpr int kShortcutModifiers =
++      blink::WebInputEvent::kMetaKey | blink::WebInputEvent::kControlKey;
++  if (!(event.GetModifiers() & kShortcutModifiers)) {
++    return content::KeyboardEventProcessingResult::NOT_HANDLED;
++  }
+   return browser_view_->PreHandleKeyboardEvent(event);
+ }
+ 

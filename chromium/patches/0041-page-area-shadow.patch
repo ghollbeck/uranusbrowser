@@ -1,0 +1,84 @@
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -6,6 +6,7 @@
+ 
+ #include <string>
+ #include <utility>
++#include <vector>
+ 
+ #include "base/strings/string_number_conversions.h"
+ #include "build/build_config.h"
+@@ -24,7 +25,11 @@
+ #include "content/public/browser/web_contents_observer.h"
+ #include "third_party/blink/public/mojom/window_features/window_features.mojom.h"
+ #include "ui/events/keycodes/keyboard_codes.h"
++#include "ui/gfx/canvas.h"
++#include "ui/gfx/color_utils.h"
+ #include "ui/gfx/geometry/rounded_corners_f.h"
++#include "ui/gfx/shadow_value.h"
++#include "ui/gfx/skia_paint_util.h"
+ #include "content/public/browser/navigation_controller.h"
+ #include "content/public/browser/render_frame_host.h"
+ #include "content/public/browser/render_widget_host.h"
+@@ -63,6 +68,52 @@
+ BEGIN_METADATA(AnusFrameBackgroundView)
+ END_METADATA
+ 
++// The window background: the Space's colour, and under the page area a soft
++// drop shadow, as in Arc, with no outline. The page area (the view's insets)
++// covers the shape itself; only its shadow shows, in the gap around it.
++class AnusFrameBackground : public views::Background {
++ public:
++  explicit AnusFrameBackground(const AnusFrameState& state)
++      : state_(state) {}
++
++  void Paint(gfx::Canvas* canvas, views::View* view) const override {
++    canvas->DrawColor(state_.background);
++    gfx::Rect page = view->GetLocalBounds();
++    page.Inset(view->GetInsets());
++    // A page area that fills the window (fullscreen, sidebar hidden) has no
++    // gap to cast a shadow in.
++    if (page.IsEmpty() || page == view->GetLocalBounds()) {
++      return;
++    }
++    // Light: a close, crisp shadow and a wide, faint one, both of Uranus Browser's
++    // ink. Dark (a dark Space colour): stronger, on black.
++    const bool dark = color_utils::IsDark(state_.background);
++    const SkColor ink = dark ? SK_ColorBLACK : SkColorSetRGB(0x0b, 0x25, 0x45);
++    const std::vector<gfx::ShadowValue> shadows = {
++        gfx::ShadowValue(gfx::Vector2d(0, 1), 3,
++                         SkColorSetA(ink, dark ? 0x59 : 0x1a)),
++        gfx::ShadowValue(gfx::Vector2d(0, 4), 14,
++                         SkColorSetA(ink, dark ? 0x40 : 0x0f)),
++    };
++    // Beside the docked sidebar (opaque, over the window's left part) a halo
++    // would show only in the gaps above and below the page, cut straight at
++    // the sidebar's edge; keep the shape that far in on that side instead.
++    gfx::RectF shape(page);
++    if (!state_.anusmini &&
++        state_.sidebar == AnusFrameState::Sidebar::kDocked) {
++      shape.Inset(gfx::InsetsF::TLBR(0, 14, 0, 0));
++    }
++    cc::PaintFlags flags;
++    flags.setAntiAlias(true);
++    flags.setColor(dark ? SkColorSetRGB(0x1f, 0x1f, 0x1f) : SK_ColorWHITE);
++    flags.setLooper(gfx::CreateShadowDrawLooper(shadows));
++    canvas->DrawRoundRect(shape, kAnusPageCornerRadius, flags);
++  }
++
++ private:
++  const AnusFrameState state_;
++};
++
+ // Wide enough to cover any window, for an overlay.
+ constexpr int kOverlayWidth = 1 << 20;
+ 
+@@ -660,7 +711,7 @@
+ 
+ void AnusFrameView::ApplyState() {
+   if (views::View* background = background_view()) {
+-    background->SetBackground(views::CreateSolidBackground(state_.background));
++    background->SetBackground(std::make_unique<AnusFrameBackground>(state_));
+     background->SetBorder(views::CreateEmptyBorder(state_.PageInsets()));
+   }
+   PreferredSizeChanged();

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 783" font-family="system-ui,sans-serif">
+<rect x="4" y="4" width="352" height="775" rx="49" fill="#191525"/>
+<rect x="12" y="12" width="336" height="759" rx="42" fill="#f5f0ff"/>
+<rect x="125" y="24" width="110" height="24" rx="12" fill="#191525"/>
+<text x="41" y="112" fill="#6250a4" font-size="15">FIELD NOTES</text>
+<text x="40" y="158" fill="#251c36" font-size="32" font-weight="600">A quiet page</text>
+<rect x="39" y="195" width="282" height="210" rx="18" fill="#dacdf8"/>
+<circle cx="240" cy="251" r="24" fill="#f6edc8"/><path d="m39 370 104-117 87 113 45-60 46 52v30q0 17-17 17H57q-18 0-18-18z" fill="#947cc8"/>
+<path d="M43 453h271M43 479h231M43 505h254M43 531h193" stroke="#bdaed8" stroke-width="7" stroke-linecap="round"/>
+<rect x="34" y="675" width="292" height="48" rx="24" fill="#fff"/><text x="74" y="704" fill="#362754" font-size="15">‹　 example.org　 ＋</text>
+<path d="M142 747h76" stroke="#191525" stroke-width="5" stroke-linecap="round"/>
+</svg>

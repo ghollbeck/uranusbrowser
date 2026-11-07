@@ -1,0 +1,736 @@
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -400,8 +400,64 @@
+   target->GetWindow()->Activate();
+   // Empty now, so Chromium closes it; any other tabs it had stay with it.
+   return RespondNow(WithArguments(tab_id));
++}
++
++namespace {
++
++// The window a Peek call is about: `window_id`, or Uranus Browser's main window.
++AnusFrameHost* PeekHost(const std::optional<int>& window_id,
++                          content::BrowserContext* context) {
++  if (window_id) {
++    AnusFrameHost* host = HostForWindow(*window_id, context);
++    return host && !host->IsAnusMini() ? host : nullptr;
++  }
++  return AnusFrameHost::Main(
++      Profile::FromBrowserContext(context)->GetOriginalProfile());
++}
++
++}  // namespace
++
++ExtensionFunction::ResponseAction AnusPrivateOpenPeekFunction::Run() {
++  auto params = anus_private::OpenPeek::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  const GURL url(params->url);
++  if (!url.is_valid()) {
++    return RespondNow(Error("Invalid url: " + params->url));
++  }
++  AnusFrameHost* host = PeekHost(params->window_id, browser_context());
++  if (!host) {
++    return RespondNow(Error(kNoWindowError, "(peek)"));
++  }
++  host->OpenPeek(url);
++  return RespondNow(NoArguments());
+ }
+ 
++ExtensionFunction::ResponseAction AnusPrivateClosePeekFunction::Run() {
++  auto params = anus_private::ClosePeek::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  if (AnusFrameHost* host = PeekHost(params->window_id, browser_context())) {
++    host->ClosePeek();
++  }
++  return RespondNow(NoArguments());
++}
++
++ExtensionFunction::ResponseAction AnusPrivatePromotePeekFunction::Run() {
++  auto params = anus_private::PromotePeek::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  if (AnusFrameHost* host = PeekHost(params->window_id, browser_context())) {
++    host->PromotePeek();
++  }
++  return RespondNow(NoArguments());
++}
++
++ExtensionFunction::ResponseAction AnusPrivateSetPeekTabsFunction::Run() {
++  auto params = anus_private::SetPeekTabs::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  AnusFrameHost::PeekTabs() =
++      std::set<int>(params->tab_ids.begin(), params->tab_ids.end());
++  return RespondNow(NoArguments());
++}
++
+ ExtensionFunction::ResponseAction AnusPrivateGetAnusMinisFunction::Run() {
+   base::ListValue ids;
+   for (AnusFrameHost* host : AnusFrameHost::All()) {
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -97,6 +97,42 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateOpenPeekFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.openPeek", UNKNOWN)
++
++ protected:
++  ~AnusPrivateOpenPeekFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateClosePeekFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.closePeek", UNKNOWN)
++
++ protected:
++  ~AnusPrivateClosePeekFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivatePromotePeekFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.promotePeek", UNKNOWN)
++
++ protected:
++  ~AnusPrivatePromotePeekFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateSetPeekTabsFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.setPeekTabs", UNKNOWN)
++
++ protected:
++  ~AnusPrivateSetPeekTabsFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ // Whether links from other apps open in a AnusMini (setOpenLinksInAnusMini).
+ bool& AnusLinksOpenInAnusMini();
+ 
+--- a/chrome/browser/anus/anus_frame_host.cc
++++ b/chrome/browser/anus/anus_frame_host.cc
+@@ -63,6 +63,12 @@
+   return creating;
+ }
+ 
++// static
++std::set<int>& AnusFrameHost::PeekTabs() {
++  static base::NoDestructor<std::set<int>> tabs;
++  return *tabs;
++}
++
+ AnusFrameHost::AnusFrameHost() {
+   Hosts().push_back(this);
+ }
+--- a/chrome/browser/anus/anus_frame_host.h
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -7,7 +7,9 @@
+ 
+ #include <algorithm>
+ #include <map>
++#include <memory>
+ #include <optional>
++#include <set>
+ #include <string>
+ #include <vector>
+ 
+@@ -18,6 +20,7 @@
+ #include "ui/gfx/geometry/rect.h"
+ 
+ class BrowserWindowInterface;
++class GURL;
+ 
+ namespace content {
+ class BrowserContext;
+@@ -55,6 +58,16 @@
+ inline constexpr float kAnusPageCornerRadius =
+     kAnusWindowCornerRadius - kAnusGap;
+ 
++// Peek's card in the page area (the spike's peekBounds()): inset 8% of the
++// page area's width on each side, 48 from its top (room for the frame page's
++// Peek toolbar) and 24 from its bottom.
++inline gfx::Rect AnusPeekBounds(const gfx::Rect& page) {
++  const int margin = static_cast<int>(page.width() * 0.08 + 0.5);
++  return gfx::Rect(page.x() + margin, page.y() + 48,
++                   std::max(0, page.width() - margin * 2),
++                   std::max(0, page.height() - 72));
++}
++
+ // AnusMini (src/main/anusmini.ts): the frame page is a toolbar this tall
+ // across the top, and the page sits under it, kAnusGap from the other edges.
+ inline constexpr int kAnusMiniToolbarHeight = 44;
+@@ -148,6 +161,23 @@
+   // frame made meanwhile is that AnusMini's.
+   static bool& CreatingAnusMini();
+ 
++  // Tabs (extension tab ids) whose links to a new foreground tab open in Peek
++  // instead, like the spike's pinned tabs and favourites
++  // (chrome.anusPrivate.setPeekTabs()).
++  static std::set<int>& PeekTabs();
++
++  // Peek: a page in a floating card over the page area (the spike's
++  // openPeek()). Opening one replaces the one before.
++  virtual void OpenPeek(const GURL& url) = 0;
++  // Peek with a page that is already made (a window.open() from a Peek tab),
++  // so that it keeps its opener.
++  virtual void OpenPeekWithContents(
++      std::unique_ptr<content::WebContents> contents) = 0;
++  virtual void ClosePeek() = 0;
++  // The Peek's page becomes a normal tab in this window.
++  virtual void PromotePeek() = 0;
++  virtual bool HasPeek() const = 0;
++
+   // The extension window ID (the window's session ID) of this host's window.
+   virtual int GetWindowId() const = 0;
+   // The profile of this host's window.
+--- a/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
++++ b/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
+@@ -20,6 +20,7 @@
+ #include "chrome/browser/devtools/devtools_window.h"
+ #include "chrome/browser/file_select_helper.h"
+ #include "chrome/browser/anus/anus_frame_host.h"
++#include "components/sessions/content/session_tab_helper.h"
+ #include "chrome/browser/headless/headless_mode_util.h"
+ #include "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h"
+ #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
+@@ -147,6 +148,22 @@
+   }
+   AnusFrameHost* main = AnusFrameHost::Main(browser.GetProfile());
+   return main ? main->GetBrowserWindowInterface() : nullptr;
++}
++
++// Uranus Browser: the window frame that opens `source`'s new foreground tabs in Peek
++// (a pinned tab's links, chrome.anusPrivate.setPeekTabs()), or null.
++AnusFrameHost* AnusPeekHostFor(BrowserWindowInterface& browser,
++                                   content::WebContents* source,
++                                   WindowOpenDisposition disposition) {
++  if (!source || disposition != WindowOpenDisposition::kNewForegroundTab ||
++      AnusFrameHost::PeekTabs().empty() ||
++      !AnusFrameHost::PeekTabs().contains(
++          sessions::SessionTabHelper::IdForTab(source).id())) {
++    return nullptr;
++  }
++  AnusFrameHost* host =
++      AnusFrameHost::ForWindow(browser.GetSessionID().id());
++  return host && !host->IsAnusMini() ? host : nullptr;
+ }
+ 
+ const extensions::Extension* GetExtensionForOrigin(
+@@ -599,6 +616,13 @@
+                                   std::move(navigation_handle_callback));
+   }
+ 
++  // Uranus Browser: like Arc, links leaving a pinned tab open in Peek.
++  if (AnusFrameHost* peek =
++          AnusPeekHostFor(*browser_, source, params.disposition)) {
++    peek->OpenPeek(params.url);
++    return nullptr;
++  }
++
+   // Uranus Browser: a AnusMini is about its one page; the tabs it opens are Uranus Browser's.
+   if (source && IsAnusNewTab(params.disposition)) {
+     if (BrowserWindowInterface* main = AnusMiniMainWindow(*browser_)) {
+@@ -810,6 +834,14 @@
+     }
+   }
+ 
++  // Uranus Browser: a pinned tab's new foreground tabs open in Peek, keeping their
++  // opener.
++  if (AnusFrameHost* peek =
++          AnusPeekHostFor(*browser_, source, disposition)) {
++    peek->OpenPeekWithContents(std::move(new_contents));
++    return nullptr;
++  }
++
+   // Uranus Browser: a AnusMini's new tabs open in Uranus Browser's main window (real popups,
+   // which need window.opener, stay popups).
+   if (IsAnusNewTab(disposition)) {
+--- a/chrome/browser/ui/views/frame/browser_view.cc
++++ b/chrome/browser/ui/views/frame/browser_view.cc
+@@ -5169,6 +5169,7 @@
+   if (AnusFrameView* anus_frame = AnusFrameView::MaybeCreate(this)) {
+     layout_views.anus_frame = anus_frame;
+     layout_views.anus_frame_background = anus_frame->background_view();
++    layout_views.anus_peek = anus_frame->peek_view();
+   }
+ 
+   SetLayoutManager(BrowserViewLayout::CreateLayout(
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -15,6 +15,15 @@
+ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
+ #include "chrome/browser/ui/views/frame/anus_top_chrome.h"
++#include "base/task/sequenced_task_runner.h"
++#include "chrome/browser/anus/anus_shell_events.h"
++#include "chrome/browser/ui/browser_tabstrip.h"
++#include "chrome/browser/ui/navigator/browser_navigator_params.h"
++#include "chrome/browser/ui/tabs/tab_strip_model.h"
++#include "content/public/browser/web_contents_observer.h"
++#include "third_party/blink/public/mojom/window_features/window_features.mojom.h"
++#include "ui/events/keycodes/keyboard_codes.h"
++#include "ui/gfx/geometry/rounded_corners_f.h"
+ #include "content/public/browser/navigation_controller.h"
+ #include "content/public/browser/site_instance.h"
+ #include "content/public/browser/web_contents.h"
+@@ -54,8 +63,135 @@
+ // Wide enough to cover any window, for an overlay.
+ constexpr int kOverlayWidth = 1 << 20;
+ 
++// Peek's card: a web view that tells the frame when it moves, so the frame
++// page can draw Peek's toolbar right above it.
++class AnusPeekWebView : public views::WebView {
++  METADATA_HEADER(AnusPeekWebView, views::WebView)
++
++ public:
++  AnusPeekWebView(content::BrowserContext* context,
++                    base::RepeatingClosure bounds_changed)
++      : views::WebView(context), bounds_changed_(std::move(bounds_changed)) {
++    SetVisible(false);
++  }
++
++  void OnBoundsChanged(const gfx::Rect& previous_bounds) override {
++    views::WebView::OnBoundsChanged(previous_bounds);
++    bounds_changed_.Run();
++  }
++
++ private:
++  base::RepeatingClosure bounds_changed_;
++};
++
++BEGIN_METADATA(AnusPeekWebView)
++END_METADATA
++
+ }  // namespace
+ 
++// The Peek's page: shown in the peek view, kept out of the tab strip until
++// it's promoted. Its links to new tabs open in the window, as in the spike;
++// Escape closes it.
++class AnusFrameView::Peek : public content::WebContentsDelegate,
++                              public content::WebContentsObserver {
++ public:
++  Peek(AnusFrameView* frame, std::unique_ptr<content::WebContents> contents)
++      : content::WebContentsObserver(contents.get()),
++        frame_(frame),
++        contents_(std::move(contents)) {
++    contents_->SetDelegate(this);
++  }
++  ~Peek() override {
++    if (contents_) {
++      contents_->SetDelegate(nullptr);
++    }
++  }
++
++  content::WebContents* contents() { return contents_.get(); }
++
++  // Hands the page over (to the tab strip, for promotePeek()).
++  std::unique_ptr<content::WebContents> Release() {
++    Observe(nullptr);
++    contents_->SetDelegate(nullptr);
++    return std::move(contents_);
++  }
++
++  // content::WebContentsDelegate:
++  content::WebContents* OpenURLFromTab(
++      content::WebContents* source,
++      const content::OpenURLParams& params,
++      base::OnceCallback<void(content::NavigationHandle&)>
++          navigation_handle_callback) override {
++    if (params.disposition == WindowOpenDisposition::kCurrentTab) {
++      source->GetController().LoadURLWithParams(
++          content::NavigationController::LoadURLParams(params));
++      return source;
++    }
++    return frame_->browser_view_->browser()->OpenURL(
++        params, std::move(navigation_handle_callback));
++  }
++  content::WebContents* AddNewContents(
++      content::WebContents* source,
++      std::unique_ptr<content::WebContents> new_contents,
++      const GURL& target_url,
++      WindowOpenDisposition disposition,
++      const blink::mojom::WindowFeatures& window_features,
++      bool user_gesture,
++      bool* was_blocked) override {
++    // Real popups (OAuth, payment) stay popups; anything else is a tab.
++    if (disposition != WindowOpenDisposition::kNewPopup &&
++        disposition != WindowOpenDisposition::kNewBackgroundTab) {
++      disposition = WindowOpenDisposition::kNewForegroundTab;
++    }
++    return chrome::AddWebContents(frame_->browser_view_->browser(), source,
++                                  std::move(new_contents), target_url,
++                                  disposition, window_features,
++                                  NavigateParams::WindowAction::kShowWindow,
++                                  user_gesture);
++  }
++  content::KeyboardEventProcessingResult PreHandleKeyboardEvent(
++      content::WebContents* source,
++      const input::NativeWebKeyboardEvent& event) override {
++    constexpr int kModifiers =
++        blink::WebInputEvent::kMetaKey | blink::WebInputEvent::kControlKey |
++        blink::WebInputEvent::kAltKey | blink::WebInputEvent::kShiftKey;
++    if (event.GetType() == blink::WebInputEvent::Type::kRawKeyDown &&
++        event.windows_key_code == ui::VKEY_ESCAPE &&
++        !(event.GetModifiers() & kModifiers) && !source->IsFullscreen()) {
++      ClosePeekSoon();
++      return content::KeyboardEventProcessingResult::HANDLED;
++    }
++    return frame_->browser_view_->PreHandleKeyboardEvent(event);
++  }
++  bool HandleKeyboardEvent(
++      content::WebContents* source,
++      const input::NativeWebKeyboardEvent& event) override {
++    return frame_->browser_view_->HandleKeyboardEvent(event);
++  }
++  void CloseContents(content::WebContents* source) override {
++    ClosePeekSoon();
++  }
++
++  // content::WebContentsObserver:
++  void TitleWasSet(content::NavigationEntry* entry) override {
++    frame_->SendPeekChanged();
++  }
++  void PrimaryPageChanged(content::Page& page) override {
++    frame_->SendPeekChanged();
++  }
++
++ private:
++  // Not while the page is calling us.
++  void ClosePeekSoon() {
++    base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
++        FROM_HERE, base::BindOnce(&AnusFrameView::ClosePeek,
++                                  frame_->weak_factory_.GetWeakPtr()));
++  }
++
++  raw_ptr<AnusFrameView> frame_;
++  std::unique_ptr<content::WebContents> contents_;
++};
++
+ #if !BUILDFLAG(IS_MAC)
+ void SetAnusTrafficLights(views::Widget* widget,
+                             const AnusFrameState* state) {}
+@@ -67,8 +203,15 @@
+       browser_view->browser()->GetProfile()->IsOffTheRecord()) {
+     return nullptr;
+   }
+-  return browser_view->AddChildView(
++  AnusFrameView* frame = browser_view->AddChildView(
+       std::make_unique<AnusFrameView>(browser_view));
++  // Above the frame.
++  frame->peek_view_.SetView(
++      browser_view->AddChildView(std::make_unique<AnusPeekWebView>(
++          browser_view->browser()->GetProfile(),
++          base::BindRepeating(&AnusFrameView::SendPeekChanged,
++                              frame->weak_factory_.GetWeakPtr()))));
++  return frame;
+ }
+ 
+ // static
+@@ -109,7 +252,111 @@
+ 
+ AnusFrameView::~AnusFrameView() {
+   UnregisterShortcuts();
++  if (auto* peek_view = views::AsViewClass<views::WebView>(peek_view_.view())) {
++    peek_view->SetWebContents(nullptr);
++  }
++  peek_.reset();
+   SetWebContents(nullptr);
++}
++
++void AnusFrameView::OpenPeek(const GURL& url) {
++  content::BrowserContext* context = GetBrowserContext();
++  std::unique_ptr<content::WebContents> contents =
++      content::WebContents::Create(content::WebContents::CreateParams(context));
++  contents->GetController().LoadURL(url, content::Referrer(),
++                                    ui::PAGE_TRANSITION_LINK, std::string());
++  OpenPeekWithContents(std::move(contents));
++}
++
++void AnusFrameView::OpenPeekWithContents(
++    std::unique_ptr<content::WebContents> contents) {
++  auto* peek_view = views::AsViewClass<views::WebView>(peek_view_.view());
++  if (!peek_view || !contents) {
++    return;
++  }
++  if (peek_) {
++    peek_view->SetWebContents(nullptr);
++    peek_.reset();
++  }
++  peek_ = std::make_unique<Peek>(this, std::move(contents));
++  peek_view->SetWebContents(peek_->contents());
++  peek_view->holder()->SetNativeViewCornerRadii(
++      gfx::RoundedCornersF(kAnusPageCornerRadius));
++  peek_view->SetVisible(true);
++  // The frame covers the window while a Peek is open: it draws the backdrop
++  // and Peek's toolbar.
++  PreferredSizeChanged();
++  browser_view_->InvalidateLayout();
++  peek_view->RequestFocus();
++  peek_->contents()->Focus();
++  SendPeekChanged();
++}
++
++void AnusFrameView::ClosePeek() {
++  if (!peek_) {
++    return;
++  }
++  if (auto* peek_view = views::AsViewClass<views::WebView>(peek_view_.view())) {
++    peek_view->SetWebContents(nullptr);
++    peek_view->SetVisible(false);
++  }
++  peek_.reset();
++  PreferredSizeChanged();
++  browser_view_->InvalidateLayout();
++  SendPeekChanged();
++  FocusPage();
++}
++
++void AnusFrameView::PromotePeek() {
++  if (!peek_) {
++    return;
++  }
++  if (auto* peek_view = views::AsViewClass<views::WebView>(peek_view_.view())) {
++    peek_view->SetWebContents(nullptr);
++    peek_view->SetVisible(false);
++  }
++  std::unique_ptr<content::WebContents> contents = peek_->Release();
++  peek_.reset();
++  PreferredSizeChanged();
++  browser_view_->InvalidateLayout();
++  SendPeekChanged();
++  // The page, as it is, becomes a tab; the shell adopts it (tabs.onCreated).
++  browser_view_->browser()->GetTabStripModel()->AppendWebContents(
++      std::move(contents), /*foreground=*/true);
++}
++
++bool AnusFrameView::HasPeek() const {
++  return !!peek_;
++}
++
++void AnusFrameView::SendPeekChanged() {
++  base::ListValue args;
++  args.Append(GetWindowId());
++  views::View* peek_view = peek_view_.view();
++  if (peek_ && peek_view) {
++    content::WebContents* contents = peek_->contents();
++    // In the frame page's coordinates (the frame view's).
++    const gfx::Rect peek_bounds =
++        peek_view->bounds() - bounds().OffsetFromOrigin();
++    // Not laid out yet; the bounds change comes next.
++    if (peek_bounds.IsEmpty()) {
++      return;
++    }
++    args.Append(
++        base::DictValue()
++            .Set("url", contents->GetLastCommittedURL().is_empty()
++                            ? contents->GetVisibleURL().spec()
++                            : contents->GetLastCommittedURL().spec())
++            .Set("title", contents->GetTitle())
++            .Set("bounds", base::DictValue()
++                               .Set("x", peek_bounds.x())
++                               .Set("y", peek_bounds.y())
++                               .Set("width", peek_bounds.width())
++                               .Set("height", peek_bounds.height())));
++  }
++  DispatchAnusShellEvent(
++      Profile::FromBrowserContext(GetBrowserContext()),
++      "anusPrivate.onPeekChanged", std::move(args));
+ }
+ 
+ void AnusFrameView::AddedToWidget() {
+@@ -180,9 +427,12 @@
+     const views::SizeBounds& available_size) const {
+   // The browser view layout reads the frame's size from here (it doesn't know
+   // this class); a height of 0 is as tall as the window.
+-  return gfx::Size(state_.FrameWidth(kOverlayWidth),
+-                   state_.anusmini && !state_.overlay
+-                       ? state_.FrameHeight(kOverlayWidth)
++  // While a Peek is open the frame covers the window, for its backdrop.
++  AnusFrameState state = state_;
++  state.overlay = state.overlay || HasPeek();
++  return gfx::Size(state.FrameWidth(kOverlayWidth),
++                   state.anusmini && !state.overlay
++                       ? state.FrameHeight(kOverlayWidth)
+                        : 0);
+ }
+ 
+@@ -288,6 +538,11 @@
+   if (!IsActive()) {
+     return HTNOWHERE;
+   }
++  // Peek's page is above the frame page and its drag areas.
++  if (const views::View* peek = peek_view_.view();
++      peek && peek->GetVisible() && peek->bounds().Contains(point)) {
++    return HTCLIENT;
++  }
+   if (bounds().Contains(point)) {
+     const gfx::Point local = point - bounds().OffsetFromOrigin();
+     return draggable_region_.contains(local.x(), local.y()) ? HTCAPTION
+--- a/chrome/browser/ui/views/frame/anus_frame_view.h
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -8,6 +8,7 @@
+ #include <memory>
+ 
+ #include "base/memory/raw_ptr.h"
++#include "base/memory/weak_ptr.h"
+ #include "base/scoped_observation.h"
+ #include "chrome/browser/anus/anus_frame_host.h"
+ #include "content/public/browser/web_contents_delegate.h"
+@@ -63,6 +64,9 @@
+   // insets from the window's edges.
+   views::View* background_view() { return background_view_.view(); }
+ 
++  // Peek's card (a web view above the frame), hidden unless a Peek is open.
++  views::View* peek_view() { return peek_view_.view(); }
++
+   const AnusFrameState& state() const { return state_; }
+ 
+   // Whether the frame lays out the window (the shell is loaded).
+@@ -91,7 +95,16 @@
+   void FocusFrame() override;
+   void FocusPage() override;
+   void UpdateShortcuts() override;
++  void OpenPeek(const GURL& url) override;
++  void OpenPeekWithContents(
++      std::unique_ptr<content::WebContents> contents) override;
++  void ClosePeek() override;
++  void PromotePeek() override;
++  bool HasPeek() const override;
+ 
++  // Tells the shell about the Peek (chrome.anusPrivate.onPeekChanged).
++  void SendPeekChanged();
++
+   // content::WebContentsDelegate (through views::WebView):
+   content::WebContents* OpenURLFromTab(
+       content::WebContents* source,
+@@ -137,9 +150,15 @@
+   };
+   void UnregisterShortcuts();
+ 
++  // The Peek's page and its delegate (anus_frame_view.cc).
++  class Peek;
++  friend class Peek;
++  std::unique_ptr<Peek> peek_;
++
+   raw_ptr<BrowserView> browser_view_;
+   // Owned by `browser_view_`, like this view; it may go first.
+   views::ViewTracker background_view_;
++  views::ViewTracker peek_view_;
+   std::unique_ptr<content::WebContents> frame_contents_;
+   AnusFrameState state_;
+   // The frame page's -webkit-app-region: drag areas, in this view's
+@@ -153,6 +172,8 @@
+   base::ScopedObservation<extensions::ExtensionRegistry,
+                           extensions::ExtensionRegistryObserver>
+       registry_observation_{this};
++
++  base::WeakPtrFactory<AnusFrameView> weak_factory_{this};
+ };
+ 
+ #endif  // CHROME_BROWSER_UI_VIEWS_FRAME_ANUS_FRAME_VIEW_H_
+--- a/chrome/browser/ui/views/frame/layout/browser_view_layout.h
++++ b/chrome/browser/ui/views/frame/layout/browser_view_layout.h
+@@ -98,6 +98,9 @@
+   // in the background's insets.
+   raw_ptr<views::View> anus_frame = nullptr;
+   raw_ptr<views::View> anus_frame_background = nullptr;
++  // Uranus Browser: Peek's card, above the frame, in AnusPeekBounds() of the page
++  // area while it is visible.
++  raw_ptr<views::View> anus_peek = nullptr;
+ };
+ 
+ // The layout manager used in chrome browser.
+--- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
++++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
+@@ -1485,6 +1485,12 @@
+     layout.AddChild(views().anus_frame,
+                     gfx::Rect(window.x(), window.y(), frame_width,
+                               frame_height));
++
++    // Peek floats over the page area, above the frame page, which draws the
++    // backdrop and Peek's toolbar around it.
++    if (IsParentedToAndVisible(views().anus_peek, views().browser_view)) {
++      layout.AddChild(views().anus_peek, AnusPeekBounds(page));
++    }
+   }
+ 
+   return layout;
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -49,6 +49,21 @@
+   callback TabIdCallback = void(long tabId);
+   callback WindowIdsCallback = void(long[] windowIds);
+ 
++  dictionary Bounds {
++    long x;
++    long y;
++    long width;
++    long height;
++  };
++
++  // The open Peek, for the frame page's backdrop and toolbar.
++  dictionary PeekState {
++    DOMString url;
++    DOMString title;
++    // Where Peek's page sits, in the frame page's coordinates.
++    Bounds bounds;
++  };
++
+   // What a new AnusMini shows.
+   dictionary AnusMiniOptions {
+     // A page to open (default: the new tab page).
+@@ -115,6 +130,22 @@
+         boolean enabled,
+         optional DoneCallback callback);
+ 
++    // Peek: a page in a floating card over the page area of the given window
++    // (default: Uranus Browser's main window), replacing any Peek there. Escape
++    // closes it; its links to new tabs open as tabs.
++    static void openPeek(
++        DOMString url,
++        optional long windowId,
++        optional DoneCallback callback);
++    static void closePeek(optional long windowId, optional DoneCallback callback);
++    // The Peek's page, as it is, becomes a normal tab of its window.
++    static void promotePeek(
++        optional long windowId,
++        optional DoneCallback callback);
++    // Tabs whose links to a new foreground tab (target=_blank) open in Peek
++    // instead, like the spike's pinned tabs. Replaces the previous list.
++    static void setPeekTabs(long[] tabIds, optional DoneCallback callback);
++
+     // The open AnusMinis' window ids.
+     static void getAnusMinis(WindowIdsCallback callback);
+   };
+@@ -127,5 +158,9 @@
+     // <code>tabId</code> is the first (left) pane's tab, <code>ratio</code>
+     // the share of the width it now takes.
+     static void onSplitRatioChanged(long tabId, double ratio);
++
++    // A window's Peek opened, moved, navigated or closed (no
++    // <code>peek</code>).
++    static void onPeekChanged(long windowId, optional PeekState peek);
+   };
+ };
+--- a/ui/views/controls/native/native_view_host_mac.mm
++++ b/ui/views/controls/native/native_view_host_mac.mm
+@@ -237,10 +237,12 @@
+ 
+ bool NativeViewHostMac::SetNativeViewCornerRadii(
+     const gfx::RoundedCornersF& corner_radii) {
+-  ui::Layer* layer = GetUiLayer();
+-  DCHECK(layer);
+-  layer->SetRoundedCornerRadius(corner_radii);
+-  layer->SetIsFastRoundedCorner(true);
++  // Uranus Browser: a host without a views layer (a plain WebView) still rounds its
++  // NSView below.
++  if (ui::Layer* layer = GetUiLayer()) {
++    layer->SetRoundedCornerRadius(corner_radii);
++    layer->SetIsFastRoundedCorner(true);
++  }
+   corner_radii_ = corner_radii;
+   ApplyCornerRadiiToNativeView();
+   return true;

@@ -1,0 +1,638 @@
+--- a/chrome/browser/app_controller_mac.mm
++++ b/chrome/browser/app_controller_mac.mm
+@@ -49,6 +49,7 @@
+ #include "chrome/browser/download/download_core_service.h"
+ #include "chrome/browser/download/download_core_service_factory.h"
+ #include "chrome/browser/enterprise/isolated_mode/isolated_mode_settings_service_factory.h"
++#include "chrome/browser/extensions/api/anus_private/anus_private_api.h"
+ #include "chrome/browser/extensions/extension_service.h"
+ #include "chrome/browser/first_run/first_run.h"
+ #include "chrome/browser/global_keyboard_shortcuts_mac.h"
+@@ -2075,7 +2076,20 @@
+     } else {
+       startupTabs.emplace_back(net::GURLWithNSURL(url),
+                                /*is_untrusted_launch=*/false);
++    }
++  }
++
++  // Uranus Browser: links from other apps open in a AnusMini, Uranus Browser's small window
++  // for one page, while Uranus Browser's window is up (see anus_private_api.h).
++  if (Profile* profile = [self lastProfileIfLoaded]) {
++    StartupTabs rest;
++    for (StartupTab& tab : startupTabs) {
++      if (tab.is_untrusted_launch ||
++          !extensions::MaybeOpenLinkInAnusMini(profile, tab.url)) {
++        rest.push_back(std::move(tab));
++      }
+     }
++    startupTabs = std::move(rest);
+   }
+ 
+   if (!startupTabs.empty()) {
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -8,7 +8,15 @@
+ #include <string>
+ 
+ #include "base/strings/string_number_conversions.h"
++#include "base/auto_reset.h"
++#include "chrome/browser/extensions/api/tabs/tabs_util.h"
+ #include "chrome/browser/extensions/extension_tab_util.h"
++#include "chrome/browser/ui/browser.h"
++#include "chrome/browser/ui/browser_tabstrip.h"
++#include "chrome/browser/ui/browser_window/public/create_browser_window.h"
++#include "chrome/common/webui_url_constants.h"
++#include "ui/base/base_window.h"
++#include "ui/display/screen.h"
+ #include "chrome/browser/anus/anus_accelerator.h"
+ #include "chrome/browser/anus/anus_frame_host.h"
+ #include "chrome/browser/profiles/profile.h"
+@@ -235,7 +243,173 @@
+   }
+   tab->GetBrowserWindowInterface()->GetTabStripModel()->UpdateSplitRatio(
+       *tab->GetSplit(), std::clamp(params->ratio, 0.1, 0.9));
++  return RespondNow(NoArguments());
++}
++
++namespace {
++
++// Where a new AnusMini goes, like the Electron spike's AnusMinis.placement():
++// centred on the display under the pointer, at most 900x700, each one a step
++// down and right of the others there.
++gfx::Rect AnusMiniBounds(content::BrowserContext* context) {
++  constexpr int kWidth = 900;
++  constexpr int kHeight = 700;
++  constexpr int kCascade = 26;
++  display::Screen* screen = display::Screen::Get();
++  const display::Display display =
++      screen->GetDisplayNearestPoint(screen->GetCursorScreenPoint());
++  const gfx::Rect area = display.work_area();
++  const int width = std::min(kWidth, area.width() - 40);
++  const int height = std::min(kHeight, area.height() - 40);
++  int others = 0;
++  for (AnusFrameHost* host : AnusFrameHost::All()) {
++    if (host->IsAnusMini() && SameProfile(host, context)) {
++      ++others;
++    }
++  }
++  const int room = std::max(
++      1, std::min(area.width() - width, area.height() - height) / 2 / kCascade);
++  const int step = (others % room) * kCascade;
++  return gfx::Rect(area.x() + (area.width() - width) / 2 + step,
++                   area.y() + (area.height() - height) / 2 + step, width,
++                   height);
++}
++
++AnusFrameHost* AnusMiniHost(int window_id,
++                               content::BrowserContext* context) {
++  AnusFrameHost* host = HostForWindow(window_id, context);
++  return host && host->IsAnusMini() ? host : nullptr;
++}
++
++// A new AnusMini window, not shown yet and without tabs.
++BrowserWindowInterface* CreateAnusMiniWindow(Profile* profile) {
++  BrowserWindowCreateParams create(BrowserWindowInterface::TYPE_NORMAL,
++                                   *profile, /*from_user_gesture=*/true);
++  create.initial_bounds = AnusMiniBounds(profile);
++  create.omit_from_session_restore = true;
++  create.should_trigger_session_restore = false;
++  create.can_fullscreen = false;
++  base::AutoReset<bool> creating(&AnusFrameHost::CreatingAnusMini(), true);
++  return CreateBrowserWindow(std::move(create));
++}
++
++}  // namespace
++
++bool& AnusLinksOpenInAnusMini() {
++  // The spike's default (state.openLinksInAnusMini !== false), until the
++  // shell says otherwise.
++  static bool open_in_anusmini = true;
++  return open_in_anusmini;
++}
++
++bool MaybeOpenLinkInAnusMini(Profile* profile, const GURL& url) {
++  if (!profile || !AnusLinksOpenInAnusMini() || !url.is_valid()) {
++    return false;
++  }
++  profile = profile->GetOriginalProfile();
++  // Only once Uranus Browser's window is up; at launch the link opens as usual.
++  if (!AnusFrameHost::Main(profile) ||
++      GetBrowserWindowCreationStatusForProfile(*profile) !=
++          BrowserWindowInterface::CreationStatus::kOk) {
++    return false;
++  }
++  BrowserWindowInterface* browser = CreateAnusMiniWindow(profile);
++  chrome::AddTabAt(browser, url, -1, /*foreground=*/true);
++  browser->GetWindow()->Show();
++  browser->GetWindow()->Activate();
++  return true;
++}
++
++ExtensionFunction::ResponseAction
++AnusPrivateSetOpenLinksInAnusMiniFunction::Run() {
++  auto params = anus_private::SetOpenLinksInAnusMini::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  AnusLinksOpenInAnusMini() = params->enabled;
+   return RespondNow(NoArguments());
+ }
+ 
++ExtensionFunction::ResponseAction AnusPrivateOpenAnusMiniFunction::Run() {
++  auto params = anus_private::OpenAnusMini::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++
++  Profile* profile =
++      Profile::FromBrowserContext(browser_context())->GetOriginalProfile();
++  GURL url(chrome::kChromeUINewTabURL);
++  std::optional<int> tab_id;
++  if (params->options) {
++    if (params->options->url) {
++      url = GURL(*params->options->url);
++      if (!url.is_valid()) {
++        return RespondNow(Error("Invalid url: " + *params->options->url));
++      }
++    }
++    tab_id = params->options->tab_id;
++  }
++  if (GetBrowserWindowCreationStatusForProfile(*profile) !=
++      BrowserWindowInterface::CreationStatus::kOk) {
++    return RespondNow(Error("Can't open a window now."));
++  }
++
++  BrowserWindowInterface* browser = CreateAnusMiniWindow(profile);
++
++  if (tab_id) {
++    std::string error;
++    if (tabs_util::MoveTabToWindow(this, *tab_id, browser, 0,
++                                   /*allow_other_window_types=*/true,
++                                   &error) < 0) {
++      browser->GetWindow()->Close();
++      return RespondNow(Error(error));
++    }
++    browser->GetTabStripModel()->ActivateTabAt(0);
++  } else {
++    chrome::AddTabAt(browser, url, -1, /*foreground=*/true);
++  }
++  browser->GetWindow()->Show();
++  return RespondNow(WithArguments(browser->GetSessionID().id()));
++}
++
++ExtensionFunction::ResponseAction AnusPrivateOpenInAnusFunction::Run() {
++  auto params = anus_private::OpenInAnus::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++
++  AnusFrameHost* anusmini =
++      AnusMiniHost(params->window_id, browser_context());
++  if (!anusmini) {
++    return RespondNow(Error("No AnusMini with id *.",
++                            base::NumberToString(params->window_id)));
++  }
++  AnusFrameHost* main = AnusFrameHost::Main(anusmini->GetBrowserContext());
++  if (!main) {
++    return RespondNow(Error("Uranus Browser has no main window."));
++  }
++  BrowserWindowInterface* source = anusmini->GetBrowserWindowInterface();
++  BrowserWindowInterface* target = main->GetBrowserWindowInterface();
++  content::WebContents* contents =
++      source->GetTabStripModel()->GetActiveWebContents();
++  if (!contents) {
++    return RespondNow(Error("The AnusMini has no page."));
++  }
++  const int tab_id = ExtensionTabUtil::GetTabId(contents);
++  std::string error;
++  const int index = tabs_util::MoveTabToWindow(
++      this, tab_id, target, -1, /*allow_other_window_types=*/true, &error);
++  if (index < 0) {
++    return RespondNow(Error(error));
++  }
++  target->GetTabStripModel()->ActivateTabAt(index);
++  target->GetWindow()->Activate();
++  // Empty now, so Chromium closes it; any other tabs it had stay with it.
++  return RespondNow(WithArguments(tab_id));
++}
++
++ExtensionFunction::ResponseAction AnusPrivateGetAnusMinisFunction::Run() {
++  base::ListValue ids;
++  for (AnusFrameHost* host : AnusFrameHost::All()) {
++    if (host->IsAnusMini() && SameProfile(host, browser_context())) {
++      ids.Append(host->GetWindowId());
++    }
++  }
++  return RespondNow(WithArguments(std::move(ids)));
++}
++
+ }  // namespace extensions
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -7,6 +7,9 @@
+ 
+ #include "extensions/browser/extension_function.h"
+ 
++class GURL;
++class Profile;
++
+ namespace extensions {
+ 
+ // chrome.anusPrivate: what Uranus Browser's browser gives its shell, and only the
+@@ -67,6 +70,49 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateOpenAnusMiniFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.openAnusMini", UNKNOWN)
++
++ protected:
++  ~AnusPrivateOpenAnusMiniFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateOpenInAnusFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.openInAnus", UNKNOWN)
++
++ protected:
++  ~AnusPrivateOpenInAnusFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateSetOpenLinksInAnusMiniFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.setOpenLinksInAnusMini", UNKNOWN)
++
++ protected:
++  ~AnusPrivateSetOpenLinksInAnusMiniFunction() override = default;
++  ResponseAction Run() override;
++};
++
++// Whether links from other apps open in a AnusMini (setOpenLinksInAnusMini).
++bool& AnusLinksOpenInAnusMini();
++
++// Opens `url`, a link from another app, in a new AnusMini if Uranus Browser wants
++// that and its window is up. Returns whether it did.
++bool MaybeOpenLinkInAnusMini(Profile* profile, const GURL& url);
++
++class AnusPrivateGetAnusMinisFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.getAnusMinis", UNKNOWN)
++
++ protected:
++  ~AnusPrivateGetAnusMinisFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ }  // namespace extensions
+ 
+ #endif  // CHROME_BROWSER_EXTENSIONS_API_ANUS_PRIVATE_ANUS_PRIVATE_API_H_
+--- a/chrome/browser/anus/anus_frame_host.cc
++++ b/chrome/browser/anus/anus_frame_host.cc
+@@ -32,6 +32,37 @@
+   return *shortcuts;
+ }
+ 
++// static
++AnusFrameHost* AnusFrameHost::ForWindow(int window_id) {
++  for (AnusFrameHost* host : Hosts()) {
++    if (host->GetWindowId() == window_id) {
++      return host;
++    }
++  }
++  return nullptr;
++}
++
++// static
++AnusFrameHost* AnusFrameHost::Main(content::BrowserContext* context) {
++  AnusFrameHost* fallback = nullptr;
++  for (AnusFrameHost* host : Hosts()) {
++    if (host->IsAnusMini() || host->GetBrowserContext() != context) {
++      continue;
++    }
++    if (host->IsActiveWindow()) {
++      return host;
++    }
++    fallback = host;
++  }
++  return fallback;
++}
++
++// static
++bool& AnusFrameHost::CreatingAnusMini() {
++  static bool creating = false;
++  return creating;
++}
++
+ AnusFrameHost::AnusFrameHost() {
+   Hosts().push_back(this);
+ }
+--- a/chrome/browser/anus/anus_frame_host.h
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -17,6 +17,8 @@
+ #include "ui/gfx/geometry/point.h"
+ #include "ui/gfx/geometry/rect.h"
+ 
++class BrowserWindowInterface;
++
+ namespace content {
+ class BrowserContext;
+ class WebContents;
+@@ -50,19 +52,27 @@
+ // (#empty-state in src/renderer/styles.css) has the same.
+ inline constexpr float kAnusPageCornerRadius = 10;
+ 
++// AnusMini (src/main/anusmini.ts): the frame page is a toolbar this tall
++// across the top, and the page sits under it, kAnusGap from the other edges.
++inline constexpr int kAnusMiniToolbarHeight = 44;
++// Its traffic lights, level with the toolbar's controls.
++inline constexpr int kAnusMiniTrafficLightsX = 16;
++inline constexpr int kAnusMiniTrafficLightsY = 16;
++
+ struct AnusFrameState {
+   enum class Sidebar { kDocked, kHidden, kFloating };
+ 
+   Sidebar sidebar = Sidebar::kDocked;
+   bool overlay = false;
+   SkColor background = SkColorSetRGB(0xe9, 0xec, 0xf2);
++  // A AnusMini window: the browser sets this, never setFrame().
++  bool anusmini = false;
+ 
+   bool operator==(const AnusFrameState&) const = default;
+ 
+-  // The frame view's width, from the window's left edge; it is as tall as the
+-  // window.
++  // The frame view's width, from the window's left edge.
+   int FrameWidth(int window_width) const {
+-    if (overlay) {
++    if (overlay || anusmini) {
+       return window_width;
+     }
+     switch (sidebar) {
+@@ -76,18 +86,34 @@
+     }
+   }
+ 
++  // The frame view's height, from the window's top edge.
++  int FrameHeight(int window_height) const {
++    return anusmini && !overlay
++               ? std::min(window_height, kAnusMiniToolbarHeight)
++               : window_height;
++  }
++
+   // The page area, as insets from the window's edges.
+   gfx::Insets PageInsets() const {
++    if (anusmini) {
++      return gfx::Insets::TLBR(kAnusMiniToolbarHeight, kAnusGap, kAnusGap,
++                               kAnusGap);
++    }
+     return gfx::Insets::TLBR(
+         kAnusGap,
+         sidebar == Sidebar::kDocked ? kAnusSidebarWidth : kAnusGap,
+         kAnusGap, kAnusGap);
+   }
+ 
+-  bool TrafficLightsVisible() const { return sidebar != Sidebar::kHidden; }
++  bool TrafficLightsVisible() const {
++    return anusmini || sidebar != Sidebar::kHidden;
++  }
+ 
+   // Top-left of the close button, from the window's top-left corner.
+   gfx::Point TrafficLightsOrigin() const {
++    if (anusmini) {
++      return gfx::Point(kAnusMiniTrafficLightsX, kAnusMiniTrafficLightsY);
++    }
+     const int inset = sidebar == Sidebar::kFloating ? kAnusFloatMargin : 0;
+     return gfx::Point(kAnusTrafficLightsX + inset,
+                       kAnusTrafficLightsY + inset);
+@@ -110,6 +136,15 @@
+   // hands them to the shell (chrome.anusPrivate.onShortcut).
+   static std::map<ui::Accelerator, std::string>& Shortcuts();
+ 
++  // The host of window `window_id`, or null.
++  static AnusFrameHost* ForWindow(int window_id);
++  // The window Uranus Browser's tabs live in: the last active window of `context`'s
++  // profile that is not a AnusMini, or null.
++  static AnusFrameHost* Main(content::BrowserContext* context);
++  // True while chrome.anusPrivate.openAnusMini() creates its window: the
++  // frame made meanwhile is that AnusMini's.
++  static bool& CreatingAnusMini();
++
+   // The extension window ID (the window's session ID) of this host's window.
+   virtual int GetWindowId() const = 0;
+   // The profile of this host's window.
+@@ -123,6 +158,10 @@
+   virtual void FocusPage() = 0;
+   // Takes the keys in Shortcuts() from now on, and lets go of any others.
+   virtual void UpdateShortcuts() = 0;
++  // Whether the window is a AnusMini, Uranus Browser's small window for one page.
++  virtual bool IsAnusMini() const = 0;
++  // The window itself.
++  virtual BrowserWindowInterface* GetBrowserWindowInterface() = 0;
+ 
+  protected:
+   AnusFrameHost();
+--- a/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
++++ b/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
+@@ -19,6 +19,7 @@
+ #include "chrome/browser/custom_handlers/protocol_handler_registry_factory.h"
+ #include "chrome/browser/devtools/devtools_window.h"
+ #include "chrome/browser/file_select_helper.h"
++#include "chrome/browser/anus/anus_frame_host.h"
+ #include "chrome/browser/headless/headless_mode_util.h"
+ #include "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h"
+ #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
+@@ -129,6 +130,24 @@
+ DEFINE_USER_DATA(BrowserWebContentsDelegate);
+ 
+ namespace {
++
++// Uranus Browser: whether `disposition` opens a new tab.
++bool IsAnusNewTab(WindowOpenDisposition disposition) {
++  return disposition == WindowOpenDisposition::kNewForegroundTab ||
++         disposition == WindowOpenDisposition::kNewBackgroundTab ||
++         disposition == WindowOpenDisposition::kSingletonTab;
++}
++
++// Uranus Browser: when `browser` is a AnusMini, the window its new tabs go to.
++BrowserWindowInterface* AnusMiniMainWindow(BrowserWindowInterface& browser) {
++  AnusFrameHost* host =
++      AnusFrameHost::ForWindow(browser.GetSessionID().id());
++  if (!host || !host->IsAnusMini()) {
++    return nullptr;
++  }
++  AnusFrameHost* main = AnusFrameHost::Main(browser.GetProfile());
++  return main ? main->GetBrowserWindowInterface() : nullptr;
++}
+ 
+ const extensions::Extension* GetExtensionForOrigin(
+     Profile* profile,
+@@ -578,6 +597,13 @@
+     CHECK(window, base::NotFatalUntil::M162);
+     return window->OpenURLFromTab(source, params,
+                                   std::move(navigation_handle_callback));
++  }
++
++  // Uranus Browser: a AnusMini is about its one page; the tabs it opens are Uranus Browser's.
++  if (source && IsAnusNewTab(params.disposition)) {
++    if (BrowserWindowInterface* main = AnusMiniMainWindow(*browser_)) {
++      return main->OpenURL(params, std::move(navigation_handle_callback));
++    }
+   }
+ 
+   // If the source is already split, navigate the other pane instead of
+@@ -784,6 +810,16 @@
+     }
+   }
+ 
++  // Uranus Browser: a AnusMini's new tabs open in Uranus Browser's main window (real popups,
++  // which need window.opener, stay popups).
++  if (IsAnusNewTab(disposition)) {
++    if (BrowserWindowInterface* main = AnusMiniMainWindow(*browser_)) {
++      return chrome::AddWebContents(main, source, std::move(new_contents),
++                                    target_url, disposition, window_features,
++                                    window_action, user_gesture);
++    }
++  }
++
+   return chrome::AddWebContents(&*browser_, source, std::move(new_contents),
+                                 target_url, disposition, window_features,
+                                 window_action, user_gesture);
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -94,6 +94,10 @@
+   if (const auto& state = AnusFrameHost::DefaultState()) {
+     state_ = *state;
+   }
++  state_.anusmini = AnusFrameHost::CreatingAnusMini();
++  if (state_.anusmini) {
++    state_.overlay = false;
++  }
+   ApplyState();
+ 
+   auto* registry = extensions::ExtensionRegistry::Get(GetBrowserContext());
+@@ -174,11 +178,22 @@
+ 
+ gfx::Size AnusFrameView::CalculatePreferredSize(
+     const views::SizeBounds& available_size) const {
+-  // The browser view layout reads the frame's width from here (it doesn't know
+-  // this class); the frame is as tall as the window.
+-  return gfx::Size(state_.FrameWidth(kOverlayWidth), 0);
++  // The browser view layout reads the frame's size from here (it doesn't know
++  // this class); a height of 0 is as tall as the window.
++  return gfx::Size(state_.FrameWidth(kOverlayWidth),
++                   state_.anusmini && !state_.overlay
++                       ? state_.FrameHeight(kOverlayWidth)
++                       : 0);
++}
++
++bool AnusFrameView::IsAnusMini() const {
++  return state_.anusmini;
+ }
+ 
++BrowserWindowInterface* AnusFrameView::GetBrowserWindowInterface() {
++  return browser_view_->browser();
++}
++
+ int AnusFrameView::GetWindowId() const {
+   return browser_view_->browser()->GetSessionID().id();
+ }
+@@ -195,7 +210,9 @@
+   return browser_view_->IsActive();
+ }
+ 
+-void AnusFrameView::SetFrameState(const AnusFrameState& state) {
++void AnusFrameView::SetFrameState(const AnusFrameState& new_state) {
++  AnusFrameState state = new_state;
++  state.anusmini = state_.anusmini;
+   if (state == state_) {
+     return;
+   }
+@@ -310,7 +327,8 @@
+   const GURL url =
+       extensions::Extension::GetBaseURLFromExtensionId(kAnusShellExtensionId)
+           .Resolve("window.html?window=" +
+-                   base::NumberToString(GetWindowId()));
++                   base::NumberToString(GetWindowId()) +
++                   (state_.anusmini ? "&kind=anusmini" : ""));
+   content::BrowserContext* context = GetBrowserContext();
+   frame_contents_ = content::WebContents::Create(content::WebContents::CreateParams(
+       context, content::SiteInstance::CreateForURL(context, url)));
+--- a/chrome/browser/ui/views/frame/anus_frame_view.h
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -85,6 +85,8 @@
+   content::BrowserContext* GetBrowserContext() override;
+   content::WebContents* GetFrameContents() override;
+   bool IsActiveWindow() const override;
++  bool IsAnusMini() const override;
++  BrowserWindowInterface* GetBrowserWindowInterface() override;
+   void SetFrameState(const AnusFrameState& state) override;
+   void FocusFrame() override;
+   void FocusPage() override;
+--- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
++++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
+@@ -1475,11 +1475,16 @@
+     }
+     contents_layout.bounds = page;
+ 
+-    const int frame_width = std::min(
+-        window.width(), views().anus_frame->GetPreferredSize().width());
++    // A preferred height of 0 is the whole window's (a AnusMini's toolbar is
++    // shorter).
++    const gfx::Size frame_size = views().anus_frame->GetPreferredSize();
++    const int frame_width = std::min(window.width(), frame_size.width());
++    const int frame_height = frame_size.height() > 0
++                                 ? std::min(window.height(), frame_size.height())
++                                 : window.height();
+     layout.AddChild(views().anus_frame,
+                     gfx::Rect(window.x(), window.y(), frame_width,
+-                              window.height()));
++                              frame_height));
+   }
+ 
+   return layout;
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -46,7 +46,17 @@
+   callback DoneCallback = void();
+   callback WindowIdCallback = void(long windowId);
+   callback RejectedCallback = void(DOMString[] rejected);
++  callback TabIdCallback = void(long tabId);
++  callback WindowIdsCallback = void(long[] windowIds);
+ 
++  // What a new AnusMini shows.
++  dictionary AnusMiniOptions {
++    // A page to open (default: the new tab page).
++    DOMString? url;
++    // A tab to move into the AnusMini instead, from any window.
++    long? tabId;
++  };
++
+   interface Functions {
+     // Lays out a window's frame. Applies to every normal window (and to the
+     // windows opened later) when <code>windowId</code> is omitted.
+@@ -85,6 +95,28 @@
+         long tabId,
+         double ratio,
+         optional DoneCallback callback);
++
++    // Opens a AnusMini, Uranus Browser's small window for one page: a normal window
++    // whose frame page is window.html?window=<id>&kind=anusmini, drawn as a
++    // toolbar across the top. The tabs its page opens go to Uranus Browser's main
++    // window. Calls back with the new window's id.
++    static void openAnusMini(
++        optional AnusMiniOptions options,
++        optional WindowIdCallback callback);
++
++    // "Open in Uranus Browser": moves the AnusMini's page to Uranus Browser's main window
++    // (activated and in front) and closes the AnusMini. Calls back with the
++    // page's tab id.
++    static void openInAnus(long windowId, optional TabIdCallback callback);
++
++    // Whether links from other apps (Uranus Browser as the default browser) open in
++    // a AnusMini, once Uranus Browser's window is up. On by default.
++    static void setOpenLinksInAnusMini(
++        boolean enabled,
++        optional DoneCallback callback);
++
++    // The open AnusMinis' window ids.
++    static void getAnusMinis(WindowIdsCallback callback);
+   };
+ 
+   interface Events {

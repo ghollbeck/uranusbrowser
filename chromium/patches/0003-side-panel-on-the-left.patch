@@ -1,0 +1,14 @@
+--- a/chrome/browser/ui/side_panel/side_panel_prefs.cc
++++ b/chrome/browser/ui/side_panel/side_panel_prefs.cc
+@@ -37,8 +37,10 @@
+   // Otherwise, the side panel should default to the right side of the screen.
+   // TODO(dljames): Add enum values kAlternateSide / kDefaultSide that will
+   // replace false and true respectively.
++  // Uranus Browser: the side panel holds Uranus Browser's sidebar, so it defaults to the left
++  // (the leading side), like Arc's sidebar.
+   registry->RegisterBooleanPref(prefs::kSidePanelHorizontalAlignment,
+-                                !base::i18n::IsRTL());
++                                base::i18n::IsRTL());
+   registry->RegisterBooleanPref(prefs::kGoogleSearchSidePanelEnabled, true);
+   registry->RegisterDictionaryPref(prefs::kSidePanelIdToWidth);
+ 

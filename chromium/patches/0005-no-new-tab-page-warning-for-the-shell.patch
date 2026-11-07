@@ -1,0 +1,45 @@
+--- a/chrome/browser/ui/extensions/settings_overridden_params_providers.cc
++++ b/chrome/browser/ui/extensions/settings_overridden_params_providers.cc
+@@ -20,6 +20,7 @@
+ #include "build/branding_buildflags.h"
+ #include "chrome/browser/extensions/extension_url_overrides.h"
+ #include "chrome/browser/extensions/settings_api_helpers.h"
++#include "chrome/browser/anus/anus_shell.h"
+ #include "chrome/browser/image_fetcher/image_fetcher_service_factory.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/profiles/profile_key.h"
+@@ -408,6 +409,12 @@
+     return std::nullopt;
+   }
+ 
++  // Uranus Browser: the new tab page is the shell's own (chromium/shell), so there is
++  // nothing to warn about, and "change it back" would disable Uranus Browser's UI.
++  if (IsAnusShell(extension->id())) {
++    return std::nullopt;
++  }
++
+   // This preference tracks whether users have acknowledged the extension's
+   // control, so that they are not warned twice about the same extension.
+   const char* preference_name = extensions::kNtpOverridingExtensionAcknowledged;
+--- a/chrome/browser/ui/views/new_tab_footer/footer_controller.cc
++++ b/chrome/browser/ui/views/new_tab_footer/footer_controller.cc
+@@ -8,6 +8,7 @@
+ #include "base/time/time.h"
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/enterprise/util/managed_browser_utils.h"
++#include "chrome/browser/anus/anus_shell.h"
+ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+ #include "chrome/browser/ui/views/frame/contents_container_view.h"
+ #include "chrome/browser/ui/views/frame/contents_web_view.h"
+@@ -218,6 +219,11 @@
+     return false;
+   }
+ 
++  // Uranus Browser: the shell's new tab page is Uranus Browser's own, not one to attribute.
++  if (IsAnusShell(url.host())) {
++    return false;
++  }
++
+   return ntp_footer::IsExtensionNtp(url, owner_->profile_) &&
+          owner_->profile_->GetPrefs()->GetBoolean(
+              prefs::kNTPFooterExtensionAttributionEnabled) &&

@@ -1,0 +1,24 @@
+--- a/chrome/app/chrome_main_delegate.cc
++++ b/chrome/app/chrome_main_delegate.cc
+@@ -1229,6 +1229,21 @@
+ #endif  // !defined(BUILDING_CHROME_RENDERER)
+ 
+ #if !defined(BUILDING_CHROME_RENDERER)
++  // Uranus Browser: the shell has its own onboarding, so Chromium's first-run
++  // experience never shows: no intro/profile picker FRE, no "What's New" tab,
++  // no default-browser infobar, no search engine choice, no IPH promos, no
++  // "install from disk image" prompt. Every launch behaves as with
++  // --no-first-run (which is what dev runs always passed); --force-first-run
++  // still brings Chromium's first run back, for debugging.
++  if (!command_line.HasSwitch(switches::kProcessType) &&
++      !command_line.HasSwitch(switches::kForceFirstRun) &&
++      !command_line.HasSwitch(switches::kNoFirstRun)) {
++    base::CommandLine::ForCurrentProcess()->AppendSwitch(
++        switches::kNoFirstRun);
++  }
++#endif  // !defined(BUILDING_CHROME_RENDERER)
++
++#if !defined(BUILDING_CHROME_RENDERER)
+   const bool is_browser = !command_line.HasSwitch(switches::kProcessType);
+ #if BUILDFLAG(IS_WIN)
+   if (is_browser) {

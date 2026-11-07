@@ -1,0 +1,22 @@
+# Uranus Browser release build: one framework, what we ship. chromium/scripts/build-release.sh
+# writes this to out/Release/args.gn (ANUS_OFFICIAL=1 adds is_official_build).
+is_debug = false
+is_component_build = false
+dcheck_always_on = false
+symbol_level = 0
+blink_symbol_level = 0
+v8_symbol_level = 0
+target_cpu = "arm64"
+# No H.264/AAC: shipping Chrome's proprietary codecs needs patent licences we don't have.
+proprietary_codecs = false
+use_remoteexec = false
+# Builds that aren't official take Google's experiments from fieldtrial_testing_config.json,
+# Omnibox Everywhere's "search with Chromium from anywhere" among them; Uranus Browser ships without.
+disable_fieldtrial_testing_config = true
+# Our patches shouldn't fail a 3-6 hour build over a warning.
+treat_warnings_as_errors = false
+# No PGO profiles in this checkout (they come with checkout_pgo_profiles).
+chrome_pgo_phase = 0
+# The shell, staged into the checkout by build-release.sh, goes into the framework's
+# Resources as anus-shell (patch 0050).
+anus_shell_dir = "//anus/shell"

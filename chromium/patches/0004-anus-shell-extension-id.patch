@@ -1,0 +1,24 @@
+--- /dev/null
++++ b/chrome/browser/anus/anus_shell.h
+@@ -0,0 +1,21 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_ANUS_ANUS_SHELL_H_
++#define CHROME_BROWSER_ANUS_ANUS_SHELL_H_
++
++#include <string_view>
++
++// Uranus Browser's shell extension (chromium/shell in the Uranus Browser repo): the window
++// frame, the new tab page and Settings. Its ID is fixed by the "key" in
++// chromium/shell/manifest.json, so it stays the same wherever the unpacked
++// extension is loaded from. Change both together.
++inline constexpr char kAnusShellExtensionId[] =
++    "abdiaepfgbbhdjaecjipmaailijaaide";
++
++inline bool IsAnusShell(std::string_view extension_id) {
++  return extension_id == kAnusShellExtensionId;
++}
++
++#endif  // CHROME_BROWSER_ANUS_ANUS_SHELL_H_

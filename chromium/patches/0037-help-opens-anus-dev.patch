@@ -1,0 +1,28 @@
+--- a/chrome/common/url_constants.h
++++ b/chrome/common/url_constants.h
+@@ -91,7 +91,8 @@
+     "https://support.google.com/chromebook?p=help&ctx=keyboard";
+ #endif  // BUILDFLAG(GOOGLE_CHROME_BRANDING)
+ #else
+-    "https://support.google.com/chrome?p=help&ctx=keyboard";
++    // Uranus Browser: its own help, not Chrome's.
++    "https://flecha.dev";
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+ 
+ inline constexpr char kChromeHelpViaMenuURL[] =
+@@ -102,11 +103,13 @@
+     "https://support.google.com/chromebook?p=help&ctx=menu";
+ #endif  // BUILDFLAG(GOOGLE_CHROME_BRANDING)
+ #else
+-    "https://support.google.com/chrome?p=help&ctx=menu";
++    // Uranus Browser: its own help, not Chrome's.
++    "https://flecha.dev";
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+ 
+ inline constexpr char kChromeHelpViaWebUIURL[] =
+-    "https://support.google.com/chrome?p=help&ctx=settings";
++    // Uranus Browser: its own help, not Chrome's.
++    "https://flecha.dev";
+ #if BUILDFLAG(IS_CHROMEOS)
+ inline constexpr char kChromeOsHelpViaWebUIURL[] =
+ #if BUILDFLAG(GOOGLE_CHROME_BRANDING)

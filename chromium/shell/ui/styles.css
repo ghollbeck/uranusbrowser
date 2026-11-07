@@ -1,0 +1,2127 @@
+/* Sidebar, command bar, Peek and downloads. Values come from tokens.css. */
+
+:root {
+  --sidebar: 260px;
+  --row: 32px;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  /* Transparent so the command bar and Peek can dim the page behind them. */
+  background: transparent;
+  color: var(--text);
+  font: 400 var(--text-md) / 1.35 var(--font);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---- sidebar ------------------------------------------------------------ */
+
+#sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 10px 6px 8px 10px;
+  /* Painted opaque on purpose: Chromium does not clear stale frames under transparent
+     pixels of an overlaid view, which made old rows ghost behind new ones. */
+  background: var(--space-color, var(--ds-frame));
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  -webkit-app-region: drag;
+}
+
+.toolbar button {
+  -webkit-app-region: no-drag;
+}
+
+/* Toolbar controls sit level with the traffic lights and are a size up from row icons. */
+.toolbar .icon-button {
+  width: 30px;
+  height: 30px;
+}
+
+.toolbar .icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.traffic-lights {
+  width: 70px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.icon-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.icon-button:active:not(:disabled) {
+  background: var(--fill-active);
+}
+
+.toolbar .icon-button.on {
+  background: color-mix(in srgb, var(--agent) 13%, transparent);
+  color: var(--agent);
+}
+
+.icon-button:disabled {
+  color: var(--text-3);
+  opacity: 0.6;
+}
+
+.text-button {
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+
+.text-button:hover {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+/* ---- address bar -------------------------------------------------------- */
+
+#urlbar-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding-right: 4px;
+  border-radius: var(--radius-lg);
+  background: var(--fill-subtle);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background var(--fast) var(--ease);
+}
+
+#urlbar-wrap:hover {
+  background: var(--fill-hover);
+}
+
+#urlbar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  padding: 0 4px 0 10px;
+  text-align: left;
+}
+
+.url-action {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+
+#urlbar-wrap:hover .url-action,
+.url-action:focus-visible {
+  opacity: 1;
+}
+
+.url-action:hover {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.url-action svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* A short confirmation ("Link copied") in place of the address, which steps aside for it. */
+#urlbar {
+  transition: opacity var(--fast) var(--ease);
+}
+
+#urlbar-wrap.flashing #urlbar,
+#urlbar-wrap.flashing .url-action {
+  opacity: 0;
+}
+
+#urlbar-wrap.flashing::after {
+  content: '✓  ' attr(data-flash);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  font-weight: 600;
+  color: var(--text);
+  white-space: pre;
+  pointer-events: none;
+  animation: flash-in var(--medium) var(--ease);
+}
+
+@keyframes flash-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+#urlbar-icon {
+  display: grid;
+  color: var(--text-3);
+}
+
+#urlbar-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+#urlbar-icon.insecure {
+  color: var(--amber);
+}
+
+#urlbar-env:empty {
+  display: none;
+}
+
+#urlbar-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+#urlbar.empty #urlbar-text {
+  font-weight: 400;
+  color: var(--text-3);
+}
+
+.env-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--ds-r-sm);
+  font: 700 10px / 16px var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.env-badge.local {
+  background: var(--green);
+}
+
+.env-badge.staging {
+  background: var(--amber);
+}
+
+.env-badge.production {
+  background: var(--red);
+}
+
+/* ---- extensions & agent ------------------------------------------------- */
+
+#extensions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: -4px 0;
+}
+
+#extensions::part(action) {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+}
+
+#extensions::part(action):hover {
+  background-color: var(--fill-hover);
+}
+
+#agent-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--agent) 13%, transparent);
+  color: var(--agent);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+#agent-status[hidden] {
+  display: none;
+}
+
+#agent-status-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--agent);
+}
+
+#agent-status.busy .agent-dot {
+  animation: agent-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes agent-pulse {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--agent) 55%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+
+/* ---- favorites ---------------------------------------------------------- */
+
+#favorites {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+#favorites:empty {
+  display: none;
+}
+
+#favorites.show-empty:empty {
+  display: block;
+  height: 44px;
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.fav {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  background: var(--fill-subtle);
+  transition: background var(--fast) var(--ease), transform var(--fast) var(--ease);
+}
+
+.fav:hover {
+  background: var(--fill-hover);
+}
+
+.fav:active {
+  transform: scale(0.96);
+}
+
+.fav.active {
+  background: var(--fill-active);
+  box-shadow: var(--shadow-row);
+}
+
+.fav .favicon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px; /* a favicon tile keeps its small corner */
+  font-size: 11px;
+}
+
+/* ---- groups, Space header ----------------------------------------------- */
+
+.group[hidden] {
+  display: none;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 22px;
+  padding: 0 4px 0 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.today-header {
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-2);
+  height: 30px;
+}
+
+.today-header .text-button {
+  opacity: 0;
+  transition: opacity var(--fast) var(--ease);
+}
+
+#scroll:hover .today-header .text-button,
+.today-header .text-button:focus-visible {
+  opacity: 1;
+}
+
+#space-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  color: var(--text);
+  transition: background var(--fast) var(--ease);
+}
+
+/* The whole row folds the pinned tabs, not only its chevron. */
+#space-header:hover {
+  background: var(--fill-hover);
+}
+
+#space-emoji {
+  font-size: 14px;
+}
+
+#space-emoji[hidden] {
+  display: none;
+}
+
+#space-title {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#space-title[contenteditable='true'],
+.folder-name[contenteditable='true'] {
+  outline: none;
+  padding: 0 4px;
+  border-radius: var(--ds-r-sm);
+  background: var(--fill-active);
+  box-shadow: 0 0 0 2px var(--focus);
+  text-overflow: clip;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Folds the pinned tabs away; faint until you're over the Space's name, like a folder's chevron. */
+#space-header .collapse-pinned {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ds-r-sm);
+  background: transparent;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+
+#space-header:hover .collapse-pinned,
+#space-header .collapse-pinned:focus-visible,
+#space-header .collapse-pinned[aria-expanded='false'] {
+  opacity: 1;
+}
+
+#space-header .collapse-pinned:hover {
+  background: var(--fill-hover, var(--fill-active));
+  color: var(--text);
+}
+
+#space-header .collapse-pinned svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  stroke-width: 1.75;
+  transform: rotate(90deg);
+  transition: transform var(--fast) var(--ease);
+}
+
+#space-header .collapse-pinned[aria-expanded='false'] svg {
+  transform: rotate(0deg);
+}
+
+#pinned.collapsed:empty {
+  min-height: 4px;
+}
+
+#pinned.collapsed:empty::before {
+  content: none;
+}
+
+#space-isolated {
+  display: grid;
+  color: var(--text-3);
+}
+
+#space-isolated[hidden] {
+  display: none;
+}
+
+#space-isolated svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---- tab list ----------------------------------------------------------- */
+
+#scroll {
+  flex: 1;
+  overflow-y: auto;
+  margin-right: -4px;
+  padding-right: 4px;
+}
+
+#scroll::-webkit-scrollbar {
+  width: 0;
+}
+
+.drop-zone {
+  min-height: 4px;
+}
+
+#pinned:empty {
+  min-height: 34px;
+}
+
+#pinned:empty::before {
+  content: 'Drag tabs here to pin them';
+  display: flex;
+  align-items: center;
+  height: 30px;
+  margin: 2px 0;
+  padding: 0 10px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: var(--row);
+  margin: 1px 0;
+  padding: 0 6px 0 9px;
+  border-radius: var(--radius-md);
+  text-align: left;
+  transition: background var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
+}
+
+.row:hover {
+  background: var(--fill-hover);
+}
+
+.row.active {
+  background: var(--fill-active);
+  box-shadow: var(--shadow-row);
+}
+
+.row.in-split:not(.active) {
+  background: color-mix(in srgb, var(--fill-active) 60%, transparent);
+}
+
+.row.agent-driving {
+  box-shadow: inset 0 0 0 1.5px var(--agent);
+}
+
+.row .title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row.active .title {
+  font-weight: 500;
+}
+
+.row-icon {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  color: var(--text-2);
+}
+
+.row .close {
+  display: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: -2px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+}
+
+.row:hover .close {
+  display: grid;
+}
+
+.row .close:hover {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.row .close svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Status marks on the right of a row; they make room for the close button on hover. */
+.split-badge,
+.device-badge,
+.window-mark,
+.boost-mark {
+  display: grid;
+  color: var(--text-3);
+}
+
+.split-badge {
+  display: none;
+}
+
+.row.in-split .split-badge {
+  display: grid;
+}
+
+.split-badge svg,
+.device-badge svg,
+.window-mark svg,
+.boost-mark svg {
+  width: 13px;
+  height: 13px;
+}
+
+.boost-mark {
+  color: var(--amber);
+}
+
+.row:hover .split-badge,
+.row:hover .device-badge,
+.row:hover .window-mark,
+.row:hover .boost-mark {
+  display: none;
+}
+
+.error-badge {
+  flex: none;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: var(--ds-r-sm);
+  background: var(--red);
+  color: #fff;
+  font: 700 10px / 16px var(--mono);
+  text-align: center;
+}
+
+.error-badge:hover {
+  filter: brightness(0.9);
+}
+
+.row.loading .favicon {
+  animation: pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  to {
+    opacity: 0.35;
+  }
+}
+
+.new-tab {
+  color: var(--text-2);
+}
+
+.new-tab kbd {
+  opacity: 0;
+  transition: opacity var(--fast) var(--ease);
+}
+
+.new-tab:hover kbd {
+  opacity: 1;
+}
+
+.favicon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 4px; /* a favicon tile keeps its small corner */
+  object-fit: contain;
+}
+
+/* Placeholder: the site's first letter on a colour derived from its host. */
+.favicon.letter {
+  display: grid;
+  place-items: center;
+  font: 700 9px / 1 var(--font);
+  color: #fff;
+  background: hsl(var(--hue, 210) 42% 48%);
+}
+
+/* ---- folders ------------------------------------------------------------ */
+
+.folder > .row .chevron {
+  display: grid;
+  margin-left: auto;
+  color: var(--text-3);
+  opacity: 0;
+  transition: transform var(--fast) var(--ease), opacity var(--fast) var(--ease);
+}
+
+.folder > .row:hover .chevron {
+  opacity: 1;
+}
+
+.folder.open > .row .chevron {
+  transform: rotate(90deg);
+}
+
+.folder-children {
+  position: relative;
+  padding-left: 16px;
+}
+
+/* A hairline guide shows which tabs belong to the folder. */
+.folder-children::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--line);
+}
+
+.folder:not(.open) > .folder-children {
+  display: none;
+}
+
+/* ---- drag and drop ------------------------------------------------------ */
+
+.drop-before::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: -2px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--blue);
+}
+
+.drag-over {
+  background: var(--fill-hover);
+  border-radius: var(--radius-md);
+}
+
+/* Tabs on another Space's button: let go to move them there. */
+.space-dot.drop-space {
+  opacity: 1;
+  background: var(--fill-active);
+  box-shadow: inset 0 0 0 1.5px var(--ds-switch-on);
+}
+
+.drag-ghost {
+  position: fixed;
+  top: -100px;
+  left: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ds-switch-on);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* ---- picking several tabs (⌘-click, ⇧-click) ----------------------------- */
+
+.row.selected,
+.fav.selected {
+  background: color-mix(in srgb, var(--ds-switch-on) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ds-switch-on) 32%, transparent);
+}
+
+.row.selected:hover,
+.fav.selected:hover {
+  background: color-mix(in srgb, var(--ds-switch-on) 20%, transparent);
+}
+
+/* While several are picked, the close buttons step aside: the bar acts on them all. */
+.selecting .row.selected .close {
+  display: none;
+}
+
+#selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: var(--space-1) 0 2px;
+  padding: 3px 3px 3px 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2, var(--fill-subtle));
+  box-shadow: var(--shadow-row);
+  animation: selection-in var(--medium, 200ms) var(--ease);
+}
+
+#selection-bar[hidden] {
+  display: none;
+}
+
+@keyframes selection-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+#selection-count {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+#selection-bar .icon-button.danger:hover:not(:disabled) {
+  color: var(--red);
+}
+
+/* ---- local servers ------------------------------------------------------ */
+
+.row.local-server {
+  height: 28px;
+}
+
+.local-server .live-dot,
+.local-chip .live-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin: 0 4px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 20%, transparent);
+}
+
+.local-server .port {
+  font: 500 var(--text-xs) var(--mono);
+  color: var(--text-3);
+}
+
+.local-server.open .title {
+  font-weight: 500;
+}
+
+/* ---- footer ------------------------------------------------------------- */
+
+footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-top: var(--space-1);
+}
+
+#spaces {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.space-dot {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  opacity: 0.6;
+  transition: opacity var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+
+.space-dot:hover {
+  opacity: 1;
+  background: var(--fill-hover);
+}
+
+.space-dot.active {
+  opacity: 1;
+  background: var(--fill-active);
+  box-shadow: var(--shadow-row);
+}
+
+.space-emoji {
+  font-size: 14px;
+}
+
+.space-initial {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px; /* a favicon tile keeps its small corner */
+  background: var(--text-2);
+  color: var(--space-color);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+#downloads-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: var(--ds-r-sm);
+  background: var(--settings-ink);
+  color: var(--settings-page);
+  font: 700 9px / 15px var(--mono);
+}
+
+#downloads-badge[hidden] {
+  display: none;
+}
+
+/* ---- popovers (downloads) ----------------------------------------------- */
+
+.popover {
+  position: absolute;
+  left: 8px;
+  right: 4px;
+  bottom: 46px;
+  max-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: rise var(--medium) var(--ease);
+}
+
+.popover[hidden] {
+  display: none;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+.popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 10px 6px 14px;
+  font-weight: 600;
+}
+
+#downloads-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px 6px;
+  overflow-y: auto;
+}
+
+.download {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'name action' 'status action' 'bar bar';
+  column-gap: 6px;
+  padding: 7px 4px 7px 8px;
+  border-radius: var(--radius-md);
+}
+
+.download:hover {
+  background: var(--surface-2);
+}
+
+.download .name {
+  grid-area: name;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.download .status {
+  grid-area: status;
+  font: var(--text-xs) var(--mono);
+  color: var(--text-2);
+}
+
+.download.cancelled .name,
+.download.interrupted .name {
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+.download .icon-button {
+  grid-area: action;
+  align-self: center;
+}
+
+.download .bar {
+  grid-area: bar;
+  height: 3px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--surface-line);
+  overflow: hidden;
+}
+
+.download .fill {
+  display: block;
+  height: 100%;
+  background: var(--settings-ink);
+  transition: width var(--medium) var(--ease);
+}
+
+#downloads-list .empty {
+  padding: 10px 8px 12px;
+  color: var(--text-3);
+}
+
+/* ---- Peek --------------------------------------------------------------- */
+
+#peek {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  animation: fade var(--medium) var(--ease);
+}
+
+#peek[hidden] {
+  display: none;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.peek-bar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 4px 0 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.peek-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.pill-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition: background var(--fast) var(--ease);
+}
+
+.pill-button:hover {
+  background: var(--surface-2);
+}
+
+.pill-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---- command bar -------------------------------------------------------- */
+
+#palette {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 16vh;
+  background: rgba(0, 0, 0, 0.22);
+  animation: fade var(--fast) var(--ease);
+}
+
+#palette[hidden] {
+  display: none;
+}
+
+.palette-box {
+  width: min(680px, 90vw);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  overflow: hidden;
+  animation: drop var(--medium) var(--ease);
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+
+.palette-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 56px;
+  padding: 0 var(--space-4) 0 18px;
+  border-bottom: 1px solid var(--surface-line);
+  color: var(--text-3);
+}
+
+.palette-field svg {
+  width: 18px;
+  height: 18px;
+}
+
+#palette-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: 400 var(--text-xl) var(--font);
+}
+
+#palette-input::placeholder {
+  color: var(--text-3);
+}
+
+#palette-mode:empty {
+  display: none;
+}
+
+#palette-mode {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+#palette-results {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  /* Fixed height so the box never shrinks and leaves stale pixels over the transparent backdrop. */
+  height: min(380px, 46vh);
+  overflow-y: auto;
+}
+
+#palette-results .group-label {
+  height: 26px;
+  padding: 8px 10px 2px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+#palette-results .item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 40px;
+  padding: 0 var(--space-3) 0 10px;
+  border-radius: var(--radius-md);
+}
+
+#palette-results .item.selected {
+  background: var(--selection);
+  color: var(--selection-text);
+}
+
+.item .item-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  flex: none;
+}
+
+.item .item-icon .favicon {
+  width: 16px;
+  height: 16px;
+}
+
+.item.selected .item-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.item .label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item .sub {
+  max-width: 45%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.item.selected .sub {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.item .enter {
+  display: none;
+}
+
+.item.selected .enter {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  box-shadow: none;
+}
+
+#palette-detail {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 12px 18px 14px;
+  border-top: 1px solid var(--surface-line);
+  background: var(--surface-2);
+  font: 12px/1.5 var(--mono);
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#palette-detail[hidden] {
+  display: none;
+}
+
+.palette-footer {
+  display: flex;
+  gap: var(--space-4);
+  padding: 8px 16px;
+  border-top: 1px solid var(--surface-line);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.palette-footer kbd {
+  margin-right: 2px;
+}
+
+/* ---- Space editor ------------------------------------------------------- */
+
+.space-editor {
+  top: 128px;
+  bottom: auto;
+  max-height: none;
+  z-index: 2;
+}
+
+.editor-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 4px 14px 12px;
+}
+
+.text-field {
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  color: var(--text);
+  font: 500 var(--text-md) var(--font);
+  outline: none;
+}
+
+.text-field:focus {
+  box-shadow: inset 0 0 0 1px var(--surface-line), 0 0 0 3px var(--focus);
+}
+
+.field-label {
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+
+.emoji {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  /* Opaque on purpose: Chromium applies a translucent text colour to emoji glyphs too. */
+  color: var(--text);
+}
+
+.emoji svg {
+  color: var(--text-3);
+}
+
+.emoji:hover {
+  background: var(--surface-2);
+}
+
+.emoji.selected {
+  background: var(--settings-soft);
+}
+
+.emoji svg {
+  width: 12px;
+  height: 12px;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.swatch {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px var(--settings-soft);
+  transition: transform var(--fast) var(--ease);
+}
+
+.swatch:hover {
+  transform: scale(1.08);
+}
+
+.swatch.selected {
+  box-shadow: inset 0 0 0 1px var(--settings-soft), 0 0 0 2px var(--surface), 0 0 0 3.5px var(--settings-muted);
+}
+
+/* The custom swatch is a rainbow ring around the current colour, with the native picker inside. */
+.swatch.custom {
+  background:
+    radial-gradient(circle, var(--swatch) 52%, transparent 54%),
+    conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f472b6, #f87171);
+  overflow: hidden;
+}
+
+.swatch.custom input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.toggle-row strong {
+  display: block;
+  font-weight: 500;
+}
+
+.toggle-row small {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 19px;
+  margin: 0;
+  border-radius: var(--ds-r-md);
+  background: var(--surface-line);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  transition: background var(--fast) var(--ease);
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform var(--fast) var(--ease);
+}
+
+.switch:checked {
+  background: var(--ds-switch-on);
+}
+
+.switch:checked::after {
+  transform: translateX(13px);
+}
+
+.popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--surface-line);
+}
+
+.text-button.danger {
+  color: var(--red);
+  font-size: var(--text-sm);
+}
+
+.text-button.danger:disabled {
+  opacity: 0.4;
+}
+
+.primary-button {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--settings-page);
+  font-weight: 600;
+  transition: filter var(--fast) var(--ease);
+}
+
+.primary-button:hover {
+  filter: brightness(0.96);
+}
+
+/* ---- empty state -------------------------------------------------------- */
+
+/* Drawn where the page would be, as a card the same shape as a page. */
+#empty-state {
+  position: fixed;
+  inset: 8px 8px 8px var(--sidebar);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: var(--page-radius);
+  /* Opaque: a page-shaped card a shade off the Space colour. */
+  background: color-mix(in srgb, var(--surface) 72%, var(--space-color, var(--ds-frame)));
+  box-shadow: 0 0 0 1px var(--line), var(--shadow-row);
+  overflow: hidden auto;
+  animation: fade var(--medium) var(--ease);
+}
+
+#empty-state[hidden] {
+  display: none;
+}
+
+.empty-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(560px, 100% - 48px);
+  padding: 48px 0 24px;
+}
+
+/* The new tab page of a window whose tab another window took: the page as it left, frozen. */
+#parked-view {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--surface);
+  animation: fade var(--medium) var(--ease);
+}
+
+#parked-view[hidden],
+#parked-shot[hidden] {
+  display: none;
+}
+
+#parked-shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  filter: saturate(0.6);
+}
+
+.parked-scrim {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--surface) 45%, transparent);
+  backdrop-filter: blur(1.5px);
+}
+
+.elsewhere-note {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(520px, 100% - 48px);
+  padding: 12px 12px 12px 16px;
+  border-radius: var(--ds-r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.elsewhere-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+
+.elsewhere-icon .favicon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+}
+
+.elsewhere-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--text-3);
+  font-size: var(--text-sm);
+}
+
+.elsewhere-text strong {
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fav.elsewhere {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.empty-space {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--fill-subtle);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.empty-space-emoji {
+  font-size: 13px;
+}
+
+#empty-state h2 {
+  margin: 14px 0 22px;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.empty-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  padding: 0 12px 0 16px;
+  border-radius: var(--ds-r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  color: var(--text-3);
+  font-size: var(--text-lg);
+  text-align: left;
+  transition: transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
+}
+
+.empty-search:hover {
+  transform: translateY(-1px);
+}
+
+.empty-search span {
+  flex: 1;
+}
+
+.empty-search svg {
+  width: 18px;
+  height: 18px;
+}
+
+.empty-section {
+  width: 100%;
+  margin-top: 32px;
+}
+
+.empty-section[hidden] {
+  display: none;
+}
+
+.empty-section header {
+  margin: 0 4px 10px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.local-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.local-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-row);
+  font-weight: 500;
+  transition: transform var(--fast) var(--ease);
+}
+
+.local-chip:hover {
+  transform: translateY(-1px);
+}
+
+.local-chip .port {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+/* ---- tooltips ----------------------------------------------------------- */
+
+#tooltip {
+  position: fixed;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(11, 23, 40, 0.94);
+  color: #f2f5f9;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  animation: fade var(--fast) var(--ease);
+}
+
+#tooltip[hidden],
+#tooltip kbd[hidden] {
+  display: none;
+}
+
+#tooltip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#tooltip kbd {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.8);
+  box-shadow: none;
+}
+
+/* ---- hidden & floating sidebar ------------------------------------------ */
+
+#edge {
+  display: none;
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 8px;
+}
+
+body[data-sidebar='hidden'] #edge {
+  display: block;
+}
+
+body[data-sidebar='hidden'] #empty-state,
+body[data-sidebar='floating'] #empty-state {
+  /* The empty state still shows, just without the sidebar beside it. */
+  inset-inline-start: 8px;
+}
+
+body[data-sidebar='hidden'] #sidebar {
+  display: none;
+}
+
+/* While the floating sidebar is out, the edge strip covers the gap between the window's
+   edge and the card, so the pointer is always over one of them (app.ts). */
+body[data-sidebar='floating'] #edge {
+  display: block;
+  width: 12px;
+}
+
+body[data-sidebar='floating'] #sidebar {
+  inset: 10px auto 10px 10px;
+  border-radius: var(--float-radius);
+  /* Kept within the view's room on the right (main.ts FLOAT_SHADOW) so it never ends in a hard edge. */
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24), 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--settings-soft);
+  /* Slides in from the window's edge and back out, as in Arc. */
+  animation: slide-in 180ms var(--ease);
+}
+
+body[data-sidebar='floating'] #sidebar.peek-leaving {
+  animation: slide-out 160ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(calc(-100% - 12px));
+  }
+}
+
+@keyframes slide-out {
+  to {
+    transform: translateX(calc(-100% - 12px));
+  }
+}
+
+/* ---- fullscreen (the browser says so, patch 0039) -------------------------------------
+   No traffic lights in the sidebar's top row, so the toggle moves to the left; the floating
+   sidebar is a card on the screen's edge, full height, as in Arc. */
+
+@media (display-mode: fullscreen) {
+  .traffic-lights {
+    display: none;
+  }
+
+  body[data-sidebar='floating'] #sidebar {
+    inset: 0 auto 0 0;
+    border-radius: 0 var(--float-radius) var(--float-radius) 0;
+  }
+}
+
+/* ---- split pairs in the sidebar ----------------------------------------- */
+
+.split-row {
+  display: flex;
+  gap: 2px;
+  margin: 1px 0;
+  padding: 2px;
+  border-radius: var(--ds-r-md);
+  background: var(--fill-subtle);
+}
+
+.split-row.showing {
+  background: var(--fill-hover);
+}
+
+.split-row > .row {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  gap: 8px;
+  padding: 0 4px 0 8px;
+}
+
+/* Inside a pair the split mark is redundant. */
+.split-row .split-badge {
+  display: none !important;
+}
+
+/* ---- site panel --------------------------------------------------------- */
+
+/* One 12px inset for every section; controls on the right share one 76px column. */
+.site-panel {
+  --inset: 12px;
+  --control: 76px;
+  top: 92px;
+  bottom: auto;
+  max-height: none;
+  z-index: 2;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--inset) var(--inset) 10px;
+}
+
+.site-header .favicon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px; /* a favicon tile keeps its small corner */
+}
+
+.site-title {
+  min-width: 0;
+}
+
+.site-title strong {
+  display: block;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-title small {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.site-title small.insecure {
+  color: var(--amber);
+}
+
+.site-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 0 var(--inset) var(--inset);
+  border-bottom: 1px solid var(--surface-line);
+}
+
+.site-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  min-width: 0;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+
+.site-action span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.site-action svg {
+  width: 14px;
+  height: 14px;
+}
+
+.site-action:hover:not(:disabled) {
+  background: var(--fill-hover);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+}
+
+.site-action:disabled {
+  opacity: 0.4;
+}
+
+.site-label {
+  margin: 0;
+  padding: 10px var(--inset) 2px;
+}
+
+.site-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 32px;
+  padding: 0 var(--inset);
+}
+
+.site-row > span:first-child {
+  color: var(--text);
+}
+
+.mini-select {
+  width: var(--control);
+  height: 24px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font: 500 var(--text-sm) var(--font);
+}
+
+.zoom-control {
+  display: grid;
+  grid-template-columns: 22px 1fr 22px;
+  width: var(--control);
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.zoom-control .icon-button {
+  width: 22px;
+  height: 24px;
+}
+
+.zoom-control .icon-button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.zoom-value {
+  height: 24px;
+  font: 500 var(--text-xs) var(--mono);
+  color: var(--text-2);
+}
+
+.zoom-value:hover {
+  color: var(--text);
+}
+
+.site-panel .popover-footer {
+  margin-top: 6px;
+  padding: 8px var(--inset) 10px;
+}
+
+.site-panel .popover-footer .text-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: -6px;
+}
+
+.site-panel .popover-footer svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---- audio -------------------------------------------------------------- */
+
+.audio-mark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+}
+
+.audio-mark:hover {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.audio-mark.muted {
+  color: var(--text-3);
+}
+
+.audio-mark svg {
+  width: 14px;
+  height: 14px;
+}
+
+.folder-name[contenteditable='true'],
+.row .title[contenteditable='true'] {
+  outline: none;
+  padding: 0 4px;
+  border-radius: var(--ds-r-sm);
+  background: var(--fill-active);
+  box-shadow: 0 0 0 2px var(--focus);
+  text-overflow: clip;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ---- where a dragged Agent panel would land (windowUi.ts) ----------------- */
+
+.panel-ghost {
+  position: fixed;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  border-radius: var(--page-radius);
+  background: rgb(56 132 255 / 12%);
+  box-shadow: inset 0 0 0 2px rgb(56 132 255 / 85%), 0 18px 50px rgb(0 0 0 / 22%);
+  pointer-events: none;
+  transition: left 140ms var(--ease), top 140ms var(--ease), width 140ms var(--ease), height 140ms var(--ease);
+  animation: fade var(--fast) var(--ease);
+}
+
+.panel-ghost-label {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgb(56 132 255 / 92%);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 18%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-ghost {
+    transition: none;
+  }
+}
+
+/* ---- drop a tab on the page to split ------------------------------------- */
+
+#split-drop {
+  position: fixed;
+  display: flex;
+  gap: 8px;
+  animation: fade var(--fast) var(--ease);
+}
+
+#split-drop[hidden] {
+  display: none;
+}
+
+.drop-half {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  border-radius: var(--page-radius);
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35);
+  transition: background var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
+}
+
+/* The half the tab would open in: a landing preview, the same blue as the Agent panel's. */
+.drop-half.over {
+  background: rgb(56 132 255 / 14%);
+  box-shadow: inset 0 0 0 2px rgb(56 132 255 / 85%);
+}
+
+/* The other half keeps the current page: it just steps back. */
+.drop-half.other {
+  background: rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.drop-half.other .drop-label {
+  opacity: 0.6;
+}
+
+.drop-half.over .drop-label {
+  background: rgb(56 132 255 / 95%);
+  color: #fff;
+}
+
+.drop-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  font-weight: 600;
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity var(--fast) var(--ease), transform var(--fast) var(--ease);
+}
+
+.drop-half.over .drop-label {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+.empty-space-emoji:empty {
+  display: none;
+}

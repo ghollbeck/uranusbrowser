@@ -1,0 +1,25 @@
+--- a/chrome/browser/extensions/api/debugger/debugger_api.cc
++++ b/chrome/browser/extensions/api/debugger/debugger_api.cc
+@@ -73,6 +73,7 @@
+ #else
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/extensions/api/debugger/extension_dev_tools_infobar_delegate.h"
++#include "chrome/browser/anus/anus_shell.h"
+ #include "chrome/browser/infobars/browser_infobar_manager.h"
+ #include "chrome/browser/infobars/infobar_features.h"
+ #include "chrome/browser/infobars/infobar_spec.h"
+@@ -715,10 +716,13 @@
+ 
+   // We allow policy-installed extensions to circumvent the normal
+   // infobar warning. See crbug.com/41302695.
++  // Uranus Browser: so is Uranus Browser's shell, which is the browser itself (responsive
++  // view, console error counts); other extensions still get the warning.
+   const bool suppress_warning =
+       base::CommandLine::ForCurrentProcess()->HasSwitch(
+           ::switches::kSilentDebuggerExtensionAPI) ||
+-      Manifest::IsPolicyLocation(extension_->location());
++      Manifest::IsPolicyLocation(extension_->location()) ||
++      IsAnusShell(extension_->id());
+ 
+   if (!suppress_warning) {
+ #if BUILDFLAG(IS_ANDROID)

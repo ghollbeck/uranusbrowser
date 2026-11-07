@@ -1,0 +1,557 @@
+--- /dev/null
++++ b/chrome/browser/anus/BUILD.gn
+@@ -0,0 +1,18 @@
++# Copyright 2026 The Uranus Browser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++# The browser's side of Uranus Browser's window frame, shared by the extension API
++# (chrome.anusPrivate) and the browser views. The other headers in this
++# directory are header-only and belong to no target.
++source_set("anus_frame_host") {
++  sources = [
++    "anus_frame_host.cc",
++    "anus_frame_host.h",
++  ]
++  public_deps = [
++    "//skia",
++    "//ui/gfx/geometry",
++  ]
++  deps = [ "//base" ]
++}
+--- /dev/null
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -0,0 +1,118 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_ANUS_ANUS_FRAME_HOST_H_
++#define CHROME_BROWSER_ANUS_ANUS_FRAME_HOST_H_
++
++#include <algorithm>
++#include <optional>
++#include <vector>
++
++#include "third_party/skia/include/core/SkColor.h"
++#include "ui/gfx/geometry/insets.h"
++#include "ui/gfx/geometry/point.h"
++#include "ui/gfx/geometry/rect.h"
++
++namespace content {
++class BrowserContext;
++class WebContents;
++}
++
++// Uranus Browser's window frame: the shell's frame page (window.html) is a transparent
++// view over each normal window, and the browser lays the page area and the
++// window controls out around it, the way the Electron spike's Browser.layout()
++// did (src/main/main.ts in the Uranus Browser repo). chrome.anusPrivate drives it;
++// the contract is chromium/shell/anusPrivate.d.ts.
++//
++// This target (chrome/browser/anus:anus_frame_host) has no dependencies on
++// views so that the extension API can reach the frames, which live in the
++// browser views (chrome/browser/ui/views/frame/anus_frame_view.h).
++
++// The spike's layout constants.
++inline constexpr int kAnusSidebarWidth = 260;
++// With the sidebar hidden, this strip at the left edge brings it back on hover.
++inline constexpr int kAnusEdgeWidth = 8;
++// The floating sidebar's inset from the window edge, and the room on its right
++// for its shadow.
++inline constexpr int kAnusFloatMargin = 10;
++inline constexpr int kAnusFloatShadow = 28;
++// Where the traffic lights sit (top-left of the close button) to line up with
++// the sidebar's toolbar.
++inline constexpr int kAnusTrafficLightsX = 16;
++inline constexpr int kAnusTrafficLightsY = 18;
++// The gap around the page area.
++inline constexpr int kAnusGap = 8;
++
++struct AnusFrameState {
++  enum class Sidebar { kDocked, kHidden, kFloating };
++
++  Sidebar sidebar = Sidebar::kDocked;
++  bool overlay = false;
++  SkColor background = SkColorSetRGB(0xe9, 0xec, 0xf2);
++
++  bool operator==(const AnusFrameState&) const = default;
++
++  // The frame view's width, from the window's left edge; it is as tall as the
++  // window.
++  int FrameWidth(int window_width) const {
++    if (overlay) {
++      return window_width;
++    }
++    switch (sidebar) {
++      case Sidebar::kDocked:
++        return std::min(window_width, kAnusSidebarWidth);
++      case Sidebar::kHidden:
++        return std::min(window_width, kAnusEdgeWidth);
++      case Sidebar::kFloating:
++        return std::min(window_width, kAnusFloatMargin + kAnusSidebarWidth +
++                                          kAnusFloatShadow);
++    }
++  }
++
++  // The page area, as insets from the window's edges.
++  gfx::Insets PageInsets() const {
++    return gfx::Insets::TLBR(
++        kAnusGap,
++        sidebar == Sidebar::kDocked ? kAnusSidebarWidth : kAnusGap,
++        kAnusGap, kAnusGap);
++  }
++
++  bool TrafficLightsVisible() const { return sidebar != Sidebar::kHidden; }
++
++  // Top-left of the close button, from the window's top-left corner.
++  gfx::Point TrafficLightsOrigin() const {
++    const int inset = sidebar == Sidebar::kFloating ? kAnusFloatMargin : 0;
++    return gfx::Point(kAnusTrafficLightsX + inset,
++                      kAnusTrafficLightsY + inset);
++  }
++};
++
++// One per normal browser window that shows the frame (AnusFrameView).
++class AnusFrameHost {
++ public:
++  // Every live frame host, oldest first.
++  static const std::vector<AnusFrameHost*>& All();
++
++  // The state that setFrame() last gave every window, for windows opened
++  // after it.
++  static std::optional<AnusFrameState>& DefaultState();
++
++  // The extension window ID (the window's session ID) of this host's window.
++  virtual int GetWindowId() const = 0;
++  // The profile of this host's window.
++  virtual content::BrowserContext* GetBrowserContext() = 0;
++  // The frame page's contents, or null before the shell is loaded.
++  virtual content::WebContents* GetFrameContents() = 0;
++  // Whether the window was the last one active (among this profile's).
++  virtual bool IsActiveWindow() const = 0;
++  virtual void SetFrameState(const AnusFrameState& state) = 0;
++  virtual void FocusFrame() = 0;
++  virtual void FocusPage() = 0;
++
++ protected:
++  AnusFrameHost();
++  virtual ~AnusFrameHost();
++};
++
++#endif  // CHROME_BROWSER_ANUS_ANUS_FRAME_HOST_H_
+--- /dev/null
++++ b/chrome/browser/anus/anus_frame_host.cc
+@@ -0,0 +1,35 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "chrome/browser/anus/anus_frame_host.h"
++
++#include "base/no_destructor.h"
++
++namespace {
++
++std::vector<AnusFrameHost*>& Hosts() {
++  static base::NoDestructor<std::vector<AnusFrameHost*>> hosts;
++  return *hosts;
++}
++
++}  // namespace
++
++// static
++const std::vector<AnusFrameHost*>& AnusFrameHost::All() {
++  return Hosts();
++}
++
++// static
++std::optional<AnusFrameState>& AnusFrameHost::DefaultState() {
++  static std::optional<AnusFrameState> state;
++  return state;
++}
++
++AnusFrameHost::AnusFrameHost() {
++  Hosts().push_back(this);
++}
++
++AnusFrameHost::~AnusFrameHost() {
++  std::erase(Hosts(), this);
++}
+--- /dev/null
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -0,0 +1,59 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// Use the <code>chrome.anusPrivate</code> API to lay out Uranus Browser's browser
++// window: the shell's frame page (window.html) is a transparent view over the
++// window, and the browser places the page area and the window controls (the
++// macOS traffic lights) around it. Only Uranus Browser's shell may use it; the
++// contract is chromium/shell/anusPrivate.d.ts in the Uranus Browser repo.
++namespace anusPrivate {
++  // Where the sidebar is.
++  enum SidebarMode {
++    // A strip at the window's left edge; the page area is beside it.
++    docked,
++    // Out of the way; a thin strip at the left edge brings it back on hover.
++    hidden,
++    // Floating over the page, which stays where it is with the sidebar hidden.
++    floating
++  };
++
++  // What keyboard focus moves to.
++  enum FocusTarget {
++    // The frame page (for its command bar).
++    frame,
++    // The active page.
++    page
++  };
++
++  dictionary FrameState {
++    SidebarMode sidebar;
++    // The frame page covers the whole window (command bar, Peek, tour, tab
++    // drag); the page area doesn't move.
++    boolean overlay;
++    // The window's colour behind the page area, as #rrggbb.
++    DOMString background;
++  };
++
++  callback DoneCallback = void();
++  callback WindowIdCallback = void(long windowId);
++
++  interface Functions {
++    // Lays out a window's frame. Applies to every normal window (and to the
++    // windows opened later) when <code>windowId</code> is omitted.
++    static void setFrame(
++        FrameState state,
++        optional long windowId,
++        optional DoneCallback callback);
++
++    // Moves keyboard focus to the frame page or back to the active page, in
++    // the given window, the caller's window or the last active window.
++    static void focus(
++        FocusTarget target,
++        optional long windowId,
++        optional DoneCallback callback);
++
++    // The window the calling frame page belongs to.
++    static void getWindowId(WindowIdCallback callback);
++  };
++};
+--- a/chrome/common/extensions/api/api_sources.gni
++++ b/chrome/common/extensions/api/api_sources.gni
+@@ -85,6 +85,9 @@
+     "enterprise_reporting_private.webidl",
+     "experimental_actor.webidl",
+     "experimental_ai_data.webidl",
++
++    # Uranus Browser: what the browser gives Uranus Browser's shell (chromium/shell).
++    "anus_private.idl",
+     "image_writer_private.webidl",
+     "indigo_private.webidl",
+     "language_settings_private.webidl",
+--- a/chrome/common/extensions/api/_api_features.json
++++ b/chrome/common/extensions/api/_api_features.json
+@@ -536,6 +536,12 @@
+   "identity.getAccounts": {
+     "channel": "dev",
+     "dependencies": ["permission:identity"],
++    "contexts": ["privileged_extension"]
++  },
++  // Uranus Browser: what the browser gives Uranus Browser's shell (chromium/shell), and only
++  // the shell (see the permission's allowlist).
++  "anusPrivate": {
++    "dependencies": ["permission:anusPrivate"],
+     "contexts": ["privileged_extension"]
+   },
+   "indigoPrivate": {
+--- a/chrome/common/extensions/api/_permission_features.json
++++ b/chrome/common/extensions/api/_permission_features.json
+@@ -477,6 +477,13 @@
+     "channel": "stable",
+     "extension_types": ["extension", "platform_app"]
+   },
++  // Uranus Browser: only Uranus Browser's shell, abdiaepfgbbhdjaecjipmaailijaaide (see
++  // chrome/browser/anus/anus_shell.h), which is loaded unpacked.
++  "anusPrivate": {
++    "channel": "stable",
++    "extension_types": ["extension"],
++    "allowlist": ["86CDD29044F07A0EC108E49C73F9C1E7FF53C62E"]
++  },
+   "indigoPrivate": {
+     "channel": "stable",
+     "extension_types": ["extension"],
+--- a/extensions/common/mojom/api_permission_id.mojom
++++ b/extensions/common/mojom/api_permission_id.mojom
+@@ -300,6 +300,9 @@
+   kPublicSuffix = 273,
+   kEnterpriseWebrtc = 274,
+   kMimeTypesHandlerPdf = 275,
++  // Uranus Browser: chrome.anusPrivate, for Uranus Browser's shell. On a rebase, keep it
++  // last (after any new Chromium entry).
++  kAnusPrivate = 276,
+ 
+   // Add new entries at the end of the enum and be sure to update the
+   // "ExtensionPermission3" enum in
+--- a/chrome/common/extensions/permissions/chrome_api_permissions.cc
++++ b/chrome/common/extensions/permissions/chrome_api_permissions.cc
+@@ -167,6 +167,9 @@
+      APIPermissionInfo::kFlagCannotBeOptional},
+     {APIPermissionID::kPdfViewerPrivate, "pdfViewerPrivate"},
+     {APIPermissionID::kIndigoPrivate, "indigoPrivate"},
++    // Uranus Browser: chrome.anusPrivate, for Uranus Browser's shell.
++    {APIPermissionID::kAnusPrivate, "anusPrivate",
++     APIPermissionInfo::kFlagCannotBeOptional},
+     {APIPermissionID::kProxyOverrideRulesPrivate, "proxyOverrideRulesPrivate",
+      APIPermissionInfo::kFlagCannotBeOptional},
+     {APIPermissionID::kResourcesPrivate, "resourcesPrivate",
+--- a/chrome/browser/extensions/api/BUILD.gn
++++ b/chrome/browser/extensions/api/BUILD.gn
+@@ -112,6 +112,7 @@
+   if (!is_android) {
+     public_deps += [
+       "//chrome/browser/extensions/api/contextual_tasks_private",
++      "//chrome/browser/extensions/api/anus_private",
+       "//chrome/browser/extensions/api/indigo_private",
+     ]
+   }
+--- /dev/null
++++ b/chrome/browser/extensions/api/anus_private/BUILD.gn
+@@ -0,0 +1,20 @@
++# Copyright 2026 The Uranus Browser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++assert(!is_android)
++
++source_set("anus_private") {
++  sources = [
++    "anus_private_api.cc",
++    "anus_private_api.h",
++  ]
++
++  deps = [
++    "//base",
++    "//chrome/browser/anus:anus_frame_host",
++    "//chrome/common/extensions/api",
++    "//content/public/browser",
++    "//extensions/browser",
++  ]
++}
+--- /dev/null
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -0,0 +1,45 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_EXTENSIONS_API_ANUS_PRIVATE_ANUS_PRIVATE_API_H_
++#define CHROME_BROWSER_EXTENSIONS_API_ANUS_PRIVATE_ANUS_PRIVATE_API_H_
++
++#include "extensions/browser/extension_function.h"
++
++namespace extensions {
++
++// chrome.anusPrivate: what Uranus Browser's browser gives its shell, and only the
++// shell (see anus_frame_host.h). Its functions use the UNKNOWN histogram
++// value so that Uranus Browser's patches stay off Chromium's histogram enums.
++
++class AnusPrivateSetFrameFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.setFrame", UNKNOWN)
++
++ protected:
++  ~AnusPrivateSetFrameFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateFocusFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.focus", UNKNOWN)
++
++ protected:
++  ~AnusPrivateFocusFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateGetWindowIdFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.getWindowId", UNKNOWN)
++
++ protected:
++  ~AnusPrivateGetWindowIdFunction() override = default;
++  ResponseAction Run() override;
++};
++
++}  // namespace extensions
++
++#endif  // CHROME_BROWSER_EXTENSIONS_API_ANUS_PRIVATE_ANUS_PRIVATE_API_H_
+--- /dev/null
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -0,0 +1,164 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "chrome/browser/extensions/api/anus_private/anus_private_api.h"
++
++#include <optional>
++#include <string>
++
++#include "base/strings/string_number_conversions.h"
++#include "chrome/browser/anus/anus_frame_host.h"
++#include "chrome/common/extensions/api/anus_private.h"
++#include "content/public/browser/web_contents.h"
++#include "extensions/browser/extensions_browser_client.h"
++
++namespace extensions {
++
++namespace {
++
++namespace anus_private = api::anus_private;
++
++constexpr char kNoWindowError[] = "No Uranus Browser window with id *.";
++constexpr char kNotAFramePageError[] = "The caller is not a frame page.";
++constexpr char kBadColorError[] = "background must be #rrggbb.";
++
++std::optional<SkColor> ParseColor(const std::string& text) {
++  uint32_t rgb = 0;
++  if (text.size() != 7 || text[0] != '#' ||
++      !base::HexStringToUInt(std::string_view(text).substr(1), &rgb)) {
++    return std::nullopt;
++  }
++  return SkColorSetRGB((rgb >> 16) & 0xff, (rgb >> 8) & 0xff, rgb & 0xff);
++}
++
++bool SameProfile(AnusFrameHost* host, content::BrowserContext* context) {
++  return ExtensionsBrowserClient::Get()->IsSameContext(
++      host->GetBrowserContext(), context);
++}
++
++AnusFrameHost* HostForWindow(int window_id,
++                               content::BrowserContext* context) {
++  for (AnusFrameHost* host : AnusFrameHost::All()) {
++    if (host->GetWindowId() == window_id && SameProfile(host, context)) {
++      return host;
++    }
++  }
++  return nullptr;
++}
++
++AnusFrameHost* HostForContents(content::WebContents* contents) {
++  if (!contents) {
++    return nullptr;
++  }
++  for (AnusFrameHost* host : AnusFrameHost::All()) {
++    if (host->GetFrameContents() == contents) {
++      return host;
++    }
++  }
++  return nullptr;
++}
++
++AnusFrameHost* ActiveHost(content::BrowserContext* context) {
++  AnusFrameHost* fallback = nullptr;
++  for (AnusFrameHost* host : AnusFrameHost::All()) {
++    if (!SameProfile(host, context)) {
++      continue;
++    }
++    if (host->IsActiveWindow()) {
++      return host;
++    }
++    fallback = host;
++  }
++  return fallback;
++}
++
++}  // namespace
++
++ExtensionFunction::ResponseAction AnusPrivateSetFrameFunction::Run() {
++  auto params = anus_private::SetFrame::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++
++  AnusFrameState state;
++  switch (params->state.sidebar) {
++    case anus_private::SidebarMode::kDocked:
++      state.sidebar = AnusFrameState::Sidebar::kDocked;
++      break;
++    case anus_private::SidebarMode::kHidden:
++      state.sidebar = AnusFrameState::Sidebar::kHidden;
++      break;
++    case anus_private::SidebarMode::kFloating:
++      state.sidebar = AnusFrameState::Sidebar::kFloating;
++      break;
++    case anus_private::SidebarMode::kNone:
++      return RespondNow(BadMessage());
++  }
++  state.overlay = params->state.overlay;
++  std::optional<SkColor> background = ParseColor(params->state.background);
++  if (!background) {
++    return RespondNow(Error(kBadColorError));
++  }
++  state.background = *background;
++
++  if (params->window_id) {
++    AnusFrameHost* host = HostForWindow(*params->window_id, browser_context());
++    if (!host) {
++      return RespondNow(Error(kNoWindowError,
++                              base::NumberToString(*params->window_id)));
++    }
++    host->SetFrameState(state);
++    return RespondNow(NoArguments());
++  }
++
++  AnusFrameHost::DefaultState() = state;
++  for (AnusFrameHost* host : AnusFrameHost::All()) {
++    if (SameProfile(host, browser_context())) {
++      host->SetFrameState(state);
++    }
++  }
++  return RespondNow(NoArguments());
++}
++
++ExtensionFunction::ResponseAction AnusPrivateFocusFunction::Run() {
++  auto params = anus_private::Focus::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++
++  AnusFrameHost* host = nullptr;
++  if (params->window_id) {
++    host = HostForWindow(*params->window_id, browser_context());
++    if (!host) {
++      return RespondNow(Error(kNoWindowError,
++                              base::NumberToString(*params->window_id)));
++    }
++  } else {
++    host = HostForContents(GetSenderWebContents());
++    if (!host) {
++      host = ActiveHost(browser_context());
++    }
++  }
++  if (!host) {
++    return RespondNow(Error(kNoWindowError, "(none)"));
++  }
++
++  switch (params->target) {
++    case anus_private::FocusTarget::kFrame:
++      host->FocusFrame();
++      break;
++    case anus_private::FocusTarget::kPage:
++      host->FocusPage();
++      break;
++    case anus_private::FocusTarget::kNone:
++      return RespondNow(BadMessage());
++  }
++  return RespondNow(NoArguments());
++}
++
++ExtensionFunction::ResponseAction AnusPrivateGetWindowIdFunction::Run() {
++  AnusFrameHost* host = HostForContents(GetSenderWebContents());
++  if (!host) {
++    return RespondNow(Error(kNotAFramePageError));
++  }
++  return RespondNow(WithArguments(host->GetWindowId()));
++}
++
++}  // namespace extensions

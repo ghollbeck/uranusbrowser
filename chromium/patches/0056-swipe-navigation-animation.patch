@@ -1,0 +1,652 @@
+--- a/chrome/browser/renderer_host/BUILD.gn
++++ b/chrome/browser/renderer_host/BUILD.gn
+@@ -100,6 +100,8 @@ if (is_mac) {
+       "//chrome/browser/glic",
+       "//chrome/browser/ui:browser_commands",
+       "//components/spellcheck/browser",
++      "//components/viz/common",
++      "//skia",
+     ]
+   }
+ }
+--- a/chrome/browser/renderer_host/chrome_render_widget_host_view_mac_delegate.mm
++++ b/chrome/browser/renderer_host/chrome_render_widget_host_view_mac_delegate.mm
+@@ -4,9 +4,13 @@
+ 
+ #import "chrome/browser/renderer_host/chrome_render_widget_host_view_mac_delegate.h"
+ 
++#import <QuartzCore/QuartzCore.h>
++
+ #include <cmath>
+ 
+ #include "base/strings/sys_string_conversions.h"
++#include "base/task/single_thread_task_runner.h"
++#include "base/time/time.h"
+ #include "chrome/browser/actor/ui/actor_overlay_ui.h"
+ #include "chrome/browser/glic/host/guest_util.h"
+ #include "chrome/browser/glic/public/glic_enabling.h"
+@@ -23,6 +27,7 @@
+ #include "components/spellcheck/browser/spellcheck_platform.h"
+ #include "components/spellcheck/common/spellcheck_panel.mojom.h"
+ #include "components/tabs/public/tab_interface.h"
++#include "components/viz/common/frame_sinks/copy_output_result.h"
+ #include "components/web_modal/web_contents_modal_dialog_manager.h"
+ #include "content/public/browser/devtools_agent_host.h"
+ #include "content/public/browser/preloading.h"
+@@ -32,10 +37,145 @@
+ #include "content/public/browser/render_widget_host.h"
+ #include "content/public/browser/render_widget_host_view.h"
+ #include "content/public/browser/web_contents.h"
++#include "content/public/browser/navigation_handle.h"
++#include "content/public/browser/web_contents_observer.h"
++#include "skia/ext/skia_utils_mac.h"
+ #include "mojo/public/cpp/bindings/remote.h"
+ #include "services/service_manager/public/cpp/interface_provider.h"
+ #include "ui/base/window_open_disposition.h"
+ 
++// Uranus Browser: when a swipe navigates, a snapshot of the page you are leaving
++// covers the page, stays put until the page you are going to has committed,
++// then slides away in the swipe's direction (right for back, left for
++// forward), so the new page looks like it was underneath.
++namespace {
++
++// How long to wait for the snapshot before navigating without one, and for
++// the navigation before sliding the snapshot away regardless.
++constexpr base::TimeDelta kSnapshotWait = base::Milliseconds(160);
++constexpr base::TimeDelta kNavigationWait = base::Milliseconds(1500);
++// After the commit, give the new page a moment to paint under the snapshot.
++constexpr base::TimeDelta kPaintGrace = base::Milliseconds(70);
++
++class SwipeNavigationObserver : public content::WebContentsObserver {
++ public:
++  SwipeNavigationObserver(content::WebContents* web_contents,
++                          base::OnceClosure done)
++      : content::WebContentsObserver(web_contents), done_(std::move(done)) {}
++
++  void DidFinishNavigation(content::NavigationHandle* handle) override {
++    if (handle->IsInPrimaryMainFrame()) {
++      Fire(handle->HasCommitted() ? kPaintGrace : base::TimeDelta());
++    }
++  }
++  void WebContentsDestroyed() override { Fire(base::TimeDelta()); }
++
++  void Fire(base::TimeDelta delay) {
++    if (done_) {
++      base::SingleThreadTaskRunner::GetCurrentDefault()->PostDelayedTask(
++          FROM_HERE, std::move(done_), delay);
++    }
++  }
++
++ private:
++  base::OnceClosure done_;
++};
++
++}  // namespace
++
++@interface AnusSwipeSnapshot : NSView
++- (instancetype)initWithImage:(CGImageRef)image
++                      forPage:(NSView*)page
++                    direction:(history_swiper::NavigationDirection)direction;
++- (void)waitForNavigationIn:(content::WebContents*)webContents;
++@end
++
++@implementation AnusSwipeSnapshot {
++  history_swiper::NavigationDirection _direction;
++  CALayer* __strong _image;
++  std::unique_ptr<SwipeNavigationObserver> _observer;
++  BOOL _sliding;
++}
++
++- (instancetype)initWithImage:(CGImageRef)image
++                      forPage:(NSView*)page
++                    direction:(history_swiper::NavigationDirection)direction {
++  if ((self = [super initWithFrame:page.frame])) {
++    _direction = direction;
++    CALayer* root = [CALayer layer];
++    self.layer = root;
++    self.wantsLayer = YES;
++    self.autoresizingMask = page.autoresizingMask;
++
++    _image = [CALayer layer];
++    _image.frame = root.bounds;
++    _image.contents = (__bridge id)image;
++    _image.contentsGravity = kCAGravityResize;
++    _image.contentsScale = page.window.backingScaleFactor ?: 2;
++    _image.shadowOpacity = 0.28;
++    _image.shadowRadius = 22;
++    _image.shadowOffset = CGSizeZero;
++    CGPathRef shadow = CGPathCreateWithRect(_image.bounds, nullptr);
++    _image.shadowPath = shadow;
++    CGPathRelease(shadow);
++    [root addSublayer:_image];
++
++    // The swipe's arrow badge lives in the page view; bring it on top of the
++    // snapshot so its exit animation stays visible.
++    [page.superview addSubview:self positioned:NSWindowAbove relativeTo:page];
++    for (NSView* sub in [page.subviews copy]) {
++      if ([sub isKindOfClass:NSClassFromString(@"HistoryOverlayView")]) {
++        NSRect frame = [self convertRect:sub.frame fromView:page];
++        [sub removeFromSuperview];
++        sub.frame = frame;
++        [self addSubview:sub];
++      }
++    }
++  }
++  return self;
++}
++
++- (NSView*)hitTest:(NSPoint)point {
++  return nil;
++}
++
++- (void)waitForNavigationIn:(content::WebContents*)webContents {
++  AnusSwipeSnapshot* strongSelf = self;
++  _observer = std::make_unique<SwipeNavigationObserver>(
++      webContents, base::BindOnce(^{
++        [strongSelf slideAway];
++      }));
++  base::SingleThreadTaskRunner::GetCurrentDefault()->PostDelayedTask(
++      FROM_HERE, base::BindOnce(^{
++        [strongSelf slideAway];
++      }),
++      kNavigationWait);
++}
++
++- (void)slideAway {
++  if (_sliding) {
++    return;
++  }
++  _sliding = YES;
++  _observer.reset();
++  CGFloat width = NSWidth(self.bounds);
++  CGFloat dir = _direction == history_swiper::kBackwards ? 1 : -1;
++  NSView* strongSelf = self;
++  [CATransaction begin];
++  [CATransaction setAnimationDuration:0.36];
++  [CATransaction
++      setAnimationTimingFunction:[CAMediaTimingFunction
++                                     functionWithControlPoints:0.2:0.8:0.2:1]];
++  [CATransaction setCompletionBlock:^{
++    [strongSelf removeFromSuperview];
++  }];
++  _image.transform = CATransform3DMakeTranslation(dir * width, 0, 0);
++  _image.opacity = 0.85;
++  [CATransaction commit];
++}
++
++@end
++
+ @interface ChromeRenderWidgetHostViewMacDelegate () <HistorySwiperDelegate>
+ 
+ @property(readonly) content::WebContents* webContents;
+@@ -190,6 +330,54 @@
+     return;
+   }
+ 
++  // Uranus Browser: snapshot the page first so the navigation can slide it away.
++  // If the snapshot doesn't come within kSnapshotWait, navigate without it.
++  content::RenderWidgetHostView* view = webContents->GetRenderWidgetHostView();
++  NSView* page = self.nsView;
++  if (!view || !page.superview || NSIsEmptyRect(page.bounds)) {
++    [self goInDirection:direction webContents:webContents];
++    return;
++  }
++  base::WeakPtr<content::WebContents> weakContents = webContents->GetWeakPtr();
++  __block BOOL started = NO;
++  ChromeRenderWidgetHostViewMacDelegate* strongSelf = self;
++  void (^go)(CGImageRef) = ^(CGImageRef image) {
++    if (started) {
++      return;
++    }
++    started = YES;
++    content::WebContents* contents = weakContents.get();
++    if (!contents) {
++      return;
++    }
++    if (image && page.superview) {
++      AnusSwipeSnapshot* snapshot =
++          [[AnusSwipeSnapshot alloc] initWithImage:image
++                                           forPage:page
++                                         direction:direction];
++      [snapshot waitForNavigationIn:contents];
++    }
++    [strongSelf goInDirection:direction webContents:contents];
++  };
++  view->CopyFromSurface(
++      gfx::Rect(), gfx::Size(), kSnapshotWait,
++      base::BindOnce(^(const content::CopyFromSurfaceResult& result) {
++        if (!result.has_value() || result->bitmap.drawsNothing()) {
++          go(nullptr);
++          return;
++        }
++        NSImage* image = skia::SkBitmapToNSImage(result->bitmap);
++        go([image CGImageForProposedRect:nullptr context:nil hints:nil]);
++      }));
++  base::SingleThreadTaskRunner::GetCurrentDefault()->PostDelayedTask(
++      FROM_HERE, base::BindOnce(^{
++        go(nullptr);
++      }),
++      kSnapshotWait);
++}
++
++- (void)goInDirection:(history_swiper::NavigationDirection)direction
++          webContents:(content::WebContents*)webContents {
+   if (direction == history_swiper::kForwards) {
+     chrome::GoForward(webContents);
+   } else {
+--- a/chrome/browser/renderer_host/chrome_render_widget_host_view_mac_history_swiper.mm
++++ b/chrome/browser/renderer_host/chrome_render_widget_host_view_mac_history_swiper.mm
+@@ -271,6 +271,8 @@ constexpr CGFloat kCancelEventVerticalLowerThreshold = 0.01;
+ 
+     // If the gesture was completed, perform a navigation.
+     if (finished) {
++      // Uranus Browser: the badge carries on into the page instead of retreating.
++      _historyOverlay.committed = YES;
+       [self navigateBrowserInDirection:_historySwipeDirection];
+     }
+ 
+@@ -506,6 +508,7 @@ constexpr CGFloat kCancelEventVerticalLowerThreshold = 0.01;
+                       // `gestureAmount` obeys -[NSEvent
+                       // isDirectionInvertedFromDevice] automatically.
+                       if (ended) {
++                        historyOverlay.committed = YES;
+                         [self.delegate
+                             navigateInDirection:isRightScroll
+                                                     ? history_swiper::kForwards
+--- a/chrome/browser/ui/cocoa/history_overlay_controller.h
++++ b/chrome/browser/ui/cocoa/history_overlay_controller.h
+@@ -29,6 +29,10 @@ enum HistoryOverlayMode { kHistoryOverlayModeBack, kHistoryOverlayModeForward };
+ - (void)setProgress:(CGFloat)gestureAmount finished:(BOOL)finished;
+ 
+ // Fades the shield out and removes it from the view hierarchy.
++// Uranus Browser: set before -dismiss when the gesture navigates, so the badge
++// carries on in the swipe's direction instead of retreating to the edge.
++@property(nonatomic) BOOL committed;
++
+ - (void)dismiss;
+ 
+ @end
+--- a/chrome/browser/ui/cocoa/history_overlay_controller.mm
++++ b/chrome/browser/ui/cocoa/history_overlay_controller.mm
+@@ -6,100 +6,253 @@
+ 
+ #import <QuartzCore/QuartzCore.h>
+ 
++#include <algorithm>
+ #include <cmath>
+ 
+-#include "base/apple/scoped_cftyperef.h"
+ #include "base/check.h"
+-#include "chrome/grit/theme_resources.h"
+-#include "ui/base/resource/resource_bundle.h"
+-#include "ui/base/ui_base_features.h"
+-#include "ui/gfx/image/image.h"
+ 
+-// Constants ///////////////////////////////////////////////////////////////////
++// Uranus Browser: the swipe-to-navigate badge. A round badge with an arrow comes
++// in from the page edge as the fingers move, follows them, and pops (with a
++// trackpad haptic tick) at the point where letting go will navigate. Ink on the
++// page in light mode, light on the page in dark mode, like the browser's own UI.
+ 
+-// The radius of the circle drawn in the shield.
+-const CGFloat kShieldRadius = 70;
++namespace {
+ 
+-// The diameter of the circle and the width of its bounding box.
+-const CGFloat kShieldWidth = kShieldRadius * 2;
++// The badge's diameter, and the room around it for its shadow.
++constexpr CGFloat kBadgeSize = 52;
++constexpr CGFloat kViewSize = 88;
+ 
+-// The height of the shield.
+-const CGFloat kShieldHeight = 140;
++// How far the badge's centre travels: from just past the edge (hidden) to
++// kTravel points in from it when the gesture reaches the navigation point.
++constexpr CGFloat kHiddenCentre = -kBadgeSize / 2 - 4;
++constexpr CGFloat kTravel = 84;
+ 
+-// Additional height that is added to kShieldHeight when the gesture is
+-// considered complete.
+-const CGFloat kShieldHeightCompletionAdjust = 10;
++// Fill opacity before and after the navigation point.
++constexpr CGFloat kIdleFillAlpha = 0.55;
++constexpr CGFloat kArmedFillAlpha = 1.0;
+ 
+-// HistoryOverlayView //////////////////////////////////////////////////////////
++CGFloat Clamp01(CGFloat v) {
++  return std::clamp(v, static_cast<CGFloat>(0), static_cast<CGFloat>(1));
++}
++
++// An arrow pointing left (back) or right (forward), drawn on the badge's grid.
++CGPathRef CreateArrowPath(HistoryOverlayMode mode) {
++  CGMutablePathRef path = CGPathCreateMutable();
++  const CGFloat mid = kBadgeSize / 2;
++  const CGFloat half = 9;   // half the shaft length
++  const CGFloat head = 7;   // length of each arrowhead stroke along x and y
++  const CGFloat dir = mode == kHistoryOverlayModeBack ? -1 : 1;
++  const CGFloat tipX = mid + dir * half;
++  CGPathMoveToPoint(path, nullptr, mid - dir * half, mid);
++  CGPathAddLineToPoint(path, nullptr, tipX, mid);
++  CGPathMoveToPoint(path, nullptr, tipX - dir * head, mid + head);
++  CGPathAddLineToPoint(path, nullptr, tipX, mid);
++  CGPathAddLineToPoint(path, nullptr, tipX - dir * head, mid - head);
++  return path;
++}
++
++}  // namespace
+ 
+-// The content view that draws the semicircle and the arrow.
+ @interface HistoryOverlayView : NSView
+-@property(nonatomic) CGFloat shieldAlpha;
+-- (instancetype)initWithMode:(HistoryOverlayMode)mode image:(NSImage*)image;
++- (instancetype)initWithMode:(HistoryOverlayMode)mode;
++- (void)setProgress:(CGFloat)progress armed:(BOOL)armed;
++- (void)dismissCommitted:(BOOL)committed;
+ @end
+ 
+ @implementation HistoryOverlayView {
+   HistoryOverlayMode _mode;
+-  CAShapeLayer* __strong _shapeLayer;
++  CALayer* __strong _badge;
++  CAShapeLayer* __strong _circle;
++  CAShapeLayer* __strong _arrow;
++  CGFloat _progress;
++  BOOL _armed;
+ }
+ 
+-@synthesize shieldAlpha = _shieldAlpha;
+-
+-- (instancetype)initWithMode:(HistoryOverlayMode)mode image:(NSImage*)image {
+-  NSRect frame = NSMakeRect(0, 0, kShieldWidth, kShieldHeight);
+-  if ((self = [super initWithFrame:frame])) {
++- (instancetype)initWithMode:(HistoryOverlayMode)mode {
++  if ((self = [super initWithFrame:NSMakeRect(0, 0, kViewSize, kViewSize)])) {
+     _mode = mode;
+-    _shieldAlpha = 1.0;  // CAShapeLayer's fillColor defaults to opaque black.
+ 
+-    // A layer-hosting view.
+-    _shapeLayer = [[CAShapeLayer alloc] init];
+-    self.layer = _shapeLayer;
++    // A layer-hosting view: the root layer is ours, not AppKit's.
++    CALayer* root = [CALayer layer];
++    self.layer = root;
+     self.wantsLayer = YES;
+ 
+-    // If going backward, the arrow needs to be in the right half of the circle,
+-    // so offset the X position.
+-    CGFloat offset = _mode == kHistoryOverlayModeBack ? kShieldRadius : 0;
+-    NSRect arrowRect = NSMakeRect(offset, 0, kShieldRadius, kShieldHeight);
+-    arrowRect = NSInsetRect(arrowRect, 10, 0);  // Give a little padding.
+-
+-    NSImageView* imageView = [[NSImageView alloc] initWithFrame:arrowRect];
+-    imageView.image = image;
+-    imageView.autoresizingMask = NSViewMinYMargin | NSViewMaxYMargin;
+-    [self addSubview:imageView];
++    _badge = [CALayer layer];
++    _badge.bounds = CGRectMake(0, 0, kBadgeSize, kBadgeSize);
++    _badge.position = CGPointMake(kViewSize / 2, kViewSize / 2);
++    _badge.shadowOpacity = 0.22;
++    _badge.shadowRadius = 10;
++    _badge.shadowOffset = CGSizeMake(0, -3);
++    [root addSublayer:_badge];
++
++    _circle = [CAShapeLayer layer];
++    _circle.frame = _badge.bounds;
++    CGPathRef oval = CGPathCreateWithEllipseInRect(_badge.bounds, nullptr);
++    _circle.path = oval;
++    _badge.shadowPath = oval;
++    CGPathRelease(oval);
++    [_badge addSublayer:_circle];
++
++    _arrow = [CAShapeLayer layer];
++    _arrow.frame = _badge.bounds;
++    CGPathRef arrowPath = CreateArrowPath(mode);
++    _arrow.path = arrowPath;
++    CGPathRelease(arrowPath);
++    _arrow.fillColor = nil;
++    _arrow.lineWidth = 2.5;
++    _arrow.lineCap = kCALineCapRound;
++    _arrow.lineJoin = kCALineJoinRound;
++    [_badge addSublayer:_arrow];
++
++    [self applyColors];
++    _badge.opacity = 0;
+   }
+   return self;
+ }
+ 
+-- (void)setFrameSize:(CGSize)newSize {
+-  NSSize oldSize = self.frame.size;
+-  [super setFrameSize:newSize];
++// Clicks go through to the page; the badge is only something to look at.
++- (NSView*)hitTest:(NSPoint)point {
++  return nil;
++}
++
++- (BOOL)isDark {
++  NSAppearanceName name = [self.effectiveAppearance
++      bestMatchFromAppearancesWithNames:@[
++        NSAppearanceNameAqua, NSAppearanceNameDarkAqua
++      ]];
++  return [name isEqualToString:NSAppearanceNameDarkAqua];
++}
++
++- (void)applyColors {
++  BOOL dark = [self isDark];
++  // ScienceOS ink and its dark-mode counterpart.
++  CGFloat fill = dark ? 0xEC / 255.0 : 0x20 / 255.0;
++  CGFloat mark = dark ? 0x20 / 255.0 : 1.0;
++  CGFloat alpha = _armed ? kArmedFillAlpha : kIdleFillAlpha;
++  CGColorRef fillColor = CGColorCreateSRGB(fill, fill, fill + 0.01, alpha);
++  CGColorRef markColor = CGColorCreateSRGB(mark, mark, mark, 1);
++  _circle.fillColor = fillColor;
++  _arrow.strokeColor = markColor;
++  CGColorRelease(fillColor);
++  CGColorRelease(markColor);
++}
++
++- (void)viewDidChangeEffectiveAppearance {
++  [super viewDidChangeEffectiveAppearance];
++  [CATransaction begin];
++  [CATransaction setDisableActions:YES];
++  [self applyColors];
++  [CATransaction commit];
++}
++
++- (CGFloat)direction {
++  return _mode == kHistoryOverlayModeBack ? 1 : -1;
++}
++
++- (void)setProgress:(CGFloat)progress armed:(BOOL)armed {
++  progress = Clamp01(progress);
++  _progress = progress;
++  NSView* parent = self.superview;
++  if (!parent) {
++    return;
++  }
+ 
+-  if (!_shapeLayer.path || !NSEqualSizes(oldSize, newSize)) {
+-    base::apple::ScopedCFTypeRef<CGMutablePathRef> oval(CGPathCreateMutable());
+-    CGRect ovalRect = CGRectMake(0, 0, newSize.width, newSize.height);
+-    CGPathAddEllipseInRect(oval.get(), nullptr, ovalRect);
+-    _shapeLayer.path = oval.get();
++  // Follow the fingers exactly: no implicit animation while tracking.
++  [CATransaction begin];
++  [CATransaction setDisableActions:YES];
++
++  NSRect bounds = parent.bounds;
++  // Ease the travel so the badge leaves the edge quickly, then settles.
++  CGFloat eased = 1 - std::pow(1 - progress, 2.2);
++  CGFloat offset = kHiddenCentre + eased * (kTravel - kHiddenCentre);
++  CGFloat centreX = _mode == kHistoryOverlayModeBack
++                        ? NSMinX(bounds) + offset
++                        : NSMaxX(bounds) - offset;
++  CGFloat centreY = NSMidY(bounds);
++  [self setFrame:NSMakeRect(std::round(centreX - kViewSize / 2),
++                            std::round(centreY - kViewSize / 2), kViewSize,
++                            kViewSize)];
++
++  _badge.opacity = Clamp01(progress * 3);
++  CGFloat scale = 0.62 + 0.38 * eased;
++  // The arrow turns from pointing a little off-axis to straight as it nears
++  // the navigation point.
++  CGFloat tilt = (1 - eased) * 0.5 * [self direction];
++  _badge.transform = CATransform3DMakeScale(scale, scale, 1);
++  _arrow.transform = CATransform3DMakeRotation(tilt, 0, 0, 1);
++  [CATransaction commit];
++
++  if (armed != _armed) {
++    _armed = armed;
++    [CATransaction begin];
++    [CATransaction setAnimationDuration:0.18];
++    [self applyColors];
++    [CATransaction commit];
++    if (armed) {
++      [self pop];
++      [NSHapticFeedbackManager.defaultPerformer
++          performFeedbackPattern:NSHapticFeedbackPatternAlignment
++                 performanceTime:NSHapticFeedbackPerformanceTimeNow];
++    }
+   }
+ }
+ 
+-- (void)setShieldAlpha:(CGFloat)shieldAlpha {
+-  if (shieldAlpha != _shieldAlpha) {
+-    _shieldAlpha = shieldAlpha;
+-    base::apple::ScopedCFTypeRef<CGColorRef> fillColor(
+-        CGColorCreateGenericGray(0, shieldAlpha));
+-    _shapeLayer.fillColor = fillColor.get();
++// A quick spring overshoot when the gesture crosses the navigation point.
++- (void)pop {
++  CASpringAnimation* spring =
++      [CASpringAnimation animationWithKeyPath:@"transform.scale"];
++  spring.fromValue = @1.16;
++  spring.toValue = @1.0;
++  spring.damping = 11;
++  spring.stiffness = 320;
++  spring.mass = 0.7;
++  spring.initialVelocity = 4;
++  spring.duration = spring.settlingDuration;
++  spring.additive = NO;
++  [_arrow addAnimation:spring forKey:@"anusPop"];
++  CASpringAnimation* circleSpring = [spring copy];
++  [_circle addAnimation:circleSpring forKey:@"anusPop"];
++}
++
++- (void)dismissCommitted:(BOOL)committed {
++  [_arrow removeAnimationForKey:@"anusPop"];
++  [_circle removeAnimationForKey:@"anusPop"];
++  CGFloat dir = [self direction];
++  NSView* strongSelf = self;
++  [CATransaction begin];
++  if (committed) {
++    // Carry on into the page and fade, as if the arrow pulled the page along.
++    [CATransaction setAnimationDuration:0.3];
++    [CATransaction setAnimationTimingFunction:
++                       [CAMediaTimingFunction
++                           functionWithControlPoints:0.16:1:0.3:1]];
++    CATransform3D t = CATransform3DMakeTranslation(dir * 34, 0, 0);
++    _badge.transform = CATransform3DScale(t, 1.22, 1.22, 1);
++  } else {
++    // Retreat to the edge it came from.
++    [CATransaction setAnimationDuration:0.22];
++    [CATransaction setAnimationTimingFunction:
++                       [CAMediaTimingFunction
++                           functionWithName:kCAMediaTimingFunctionEaseIn]];
++    CATransform3D t = CATransform3DMakeTranslation(-dir * 40, 0, 0);
++    _badge.transform = CATransform3DScale(t, 0.55, 0.55, 1);
+   }
++  _badge.opacity = 0;
++  [CATransaction setCompletionBlock:^{
++    [strongSelf removeFromSuperview];
++  }];
++  [CATransaction commit];
+ }
+ 
+ @end
+ 
+-// HistoryOverlayController ////////////////////////////////////////////////////
+-
+ @implementation HistoryOverlayController {
+   HistoryOverlayMode _mode;
+   HistoryOverlayView* __strong _contentView;
+ }
+ 
++@synthesize committed = _committed;
++
+ - (instancetype)initForMode:(HistoryOverlayMode)mode {
+   if ((self = [super init])) {
+     _mode = mode;
+@@ -110,53 +263,13 @@ const CGFloat kShieldHeightCompletionAdjust = 10;
+ }
+ 
+ - (void)loadView {
+-  int resourceId = 0;
+-  if (features::IsRoundedIconsEnabled()) {
+-    resourceId = (_mode == kHistoryOverlayModeBack) ? IDR_ARROW_BACKWARD
+-                                                    : IDR_ARROW_FORWARD;
+-  } else {
+-    resourceId =
+-        (_mode == kHistoryOverlayModeBack) ? IDR_SWIPE_BACK : IDR_SWIPE_FORWARD;
+-  }
+-
+-  const gfx::Image& image =
+-      ui::ResourceBundle::GetSharedInstance().GetNativeImageNamed(resourceId);
+-  _contentView = [[HistoryOverlayView alloc] initWithMode:_mode
+-                                                    image:image.ToNSImage()];
++  _contentView = [[HistoryOverlayView alloc] initWithMode:_mode];
+   self.view = _contentView;
+ }
+ 
+ - (void)setProgress:(CGFloat)gestureAmount finished:(BOOL)finished {
+   DCHECK(self.view.superview);
+-  NSRect parentFrame = self.view.superview.frame;
+-  // When tracking the gesture, the height is constant and the alpha value
+-  // changes from [0.25, 0.65].
+-  CGFloat height = kShieldHeight;
+-  CGFloat shieldAlpha =
+-      std::min(static_cast<CGFloat>(0.65),
+-               std::max(gestureAmount, static_cast<CGFloat>(0.25)));
+-
+-  // When the gesture is very likely to be completed (90% in this case), grow
+-  // the semicircle's height and lock the alpha to 0.75.
+-  if (finished) {
+-    height += kShieldHeightCompletionAdjust;
+-    shieldAlpha = 0.75;
+-  }
+-
+-  // Compute the new position based on the progress.
+-  NSRect frame = self.view.frame;
+-  frame.size.height = height;
+-  frame.origin.y = (NSHeight(parentFrame) / 2) - (height / 2);
+-
+-  CGFloat width = std::min(kShieldRadius * gestureAmount, kShieldRadius);
+-  if (_mode == kHistoryOverlayModeForward) {
+-    frame.origin.x = NSMaxX(parentFrame) - width;
+-  } else if (_mode == kHistoryOverlayModeBack) {
+-    frame.origin.x = NSMinX(parentFrame) - kShieldWidth + width;
+-  }
+-
+-  self.view.frame = frame;
+-  _contentView.shieldAlpha = shieldAlpha;
++  [_contentView setProgress:gestureAmount armed:finished];
+ }
+ 
+ - (void)showPanelForView:(NSView*)view {
+@@ -167,12 +280,10 @@ const CGFloat kShieldHeightCompletionAdjust = 10;
+ }
+ 
+ - (void)dismiss {
+-  const CGFloat kFadeOutDurationSeconds = 0.4;
+-
+-  [NSAnimationContext beginGrouping];
+-  NSAnimationContext.currentContext.duration = kFadeOutDurationSeconds;
+-  [self.view.animator removeFromSuperview];
+-  [NSAnimationContext endGrouping];
++  if (!_contentView.superview) {
++    return;
++  }
++  [_contentView dismissCommitted:_committed];
+ }
+ 
+ @end

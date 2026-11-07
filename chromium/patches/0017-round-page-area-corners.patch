@@ -1,0 +1,160 @@
+--- a/chrome/browser/anus/anus_frame_host.h
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -46,6 +46,9 @@
+ inline constexpr int kAnusTrafficLightsY = 18;
+ // The gap around the page area.
+ inline constexpr int kAnusGap = 8;
++// The page area's corner radius: the shell's page-shaped card
++// (#empty-state in src/renderer/styles.css) has the same.
++inline constexpr float kAnusPageCornerRadius = 10;
+ 
+ struct AnusFrameState {
+   enum class Sidebar { kDocked, kHidden, kFloating };
+--- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
++++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
+@@ -30,6 +30,7 @@
+ #include "chrome/browser/ui/views/animations/side_panel_animations.h"
+ #include "chrome/browser/ui/views/animations/tab_strip_animations.h"
+ #include "chrome/browser/ui/views/bookmarks/bookmark_bar_view.h"
++#include "chrome/browser/anus/anus_frame_host.h"
+ #include "chrome/browser/ui/views/frame/custom_corners.h"
+ #include "chrome/browser/ui/views/frame/custom_corners_background.h"
+ #include "chrome/browser/ui/views/frame/custom_floating_corner.h"
+@@ -1245,8 +1246,11 @@
+   // especially obvious in split view, where turning the separator off provides
+   // the required top padding.
+   const auto& separator_info = layout_data_->separator_info;
++  // Uranus Browser: no line across the top of the round page area while the shell's
++  // frame draws the window.
+   views().multi_contents_view->SetShouldShowTopSeparator(
+-      separator_info.multi_contents_separator);
++      separator_info.multi_contents_separator &&
++      !IsParentedToAndVisible(views().anus_frame, views().browser_view));
+ 
+   // Updating the top, left and right insets for contents container view when
+   // in split view. This is dependent on a number of other browser states.
+@@ -1650,6 +1654,18 @@
+       }
+     }
+     views().multi_contents_view->SetBackgroundRadii(content_corners);
++  }
++
++  // Uranus Browser: while the shell's frame draws the window, the page area has round
++  // corners, like the window and the shell's page-shaped card. Each pane of a
++  // split rounds its own (MultiContentsView::kSplitViewContentCornerRadius).
++  if (views().anus_frame) {
++    if (IsParentedToAndVisible(views().anus_frame, views().browser_view)) {
++      views().multi_contents_view->SetBackgroundRadii(
++          gfx::RoundedCornersF(kAnusPageCornerRadius));
++    } else if (!in_glass_mode()) {
++      views().multi_contents_view->SetBackgroundRadii(gfx::RoundedCornersF());
++    }
+   }
+ 
+   // Want to cut the vertical tabstrip and its decorations out of the top
+--- a/chrome/browser/ui/views/frame/multi_contents_view.h
++++ b/chrome/browser/ui/views/frame/multi_contents_view.h
+@@ -65,7 +65,9 @@
+   };
+ 
+   static constexpr int kSplitViewContentInset = 8;
+-  static constexpr float kSplitViewContentCornerRadius = 6;
++  // Uranus Browser: 10 (was 6), the page area's radius (kAnusPageCornerRadius), so
++  // each pane of a split rounds like a single page.
++  static constexpr float kSplitViewContentCornerRadius = 10;
+   static constexpr gfx::RoundedCornersF kSplitViewContentRoundedCorners{
+       kSplitViewContentCornerRadius};
+ 
+--- a/ui/views/controls/native/native_view_host_mac.h
++++ b/ui/views/controls/native/native_view_host_mac.h
+@@ -7,6 +7,7 @@
+ 
+ #include "base/memory/raw_ptr.h"
+ #include "ui/base/cocoa/views_hostable.h"
++#include "ui/gfx/geometry/rounded_corners_f.h"
+ #include "ui/views/controls/native/native_view_host_wrapper.h"
+ #include "ui/views/views_export.h"
+ 
+@@ -73,6 +74,12 @@
+   // Return the NativeWidgetMacNSWindowHost for this hosted view.
+   NativeWidgetMacNSWindowHost* GetNSWindowHost() const;
+ 
++  // Uranus Browser: rounds the hosted NSView's own layer with `corner_radii_`. The
++  // views layer's radii don't reach it: a hosted NSView (a WebContents) draws
++  // in its own CALayers, so without this web pages stay square.
++  void ApplyCornerRadiiToNativeView();
++  gfx::RoundedCornersF corner_radii_;
++
+   // Our associated NativeViewHost. Owns this.
+   raw_ptr<NativeViewHost> host_;
+ 
+--- a/ui/views/controls/native/native_view_host_mac.mm
++++ b/ui/views/controls/native/native_view_host_mac.mm
+@@ -5,7 +5,10 @@
+ #include "ui/views/controls/native/native_view_host_mac.h"
+ 
+ #import <Cocoa/Cocoa.h>
++#import <QuartzCore/QuartzCore.h>
+ 
++#include <algorithm>
++
+ #include "base/apple/foundation_util.h"
+ #include "base/notimplemented.h"
+ #import "ui/accessibility/platform/ax_platform_node_mac.h"
+@@ -162,6 +165,7 @@
+   }
+ 
+   window_host->OnNativeViewHostAttach(host_, native_view_);
++  ApplyCornerRadiiToNativeView();
+ }
+ 
+ void NativeViewHostMac::NativeViewDetaching(bool destroyed) {
+@@ -237,9 +241,48 @@
+   DCHECK(layer);
+   layer->SetRoundedCornerRadius(corner_radii);
+   layer->SetIsFastRoundedCorner(true);
++  corner_radii_ = corner_radii;
++  ApplyCornerRadiiToNativeView();
+   return true;
+ }
+ 
++void NativeViewHostMac::ApplyCornerRadiiToNativeView() {
++  if (!native_view_) {
++    return;
++  }
++  const float radius =
++      std::max({corner_radii_.upper_left(), corner_radii_.upper_right(),
++                corner_radii_.lower_right(), corner_radii_.lower_left()});
++  native_view_.wantsLayer = YES;
++  CALayer* layer = native_view_.layer;
++  layer.cornerRadius = radius;
++  layer.masksToBounds = radius > 0;
++  // CALayer's Y axis points up unless the view is flipped.
++  const bool flipped = native_view_.isFlipped;
++  const CACornerMask top_left =
++      flipped ? kCALayerMinXMinYCorner : kCALayerMinXMaxYCorner;
++  const CACornerMask top_right =
++      flipped ? kCALayerMaxXMinYCorner : kCALayerMaxXMaxYCorner;
++  const CACornerMask bottom_left =
++      flipped ? kCALayerMinXMaxYCorner : kCALayerMinXMinYCorner;
++  const CACornerMask bottom_right =
++      flipped ? kCALayerMaxXMaxYCorner : kCALayerMaxXMinYCorner;
++  CACornerMask corners = 0;
++  if (corner_radii_.upper_left() > 0) {
++    corners |= top_left;
++  }
++  if (corner_radii_.upper_right() > 0) {
++    corners |= top_right;
++  }
++  if (corner_radii_.lower_left() > 0) {
++    corners |= bottom_left;
++  }
++  if (corner_radii_.lower_right() > 0) {
++    corners |= bottom_right;
++  }
++  layer.maskedCorners = corners;
++}
++
+ gfx::RoundedCornersF NativeViewHostMac::GetNativeViewCornerRadii() const {
+   ui::Layer* layer = GetUiLayer();
+   return layer ? layer->rounded_corner_radii() : gfx::RoundedCornersF();

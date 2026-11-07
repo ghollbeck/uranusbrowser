@@ -1,0 +1,14 @@
+/* Settings in the Chromium shell: a tab, not a vibrant window, plus the menus, questions and
+   notes Electron draws natively (settingsUi.ts). Values come from tokens.css and settings.css. */
+
+/* No window vibrancy behind the sidebar, so give the page a solid ground. */
+html {
+  background: var(--surface-2);
+}
+
+/* No traffic lights to clear. */
+.nav-titlebar {
+  height: 16px;
+}
+
+/* Menus, questions and notes (settingsUi.ts) are styled in shell.css, shared with the window. */

@@ -1,0 +1,25 @@
+--- a/chrome/browser/ui/views/frame/anus_top_chrome.h
++++ b/chrome/browser/ui/views/frame/anus_top_chrome.h
+@@ -6,6 +6,7 @@
+ #define CHROME_BROWSER_UI_VIEWS_FRAME_ANUS_TOP_CHROME_H_
+ 
+ #include "base/command_line.h"
++#include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+ 
+ // Uranus Browser has no horizontal tab strip and no toolbar/omnibox row: the sidebar
+@@ -18,9 +19,14 @@
+ //
+ // Pass --anus-show-top-chrome to get Chromium's tab strip and toolbar back,
+ // which is handy when debugging.
++//
++// Incognito and guest windows keep Chromium's tab strip and toolbar: the shell
++// doesn't run in off-the-record profiles, so nothing else would show the URL.
+ inline bool AnusHidesTopChrome(const BrowserWindowInterface* browser) {
+   return browser &&
+          browser->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL &&
++         !browser->GetProfile()->IsOffTheRecord() &&
++         !browser->GetProfile()->IsGuestSession() &&
+          !base::CommandLine::ForCurrentProcess()->HasSwitch(
+              "anus-show-top-chrome");
+ }

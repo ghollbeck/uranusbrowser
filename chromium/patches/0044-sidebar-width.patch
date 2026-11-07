@@ -1,0 +1,82 @@
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -128,6 +128,11 @@ ExtensionFunction::ResponseAction AnusPrivateSetFrameFunction::Run() {
+       return RespondNow(BadMessage());
+   }
+   state.overlay = params->state.overlay;
++  if (params->state.sidebar_width) {
++    state.sidebar_width =
++        std::clamp(*params->state.sidebar_width, kAnusSidebarMinWidth,
++                   kAnusSidebarMaxWidth);
++  }
+   std::optional<SkColor> background = ParseColor(params->state.background);
+   if (!background) {
+     return RespondNow(Error(kBadColorError));
+--- a/chrome/browser/anus/anus_frame_host.h
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -40,6 +40,10 @@ class WebContents;
+ 
+ // The spike's layout constants.
+ inline constexpr int kAnusSidebarWidth = 260;
++// Uranus Browser: the sidebar's width is the user's (dragging its right edge), between
++// these.
++inline constexpr int kAnusSidebarMinWidth = 200;
++inline constexpr int kAnusSidebarMaxWidth = 480;
+ // With the sidebar hidden, this strip at the left edge brings it back on hover.
+ inline constexpr int kAnusEdgeWidth = 8;
+ // The floating sidebar's inset from the window edge, and the room on its right
+@@ -93,6 +97,9 @@ struct AnusFrameState {
+ 
+   Sidebar sidebar = Sidebar::kDocked;
+   bool overlay = false;
++  // The sidebar's width (docked or floating), kAnusSidebarMinWidth to
++  // kAnusSidebarMaxWidth.
++  int sidebar_width = kAnusSidebarWidth;
+   SkColor background = SkColorSetRGB(0xe9, 0xec, 0xf2);
+   // A AnusMini window: the browser sets this, never setFrame().
+   bool anusmini = false;
+@@ -108,11 +115,11 @@ struct AnusFrameState {
+     }
+     switch (sidebar) {
+       case Sidebar::kDocked:
+-        return std::min(window_width, kAnusSidebarWidth);
++        return std::min(window_width, sidebar_width);
+       case Sidebar::kHidden:
+         return std::min(window_width, kAnusEdgeWidth);
+       case Sidebar::kFloating:
+-        return std::min(window_width, kAnusFloatMargin + kAnusSidebarWidth +
++        return std::min(window_width, kAnusFloatMargin + sidebar_width +
+                                           kAnusFloatShadow);
+     }
+   }
+@@ -137,7 +144,7 @@ struct AnusFrameState {
+     }
+     return gfx::Insets::TLBR(
+         kAnusGap,
+-        sidebar == Sidebar::kDocked ? kAnusSidebarWidth : kAnusGap,
++        sidebar == Sidebar::kDocked ? sidebar_width : kAnusGap,
+         kAnusGap, kAnusGap);
+   }
+ 
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -457,7 +457,7 @@ int AnusFrameView::AgentPanelWidth() const {
+   // A window too narrow for the panel and a usable page (beside the sidebar)
+   // leaves it out until the window is wider again.
+   constexpr int kMinPageWidth = 320;
+-  if (browser_view_->width() - width < kAnusSidebarWidth + kMinPageWidth) {
++  if (browser_view_->width() - width < state_.sidebar_width + kMinPageWidth) {
+     return 0;
+   }
+   return width;
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -41,6 +41,8 @@ namespace anusPrivate {
+     boolean overlay;
+     // The window's colour behind the page area, as #rrggbb.
+     DOMString background;
++    // The sidebar's width in px, 200 to 480 (260 when left out).
++    long? sidebarWidth;
+   };
+ 
+   // Uranus Browser: which side of the page the Agent panel is on.

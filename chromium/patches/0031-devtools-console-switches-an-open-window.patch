@@ -1,0 +1,19 @@
+--- a/chrome/browser/devtools/devtools_window.cc
++++ b/chrome/browser/devtools/devtools_window.cc
+@@ -2152,9 +2152,15 @@ void DevToolsWindow::DoAction(const DevToolsToggleAction& action) {
+       bindings_->CallClientMethod("DevToolsAPI", "enterInspectElementMode");
+       break;
+ 
++    // Uranus Browser: an open DevTools window switches to the Console too (the panel
++    // is otherwise only picked when the window opens).
++    case DevToolsToggleAction::kShowConsolePanel:
++      bindings_->CallClientMethod("DevToolsAPI", "showPanel",
++                                  base::Value("console"));
++      break;
++
+     case DevToolsToggleAction::kShowElementsPanel:
+     case DevToolsToggleAction::kPauseInDebugger:
+-    case DevToolsToggleAction::kShowConsolePanel:
+     case DevToolsToggleAction::kShow:
+     case DevToolsToggleAction::kToggle:
+       // Do nothing.

@@ -1,0 +1,477 @@
+--- /dev/null
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -0,0 +1,109 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_UI_VIEWS_FRAME_ANUS_FRAME_VIEW_H_
++#define CHROME_BROWSER_UI_VIEWS_FRAME_ANUS_FRAME_VIEW_H_
++
++#include <memory>
++
++#include "base/memory/raw_ptr.h"
++#include "base/scoped_observation.h"
++#include "chrome/browser/anus/anus_frame_host.h"
++#include "content/public/browser/web_contents_delegate.h"
++#include "extensions/browser/extension_registry.h"
++#include "extensions/browser/extension_registry_observer.h"
++#include "ui/base/metadata/metadata_header_macros.h"
++#include "ui/views/controls/webview/webview.h"
++#include "ui/views/view_tracker.h"
++
++class BrowserView;
++
++// Uranus Browser's window frame (see anus_frame_host.h): the shell's frame page,
++// chrome-extension://<shell>/window.html?window=<id>, in a transparent view
++// stacked above the page area of a normal browser window, plus the window
++// background behind the page area. chrome.anusPrivate.setFrame() says where
++// the sidebar is; the browser view layout puts this view and the page area
++// where the state says (BrowserViewTabbedLayoutImpl).
++//
++// The frame shows only while the shell is loaded; without it the window keeps
++// Chromium's layout (with top chrome hidden, see anus_top_chrome.h).
++class AnusFrameView : public views::WebView,
++                        public AnusFrameHost,
++                        public extensions::ExtensionRegistryObserver {
++  METADATA_HEADER(AnusFrameView, views::WebView)
++
++ public:
++  // Adds the frame and its background to `browser_view`, if it is a normal
++  // window with top chrome hidden. Returns the frame, owned by `browser_view`.
++  static AnusFrameView* MaybeCreate(BrowserView* browser_view);
++
++  // The frame of `browser_view`, if it has one.
++  static AnusFrameView* From(views::View* browser_view);
++
++  explicit AnusFrameView(BrowserView* browser_view);
++  AnusFrameView(const AnusFrameView&) = delete;
++  AnusFrameView& operator=(const AnusFrameView&) = delete;
++  ~AnusFrameView() override;
++
++  // The window background behind the page area. Its insets are the page area's
++  // insets from the window's edges.
++  views::View* background_view() { return background_view_.view(); }
++
++  const AnusFrameState& state() const { return state_; }
++
++  // Whether the frame lays out the window (the shell is loaded).
++  bool IsActive() const { return GetVisible(); }
++
++  // views::WebView:
++  gfx::Size CalculatePreferredSize(
++      const views::SizeBounds& available_size) const override;
++
++  // AnusFrameHost:
++  int GetWindowId() const override;
++  content::BrowserContext* GetBrowserContext() override;
++  content::WebContents* GetFrameContents() override;
++  bool IsActiveWindow() const override;
++  void SetFrameState(const AnusFrameState& state) override;
++  void FocusFrame() override;
++  void FocusPage() override;
++
++  // content::WebContentsDelegate (through views::WebView):
++  content::WebContents* OpenURLFromTab(
++      content::WebContents* source,
++      const content::OpenURLParams& params,
++      base::OnceCallback<void(content::NavigationHandle&)>
++          navigation_handle_callback) override;
++  content::KeyboardEventProcessingResult PreHandleKeyboardEvent(
++      content::WebContents* source,
++      const input::NativeWebKeyboardEvent& event) override;
++  bool HandleKeyboardEvent(content::WebContents* source,
++                           const input::NativeWebKeyboardEvent& event) override;
++
++  // extensions::ExtensionRegistryObserver:
++  void OnExtensionReady(content::BrowserContext* browser_context,
++                        const extensions::Extension* extension) override;
++  void OnExtensionUnloaded(content::BrowserContext* browser_context,
++                           const extensions::Extension* extension,
++                           extensions::UnloadedExtensionReason reason) override;
++
++ private:
++  // Opens the frame page (the shell is loaded), or closes it (it is not).
++  void OpenFramePage();
++  void CloseFramePage();
++
++  // Applies `state_` to the background, the layout and the window controls.
++  void ApplyState();
++
++  raw_ptr<BrowserView> browser_view_;
++  // Owned by `browser_view_`, like this view; it may go first.
++  views::ViewTracker background_view_;
++  std::unique_ptr<content::WebContents> frame_contents_;
++  AnusFrameState state_;
++
++  base::ScopedObservation<extensions::ExtensionRegistry,
++                          extensions::ExtensionRegistryObserver>
++      registry_observation_{this};
++};
++
++#endif  // CHROME_BROWSER_UI_VIEWS_FRAME_ANUS_FRAME_VIEW_H_
+--- /dev/null
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -0,0 +1,245 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "chrome/browser/ui/views/frame/anus_frame_view.h"
++
++#include <string>
++#include <utility>
++
++#include "base/strings/string_number_conversions.h"
++#include "chrome/browser/extensions/chrome_extension_web_contents_observer.h"
++#include "chrome/browser/anus/anus_shell.h"
++#include "chrome/browser/profiles/profile.h"
++#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
++#include "chrome/browser/ui/views/frame/browser_view.h"
++#include "chrome/browser/ui/views/frame/anus_top_chrome.h"
++#include "content/public/browser/navigation_controller.h"
++#include "content/public/browser/site_instance.h"
++#include "content/public/browser/web_contents.h"
++#include "extensions/browser/view_type_utils.h"
++#include "extensions/common/extension.h"
++#include "extensions/common/mojom/view_type.mojom.h"
++#include "ui/base/metadata/metadata_impl_macros.h"
++#include "ui/views/background.h"
++#include "ui/views/border.h"
++#include "ui/views/controls/webview/web_contents_set_background_color.h"
++
++namespace {
++
++// The window background behind the page area; the frame page draws over it.
++class AnusFrameBackgroundView : public views::View {
++  METADATA_HEADER(AnusFrameBackgroundView, views::View)
++
++ public:
++  AnusFrameBackgroundView() {
++    // Only paints: clicks fall through to the window (and drag it).
++    SetCanProcessEventsWithinSubtree(false);
++    SetVisible(false);
++  }
++};
++
++BEGIN_METADATA(AnusFrameBackgroundView)
++END_METADATA
++
++// Wide enough to cover any window, for an overlay.
++constexpr int kOverlayWidth = 1 << 20;
++
++}  // namespace
++
++// static
++AnusFrameView* AnusFrameView::MaybeCreate(BrowserView* browser_view) {
++  if (!AnusHidesTopChrome(browser_view->browser()) ||
++      browser_view->browser()->GetProfile()->IsOffTheRecord()) {
++    return nullptr;
++  }
++  return browser_view->AddChildView(
++      std::make_unique<AnusFrameView>(browser_view));
++}
++
++// static
++AnusFrameView* AnusFrameView::From(views::View* browser_view) {
++  if (!browser_view) {
++    return nullptr;
++  }
++  for (views::View* child : browser_view->children()) {
++    if (auto* frame = views::AsViewClass<AnusFrameView>(child)) {
++      return frame;
++    }
++  }
++  return nullptr;
++}
++
++AnusFrameView::AnusFrameView(BrowserView* browser_view)
++    : views::WebView(browser_view->browser()->GetProfile()), browser_view_(browser_view) {
++  // Stays hidden until the shell is loaded and the frame page opens.
++  SetVisible(false);
++  // Under every other view of the window.
++  background_view_.SetView(browser_view->AddChildViewAt(
++      std::make_unique<AnusFrameBackgroundView>(), 0));
++  if (const auto& state = AnusFrameHost::DefaultState()) {
++    state_ = *state;
++  }
++  ApplyState();
++
++  auto* registry = extensions::ExtensionRegistry::Get(GetBrowserContext());
++  registry_observation_.Observe(registry);
++  if (registry->ready_extensions().Contains(kAnusShellExtensionId)) {
++    OpenFramePage();
++  }
++}
++
++AnusFrameView::~AnusFrameView() {
++  SetWebContents(nullptr);
++}
++
++gfx::Size AnusFrameView::CalculatePreferredSize(
++    const views::SizeBounds& available_size) const {
++  // The browser view layout reads the frame's width from here (it doesn't know
++  // this class); the frame is as tall as the window.
++  return gfx::Size(state_.FrameWidth(kOverlayWidth), 0);
++}
++
++int AnusFrameView::GetWindowId() const {
++  return browser_view_->browser()->GetSessionID().id();
++}
++
++content::BrowserContext* AnusFrameView::GetBrowserContext() {
++  return browser_view_->browser()->GetProfile();
++}
++
++content::WebContents* AnusFrameView::GetFrameContents() {
++  return frame_contents_.get();
++}
++
++bool AnusFrameView::IsActiveWindow() const {
++  return browser_view_->IsActive();
++}
++
++void AnusFrameView::SetFrameState(const AnusFrameState& state) {
++  if (state == state_) {
++    return;
++  }
++  state_ = state;
++  ApplyState();
++}
++
++void AnusFrameView::FocusFrame() {
++  if (frame_contents_) {
++    RequestFocus();
++    frame_contents_->Focus();
++  }
++}
++
++void AnusFrameView::FocusPage() {
++  if (views::WebView* page = browser_view_->GetActiveContentsWebView()) {
++    page->RequestFocus();
++    if (page->web_contents()) {
++      page->web_contents()->Focus();
++    }
++  }
++}
++
++content::WebContents* AnusFrameView::OpenURLFromTab(
++    content::WebContents* source,
++    const content::OpenURLParams& params,
++    base::OnceCallback<void(content::NavigationHandle&)>
++        navigation_handle_callback) {
++  // The frame page stays the shell's; anything else it opens goes to a tab.
++  WindowOpenDisposition disposition = params.disposition;
++  if (disposition == WindowOpenDisposition::kCurrentTab) {
++    if (params.url.SchemeIs(extensions::kExtensionScheme) &&
++        IsAnusShell(params.url.host())) {
++      source->GetController().LoadURLWithParams(
++          content::NavigationController::LoadURLParams(params));
++      return source;
++    }
++    disposition = WindowOpenDisposition::kNewForegroundTab;
++  }
++  browser_view_->browser()->OpenGURL(params.url, disposition);
++  return nullptr;
++}
++
++content::KeyboardEventProcessingResult AnusFrameView::PreHandleKeyboardEvent(
++    content::WebContents* source,
++    const input::NativeWebKeyboardEvent& event) {
++  // The window's shortcuts (Cmd+T, Cmd+L, ...) work with the frame focused.
++  return browser_view_->PreHandleKeyboardEvent(event);
++}
++
++bool AnusFrameView::HandleKeyboardEvent(
++    content::WebContents* source,
++    const input::NativeWebKeyboardEvent& event) {
++  return browser_view_->HandleKeyboardEvent(event);
++}
++
++void AnusFrameView::OnExtensionReady(content::BrowserContext* browser_context,
++                                       const extensions::Extension* extension) {
++  if (IsAnusShell(extension->id())) {
++    OpenFramePage();
++  }
++}
++
++void AnusFrameView::OnExtensionUnloaded(
++    content::BrowserContext* browser_context,
++    const extensions::Extension* extension,
++    extensions::UnloadedExtensionReason reason) {
++  if (IsAnusShell(extension->id())) {
++    CloseFramePage();
++  }
++}
++
++void AnusFrameView::OpenFramePage() {
++  CloseFramePage();
++
++  const GURL url =
++      extensions::Extension::GetBaseURLFromExtensionId(kAnusShellExtensionId)
++          .Resolve("window.html?window=" +
++                   base::NumberToString(GetWindowId()));
++  content::BrowserContext* context = GetBrowserContext();
++  frame_contents_ = content::WebContents::Create(content::WebContents::CreateParams(
++      context, content::SiteInstance::CreateForURL(context, url)));
++  // The page area shows through wherever the frame page draws nothing.
++  views::WebContentsSetBackgroundColor::CreateForWebContentsWithColor(
++      frame_contents_.get(), SK_ColorTRANSPARENT);
++  extensions::SetViewType(frame_contents_.get(),
++                          extensions::mojom::ViewType::kComponent);
++  extensions::ChromeExtensionWebContentsObserver::CreateForWebContents(
++      frame_contents_.get());
++  frame_contents_->SetDelegate(this);
++  SetWebContents(frame_contents_.get());
++  frame_contents_->GetController().LoadURL(url, content::Referrer(),
++                                           ui::PAGE_TRANSITION_AUTO_TOPLEVEL,
++                                           std::string());
++
++  SetVisible(true);
++  if (views::View* background = background_view()) {
++    background->SetVisible(true);
++  }
++  ApplyState();
++}
++
++void AnusFrameView::CloseFramePage() {
++  if (!frame_contents_) {
++    return;
++  }
++  SetVisible(false);
++  if (views::View* background = background_view()) {
++    background->SetVisible(false);
++  }
++  SetWebContents(nullptr);
++  frame_contents_.reset();
++  ApplyState();
++}
++
++void AnusFrameView::ApplyState() {
++  if (views::View* background = background_view()) {
++    background->SetBackground(views::CreateSolidBackground(state_.background));
++    background->SetBorder(views::CreateEmptyBorder(state_.PageInsets()));
++  }
++  PreferredSizeChanged();
++  browser_view_->InvalidateLayout();
++}
++
++BEGIN_METADATA(AnusFrameView)
++END_METADATA
+--- a/chrome/browser/ui/views/frame/BUILD.gn
++++ b/chrome/browser/ui/views/frame/BUILD.gn
+@@ -749,6 +749,30 @@
+   ]
+ }
+ 
++# Uranus Browser: the shell's frame page, which draws the window.
++source_set("anus_frame_view") {
++  sources = [
++    "anus_frame_view.cc",
++    "anus_frame_view.h",
++  ]
++  public_deps = [
++    "//base",
++    "//chrome/browser/anus:anus_frame_host",
++    "//content/public/browser",
++    "//extensions/browser",
++    "//ui/views",
++    "//ui/views/controls/webview",
++  ]
++  deps = [
++    ":browser_view_header",
++    "//chrome/browser/extensions",
++    "//chrome/browser/profiles:profile",
++    "//chrome/browser/ui/browser_window",
++    "//extensions/common",
++    "//ui/base",
++  ]
++}
++
+ source_set("browser_view") {
+   sources = [ "browser_view.cc" ]
+   public_deps = [ ":browser_view_header" ]
+@@ -756,6 +780,7 @@
+     ":app_menu_button",
+     ":browser_frame_view",
+     ":browser_native_widget",
++    ":anus_frame_view",
+     ":browser_view_layout",
+     ":browser_view_layout_delegate_impl",
+     ":browser_widget",
+--- a/chrome/browser/ui/views/frame/browser_view.cc
++++ b/chrome/browser/ui/views/frame/browser_view.cc
+@@ -168,6 +168,7 @@
+ #include "chrome/browser/ui/views/frame/contents_separator.h"
+ #include "chrome/browser/ui/views/frame/contents_web_view.h"
+ #include "chrome/browser/ui/views/frame/custom_floating_corner.h"
++#include "chrome/browser/ui/views/frame/anus_frame_view.h"
+ #include "chrome/browser/ui/views/frame/anus_top_chrome.h"
+ #include "chrome/browser/ui/views/frame/horizontal_tab_strip_region_view.h"
+ #include "chrome/browser/ui/views/frame/layout/browser_view_layout.h"
+@@ -5152,6 +5153,12 @@
+   layout_views.top_container_separator = top_container_separator_;
+   // LINT.ThenChange(//chrome/browser/ui/views/frame/layout/browser_view_layout.h:BrowserViewLayoutViews)
+ 
++  // Uranus Browser: the shell's frame page draws the window (anus_frame_view.h).
++  if (AnusFrameView* anus_frame = AnusFrameView::MaybeCreate(this)) {
++    layout_views.anus_frame = anus_frame;
++    layout_views.anus_frame_background = anus_frame->background_view();
++  }
++
+   SetLayoutManager(BrowserViewLayout::CreateLayout(
+       std::make_unique<BrowserViewLayoutDelegateImpl>(*this), browser(),
+       std::move(layout_views)));
+--- a/chrome/browser/ui/views/frame/layout/browser_view_layout.h
++++ b/chrome/browser/ui/views/frame/layout/browser_view_layout.h
+@@ -91,6 +91,13 @@
+ 
+   // These views are dynamically set.
+   raw_ptr<BookmarkBarView> bookmark_bar = nullptr;
++
++  // Uranus Browser: the window frame and the window background behind the page area
++  // (anus_frame_view.h), or null. While the frame is visible it lays out
++  // the window: it is as wide as its preferred width, and the page area sits
++  // in the background's insets.
++  raw_ptr<views::View> anus_frame = nullptr;
++  raw_ptr<views::View> anus_frame_background = nullptr;
+ };
+ 
+ // The layout manager used in chrome browser.
+--- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
++++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
+@@ -1445,6 +1445,34 @@
+     }
+     layout.AddChild(views().side_panel_content_transition_scrim, scrim_bounds,
+                     is_scrim_visible);
++  }
++
++  // Uranus Browser: the shell's frame page draws the window, like the Electron spike
++  // (see anus_frame_view.h). The background fills the window, the page area
++  // sits in its insets, and the frame view covers the window's left part (or
++  // all of it, for an overlay), above the page.
++  if (views().anus_frame_background &&
++      IsParentedToAndVisible(views().anus_frame, views().browser_view)) {
++    const gfx::Rect window = browser_params.visual_client_area;
++    layout.AddChild(views().anus_frame_background, window);
++
++    gfx::Rect page = window;
++    page.Inset(views().anus_frame_background->GetInsets());
++    if (auto infobar = layout.children.find(
++            static_cast<views::View*>(views().infobar_container.get()));
++        infobar_visible && infobar != layout.children.end()) {
++      const int infobar_height = infobar->second.bounds.height();
++      infobar->second.bounds =
++          gfx::Rect(page.x(), page.y(), page.width(), infobar_height);
++      page.Inset(gfx::Insets::TLBR(infobar_height, 0, 0, 0));
++    }
++    contents_layout.bounds = page;
++
++    const int frame_width = std::min(
++        window.width(), views().anus_frame->GetPreferredSize().width());
++    layout.AddChild(views().anus_frame,
++                    gfx::Rect(window.x(), window.y(), frame_width,
++                              window.height()));
+   }
+ 
+   return layout;

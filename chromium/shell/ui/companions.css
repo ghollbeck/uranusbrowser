@@ -1,0 +1,595 @@
+/* The companions sheet (companionsSheet.ts): the list, a companion's profile in four tabs
+   (About, Knowledge, Skills, Memory) and the skill form; and the composer's "/" skill menu
+   and chip (skillPicker.ts). ScienceOS roles only: neutral surfaces, one hairline, colour
+   for a companion's face and for status. */
+
+/* ---- a companion's face ------------------------------------------------------------------ */
+
+.face {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ds-r-sm);
+  background: hsl(var(--hue, 262) 62% 52% / 14%);
+  color: hsl(var(--hue, 262) 55% 40%);
+  font: 600 12px / 1 var(--font);
+}
+
+.face.large {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ds-r-md);
+  font-size: 16px;
+}
+
+.face.small {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .face {
+    background: hsl(var(--hue, 262) 62% 60% / 20%);
+    color: hsl(var(--hue, 262) 70% 76%);
+  }
+}
+
+:root[data-theme='dark'] .face {
+  background: hsl(var(--hue, 262) 62% 60% / 20%);
+  color: hsl(var(--hue, 262) 70% 76%);
+}
+
+/* ---- the list ------------------------------------------------------------------------------ */
+
+.person-meta {
+  margin-top: 1px;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.person-open svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---- a profile ----------------------------------------------------------------------------- */
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--space-1) 0 var(--space-3);
+}
+
+.profile-who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-name {
+  overflow: hidden;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-role {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.profile-active svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.secondary-button.small,
+.primary-button.small {
+  height: var(--ds-h-xs);
+  padding: 0 10px;
+  font-size: var(--text-sm);
+}
+
+/* The four tabs: one segmented control, as the routines sheet's. */
+.profile-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: var(--space-3);
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+}
+
+.profile-tab {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: var(--ds-r-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.profile-tab[aria-selected='true'] {
+  background: var(--surface);
+  box-shadow: var(--shadow-row);
+  color: var(--text);
+}
+
+.profile-tab-count {
+  min-width: 14px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--fill-active);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 15px;
+  color: var(--text-2);
+}
+
+.profile .memory {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.profile-panel > div > .section-title:first-child,
+.profile-panel > section > .section-title:first-child {
+  margin-top: 0;
+}
+
+.about-text {
+  margin: var(--space-2) 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.profile .edit-actions {
+  margin-top: var(--space-2);
+}
+
+.edit-actions .secondary-button svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: -2px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- knowledge --------------------------------------------------------------------------- */
+
+.field-count {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.field-status {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--green);
+}
+
+.row-end {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+
+.files {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: var(--space-2) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.file-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: var(--radius-lg);
+  text-align: left;
+}
+
+.file-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ds-r-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-row);
+}
+
+.file-icon svg,
+.skill-icon svg,
+.drop-zone svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.file-icon .spinner {
+  width: 12px;
+  height: 12px;
+}
+
+.file-text,
+.skill-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-name,
+.skill-name {
+  overflow: hidden;
+  font-size: var(--text-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-meta {
+  font-size: var(--text-xs);
+  color: var(--text-2);
+}
+
+.file.reading {
+  padding: 7px 10px;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.file-preview {
+  flex-basis: 100%;
+  max-height: 180px;
+  margin: 0 6px 6px;
+  padding: 8px 10px;
+  overflow: auto;
+  border-radius: var(--ds-r-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-row);
+  font: 11px / 1.5 var(--mono);
+  color: var(--text-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.drop-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  text-align: left;
+  transition: background var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
+}
+
+.drop-zone:not(:disabled):hover,
+.drop-zone.over {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-2) 55%, transparent);
+}
+
+.drop-zone:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.drop-title {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.drop-text {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--text-xs);
+  color: var(--text-2);
+}
+
+/* ---- skills ----------------------------------------------------------------------------- */
+
+.skills {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.skill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 8px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.skill-main {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: var(--radius-lg);
+  text-align: left;
+}
+
+.skill-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ds-r-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-row);
+}
+
+.skill-when {
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--text-2);
+}
+
+.skill-source {
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+}
+
+.form-for {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.form-for .skill-source {
+  margin: 0;
+  font-weight: 400;
+}
+
+.label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.field.mono {
+  font: 12px / 1.55 var(--mono);
+}
+
+/* ---- the composer: the picked skill, and the "/" menu -------------------------------------- */
+
+.skill-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 2px;
+  padding: 3px 3px 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.skill-chip[hidden] {
+  display: none;
+}
+
+.skill-chip > svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.skill-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-chip-remove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: var(--text-2);
+}
+
+.skill-chip-remove:hover {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.skill-chip-remove svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.skill-pop {
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  max-height: 300px;
+  margin: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.skill-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--ds-r-sm);
+  cursor: default;
+}
+
+.skill-opt[aria-selected='true'] {
+  background: var(--selection);
+}
+
+.skill-opt > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.skill-opt-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.skill-opt-name {
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.skill-opt-when {
+  overflow: hidden;
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-opt.empty {
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+/* ---- "Save as skill" under a routine run that went well (routinesSheet.ts) ------------------ */
+
+.skill-offer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+}
+
+.skill-offer-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.skill-offer-text strong {
+  font-weight: 600;
+  color: var(--text);
+}

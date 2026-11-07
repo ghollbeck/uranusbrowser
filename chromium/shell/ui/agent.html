@@ -1,0 +1,166 @@
+<!doctype html>
+<html data-surface="agent">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; font-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'none'"
+    />
+    <title>Agent</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="select.css" />
+    <link rel="stylesheet" href="agent.css" />
+    <link rel="stylesheet" href="artifacts.css" />
+    <link rel="stylesheet" href="routines.css" />
+    <link rel="stylesheet" href="joinly.css" />
+    <link rel="stylesheet" href="meetings.css" />
+    <link rel="stylesheet" href="companions.css" />
+    <link rel="stylesheet" href="markdown.css" />
+  </head>
+  <body>
+    <main id="panel" aria-label="Agent">
+      <header class="head">
+        <button id="dock-handle" class="dock-handle" type="button" aria-describedby="dock-hint">
+          <i data-icon="grip"></i>
+        </button>
+        <button id="new-chat" class="icon-button" type="button" aria-label="New conversation" data-tip="New conversation"><i data-icon="squarePen"></i></button>
+        <button id="history" class="icon-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="history-pop" aria-label="Past conversations" data-tip="Past conversations"><i data-icon="history"></i></button>
+        <button id="companion" class="companion-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="sheet" data-tip="Companions: skills, files and memory" hidden>
+          <span id="companion-dot" class="dot" aria-hidden="true"></span>
+          <span id="companion-name" class="companion-name">General</span>
+          <i data-icon="chevron"></i>
+        </button>
+        <span id="provider-badge" class="provider-badge" hidden></span>
+        <span id="status" class="status" role="status" aria-live="polite"></span>
+        <span class="spacer"></span>
+        <button id="meetings" class="icon-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="meetings-sheet" aria-label="Meeting notes" data-tip="Meeting notes"><i data-icon="mic"></i></button>
+        <button id="routines-open" class="icon-button routines-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="routines-sheet" aria-label="Routines" data-tip="Routines" hidden><i data-icon="clock"></i><span id="routines-badge" class="routines-badge" aria-hidden="true" hidden></span></button>
+        <button id="joinly-open" class="icon-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="joinly-sheet" aria-label="Agent in a meeting" data-tip="Agent in a meeting: let the agent join one"><i data-icon="users"></i></button>
+        <button id="close" class="icon-button" type="button" aria-label="Close Agent panel" data-tip="Close (Esc)"><i data-icon="close"></i></button>
+      </header>
+      <p id="dock-hint" class="dock-hint" hidden></p>
+
+      <div id="history-pop" class="popover history-pop" role="dialog" aria-label="Past conversations" hidden>
+        <div class="pop-search">
+          <i data-icon="search"></i>
+          <label for="history-search" class="visually-hidden">Search chats</label>
+          <input id="history-search" type="search" placeholder="Search chats" autocomplete="off" spellcheck="false" />
+          <button id="history-unread" class="icon-button small" type="button" aria-pressed="false" aria-label="Only unread" data-tip="Only unread"><i data-icon="listFilter"></i></button>
+        </div>
+        <ul id="history-list" class="history-list" role="listbox" aria-label="Conversations"></ul>
+        <p id="history-empty" class="pop-empty" hidden>No conversations yet.</p>
+      </div>
+
+      <div id="rec-bar" class="rec-bar" role="region" aria-label="Recording" hidden>
+        <span class="mt-rec-dot pulse" aria-hidden="true"></span>
+        <button id="rec-bar-open" class="rec-bar-open" type="button"><span id="rec-bar-text" role="status">Recording</span><span id="rec-bar-time" class="mt-time" aria-hidden="true">0:00</span></button>
+        <button id="rec-bar-stop" class="danger-button" type="button">Stop</button>
+        <p id="rec-bar-hint" class="rec-bar-hint" hidden></p>
+        <div id="rec-bar-ask" class="rec-bar-ask" role="alertdialog" aria-label="Recording is still running" hidden>
+          <span>A meeting is being recorded.</span>
+          <button id="rec-bar-stop-close" class="secondary-button" type="button">Stop and close</button>
+          <button id="rec-bar-keep" class="secondary-button" type="button">Keep recording</button>
+          <button id="rec-bar-cancel" class="text-button" type="button">Cancel</button>
+        </div>
+      </div>
+
+      <section id="meetings-sheet" class="sheet meetings-sheet" role="dialog" aria-modal="false" aria-labelledby="meetings-title" hidden>
+        <div class="sheet-head">
+          <button id="meetings-back" class="icon-button" type="button" aria-label="Back to meetings" hidden><i data-icon="arrowLeft"></i></button>
+          <h2 id="meetings-title" class="sheet-title">Meeting notes</h2>
+          <span class="spacer"></span>
+          <button id="meetings-close" class="text-button" type="button" aria-label="Close meeting notes">Done</button>
+        </div>
+        <div id="meetings-body" class="sheet-body"></div>
+      </section>
+
+      <section id="sheet" class="sheet" role="dialog" aria-modal="false" aria-labelledby="sheet-title" hidden>
+        <div class="sheet-head">
+          <button id="sheet-back" class="icon-button" type="button" aria-label="Back to companions" hidden><i data-icon="arrowLeft"></i></button>
+          <h2 id="sheet-title" class="sheet-title">Companions</h2>
+          <span class="spacer"></span>
+          <button id="sheet-close" class="text-button" type="button" aria-label="Close companions">Done</button>
+        </div>
+        <div id="sheet-body" class="sheet-body"></div>
+      </section>
+
+      <section id="routines-sheet" class="sheet routines-sheet" role="dialog" aria-modal="false" aria-labelledby="routines-title" hidden>
+        <div class="sheet-head">
+          <button id="routines-back" class="icon-button" type="button" aria-label="Back to routines" hidden><i data-icon="arrowLeft"></i></button>
+          <h2 id="routines-title" class="sheet-title">Routines</h2>
+          <span class="spacer"></span>
+          <button id="routines-close" class="text-button" type="button" aria-label="Close routines">Done</button>
+        </div>
+        <div id="routines-body" class="sheet-body"></div>
+      </section>
+
+      <section id="joinly-sheet" class="sheet joinly-sheet" role="dialog" aria-modal="false" aria-labelledby="joinly-title" hidden>
+        <div class="sheet-head">
+          <h2 id="joinly-title" class="sheet-title">Agent in a meeting</h2>
+          <span class="spacer"></span>
+          <button id="joinly-close" class="text-button" type="button" aria-label="Close agent in a meeting">Done</button>
+        </div>
+        <div id="joinly-body" class="sheet-body"></div>
+      </section>
+
+      <div id="meeting-banner" class="meeting-banner" role="status" hidden></div>
+      <div id="provider" class="banner provider-banner" role="note" hidden>
+        <span id="provider-text"></span>
+        <button id="provider-setup" class="pill" type="button">Open AI settings</button>
+      </div>
+      <div id="routines-card" class="routines-card" role="group" aria-label="Overdue routine" hidden></div>
+      <div id="meeting-strip" class="meeting-strip" role="group" aria-label="Meeting notes" hidden></div>
+
+      <ol id="transcript" class="transcript" role="log" aria-live="polite" aria-label="Conversation" tabindex="0"></ol>
+      <div id="empty" class="empty">
+        <span class="empty-mark" aria-hidden="true"><i data-icon="agent"></i></span>
+        <p id="empty-title" class="empty-title">Ask about this page, or have the agent work on it.</p>
+        <p class="empty-hint">It reads the page, scrolls, clicks, types and switches tabs, and asks you first before anything that sends, buys, signs in or changes an account.</p>
+      </div>
+      <form id="composer" class="composer">
+        <button id="to-latest" class="to-latest" type="button" aria-label="Scroll to the latest message" hidden><i data-icon="arrowDown"></i></button>
+        <div id="working" class="working" hidden>
+          <span class="working-dot" aria-hidden="true"></span>
+          <span id="working-text">Working on it…</span>
+          <span class="spacer"></span>
+          <button id="takeover" class="pill" type="button">Take over</button>
+        </div>
+        <div id="page-chip" class="chip" title="">
+          <span id="page-chip-icon" class="site-tile" aria-hidden="true"></span>
+          <span class="chip-text">
+            <span id="page-chip-title" class="chip-title">No tab</span>
+            <span id="page-chip-host" class="chip-host"></span>
+          </span>
+        </div>
+        <div id="skill-chip" class="skill-chip" hidden></div>
+        <ul id="skill-pop" class="popover skill-pop" role="listbox" aria-label="Skills" hidden></ul>
+        <label for="input" class="visually-hidden">Message the agent</label>
+        <textarea id="input" rows="1" placeholder="Ask or work on anything…" spellcheck="true" autocomplete="off"></textarea>
+        <div class="composer-row">
+          <span class="spacer"></span>
+          <button id="chooser" class="chooser" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="chooser-pop">
+            <span id="chooser-dot" class="chooser-dot" aria-hidden="true"></span>
+            <span id="chooser-label">Model</span>
+            <i data-icon="chevronDown"></i>
+          </button>
+          <button id="stop" class="round-button stop" type="button" aria-label="Stop the agent" hidden><i data-icon="stop"></i></button>
+          <button id="send" class="round-button" type="submit" aria-label="Send"><i data-icon="send"></i></button>
+        </div>
+        <div id="chooser-pop" class="popover chooser-pop" role="menu" aria-label="Companion and mode" hidden>
+          <div class="pop-search">
+            <label for="chooser-search" class="visually-hidden">Search companions</label>
+            <input id="chooser-search" type="search" placeholder="Search companions…" autocomplete="off" spellcheck="false" />
+          </div>
+          <ul id="chooser-people" class="chooser-list"></ul>
+          <div class="pop-separator" role="separator"></div>
+          <ul id="chooser-modes" class="chooser-list"></ul>
+          <div class="pop-separator" role="separator"></div>
+          <button id="chooser-manage" class="chooser-row quiet" type="button" role="menuitem">Companions, skills and files…</button>
+        </div>
+        <div id="chooser-fly" class="popover chooser-fly" role="menu" hidden></div>
+      </form>
+    </main>
+    <div id="resize" class="resize-edge" role="separator" aria-orientation="vertical" aria-label="Panel width" tabindex="0"></div>
+    <script type="module" src="agent.js"></script>
+  </body>
+</html>

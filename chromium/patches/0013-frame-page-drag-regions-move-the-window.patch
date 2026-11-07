@@ -1,0 +1,147 @@
+--- a/chrome/browser/ui/views/frame/anus_frame_view.h
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -13,6 +13,8 @@
+ #include "content/public/browser/web_contents_delegate.h"
+ #include "extensions/browser/extension_registry.h"
+ #include "extensions/browser/extension_registry_observer.h"
++#include "third_party/blink/public/mojom/page/draggable_region.mojom-forward.h"
++#include "third_party/skia/include/core/SkRegion.h"
+ #include "ui/base/metadata/metadata_header_macros.h"
+ #include "ui/views/controls/webview/webview.h"
+ #include "ui/views/view_tracker.h"
+@@ -65,6 +67,12 @@
+   // Whether the frame lays out the window (the shell is loaded).
+   bool IsActive() const { return GetVisible(); }
+ 
++  // The window's hit test at `point` (in the browser view's coordinates):
++  // HTCAPTION where the frame page marks -webkit-app-region: drag and in the
++  // window background around the page area, HTCLIENT elsewhere in the frame
++  // view and in the page area, HTNOWHERE elsewhere or while inactive.
++  int NonClientHitTest(const gfx::Point& point) const;
++
+   // views::WebView:
+   gfx::Size CalculatePreferredSize(
+       const views::SizeBounds& available_size) const override;
+@@ -90,6 +98,9 @@
+       const input::NativeWebKeyboardEvent& event) override;
+   bool HandleKeyboardEvent(content::WebContents* source,
+                            const input::NativeWebKeyboardEvent& event) override;
++  void DraggableRegionsChanged(
++      const std::vector<blink::mojom::DraggableRegionPtr>& regions,
++      content::WebContents* contents) override;
+ 
+   // extensions::ExtensionRegistryObserver:
+   void OnExtensionReady(content::BrowserContext* browser_context,
+@@ -111,6 +122,9 @@
+   views::ViewTracker background_view_;
+   std::unique_ptr<content::WebContents> frame_contents_;
+   AnusFrameState state_;
++  // The frame page's -webkit-app-region: drag areas, in this view's
++  // coordinates.
++  SkRegion draggable_region_;
+ 
+   base::ScopedObservation<extensions::ExtensionRegistry,
+                           extensions::ExtensionRegistryObserver>
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -21,7 +21,10 @@
+ #include "extensions/browser/view_type_utils.h"
+ #include "extensions/common/extension.h"
+ #include "extensions/common/mojom/view_type.mojom.h"
++#include "third_party/blink/public/mojom/page/draggable_region.mojom.h"
++#include "ui/base/hit_test.h"
+ #include "ui/base/metadata/metadata_impl_macros.h"
++#include "ui/gfx/draggable_region.h"
+ #include "ui/views/background.h"
+ #include "ui/views/border.h"
+ #include "ui/views/controls/webview/web_contents_set_background_color.h"
+@@ -182,6 +185,39 @@
+     content::WebContents* source,
+     const input::NativeWebKeyboardEvent& event) {
+   return browser_view_->HandleKeyboardEvent(event);
++}
++
++void AnusFrameView::DraggableRegionsChanged(
++    const std::vector<blink::mojom::DraggableRegionPtr>& regions,
++    content::WebContents* contents) {
++  // The frame page fills this view, so its coordinates are this view's.
++  draggable_region_ = gfx::DraggableRegionsToSkRegion(regions);
++}
++
++int AnusFrameView::NonClientHitTest(const gfx::Point& point) const {
++  if (!IsActive()) {
++    return HTNOWHERE;
++  }
++  if (bounds().Contains(point)) {
++    const gfx::Point local = point - bounds().OffsetFromOrigin();
++    return draggable_region_.contains(local.x(), local.y()) ? HTCAPTION
++                                                            : HTCLIENT;
++  }
++  // The window background around the page area moves the window, as a title
++  // bar would.
++  if (const views::View* background = background_view_.view()) {
++    gfx::Rect page = background->bounds();
++    page.Inset(background->GetInsets());
++    if (background->bounds().Contains(point) && !page.Contains(point)) {
++      return HTCAPTION;
++    }
++    // The page area is the page's up to its top edge. Left to BrowserView, the
++    // band where the hidden tab strip would be counts as title bar.
++    if (page.Contains(point)) {
++      return HTCLIENT;
++    }
++  }
++  return HTNOWHERE;
+ }
+ 
+ void AnusFrameView::OnExtensionReady(content::BrowserContext* browser_context,
+@@ -218,6 +254,9 @@
+   extensions::ChromeExtensionWebContentsObserver::CreateForWebContents(
+       frame_contents_.get());
+   frame_contents_->SetDelegate(this);
++  // -webkit-app-region marks the parts of the frame page that move the window.
++  frame_contents_->SetSupportsDraggableRegions(true);
++  draggable_region_.setEmpty();
+   SetWebContents(frame_contents_.get());
+   frame_contents_->GetController().LoadURL(url, content::Referrer(),
+                                            ui::PAGE_TRANSITION_AUTO_TOPLEVEL,
+--- a/chrome/browser/ui/views/frame/browser_view.cc
++++ b/chrome/browser/ui/views/frame/browser_view.cc
+@@ -4695,6 +4695,18 @@
+     return views::ClientView::NonClientHitTest(point);
+   }
+ #endif  // BUILDFLAG(IS_MAC)
++
++  // Uranus Browser: the shell's frame page draws the window. Its -webkit-app-region:
++  // drag areas and the window background around the page move the window.
++  if (AnusFrameView* anus_frame = AnusFrameView::From(this)) {
++    gfx::Point point_in_browser_view(point);
++    views::View::ConvertPointToTarget(parent(), this, &point_in_browser_view);
++    if (const int component =
++            anus_frame->NonClientHitTest(point_in_browser_view);
++        component != HTNOWHERE) {
++      return component;
++    }
++  }
+ 
+   // Since the TabStrip only renders in some parts of the top of the window,
+   // the un-obscured area is considered to be part of the non-client caption
+--- a/chrome/browser/ui/views/frame/BUILD.gn
++++ b/chrome/browser/ui/views/frame/BUILD.gn
+@@ -760,6 +760,8 @@
+     "//chrome/browser/anus:anus_frame_host",
+     "//content/public/browser",
+     "//extensions/browser",
++    "//skia",
++    "//third_party/blink/public/common:headers",
+     "//ui/views",
+     "//ui/views/controls/webview",
+   ]
+@@ -770,6 +772,7 @@
+     "//chrome/browser/ui/browser_window",
+     "//extensions/common",
+     "//ui/base",
++    "//ui/gfx",
+   ]
+   if (is_mac) {
+     sources += [ "anus_frame_view_mac.mm" ]

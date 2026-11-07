@@ -1,0 +1,527 @@
+/* Visual artifacts in the Agent panel (ui/artifacts.ts): tables, charts, key-number cards and
+   one-pagers drawn inline in the conversation. Colours come from tokens.css; the chart palette
+   below follows the system light/dark setting like those do. */
+
+.art-row {
+  list-style: none;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .art-row {
+    animation: art-in var(--medium) var(--ease);
+  }
+}
+
+@keyframes art-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.art {
+  --art-bg: var(--surface);
+  --art-on: #fff;
+  --art-halo: rgba(0, 0, 0, 0.28);
+  --art-1: #2f7fc1;
+  --art-2: #e4572e;
+  --art-3: #1f9d5b;
+  --art-4: #6d5bd0;
+  --art-5: #b8730a;
+  --art-6: #17848f;
+  --art-7: #c0407b;
+  --art-8: #7a8a1e;
+  --art-9: #8b5a2b;
+  --art-10: #3f51b5;
+  --art-11: #74767a;
+  --art-12: #b04a4a;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-xl);
+  background: var(--art-bg);
+  box-shadow: 0 0 0 1px var(--surface-line), var(--shadow-row);
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .art {
+    --art-on: #191919;
+    --art-halo: rgba(255, 255, 255, 0);
+    --art-1: #5aa9e6;
+    --art-2: #ff7a52;
+    --art-3: #3ccf88;
+    --art-4: #9a8cf0;
+    --art-5: #f2b134;
+    --art-6: #3fc3cf;
+    --art-7: #ee74a8;
+    --art-8: #b6c84a;
+    --art-9: #c99863;
+    --art-10: #7f8ff0;
+    --art-11: #9aa5b5;
+    --art-12: #e07f7f;
+  }
+}
+
+/* ---- head, caption, toolbar ------------------------------------------------------ */
+
+.art-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.art-kind {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--ds-r-sm);
+  background: color-mix(in srgb, var(--agent) 12%, transparent);
+  color: var(--agent);
+}
+
+.art-kind svg {
+  width: 14px;
+  height: 14px;
+}
+
+.art-title {
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.art-caption {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.art-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.art-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+
+.art-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.art-btn:hover {
+  background: var(--fill-active);
+  color: var(--text);
+}
+
+.art-btn:focus-visible,
+.art-scroll:focus-visible,
+.art-data summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.art-status {
+  margin-left: auto;
+  min-height: 1em;
+  font-size: var(--text-xs);
+  color: var(--text-2);
+}
+
+/* ---- table ------------------------------------------------------------------------ */
+
+.art-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  scrollbar-width: thin;
+}
+
+.art-scroll[data-more] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+
+.art-table {
+  /* As wide as its content wants (a wide table scrolls), and at least the card. */
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.art-table th,
+.art-table td {
+  min-width: 5.5em;
+  max-width: 15em;
+  padding: 7px 10px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: break-word;
+}
+
+.art-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+  overflow-wrap: normal;
+  hyphens: auto;
+}
+
+.art-table tbody th {
+  font-weight: 600;
+}
+
+.art-table tbody tr + tr > * {
+  border-top: 1px solid var(--line);
+}
+
+.art-table tbody tr:nth-child(even) > * {
+  background: color-mix(in srgb, var(--text) 3%, transparent);
+}
+
+.art-table td.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---- cards ------------------------------------------------------------------------ */
+
+.art-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 124px), 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.art-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+}
+
+.art-card dt {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.art-card dd {
+  margin: 0;
+}
+
+.art-value {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.art-note {
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+/* ---- one-pager -------------------------------------------------------------------- */
+
+.art-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.art-section + .art-section {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.art-section h4 {
+  margin: 0 0 4px;
+  font-size: var(--text-md);
+  font-weight: 650;
+}
+
+.art-section p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.art-section p + ul {
+  margin-top: 6px;
+}
+
+.art-section ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.art-section li + li {
+  margin-top: 3px;
+}
+
+.art-section li {
+  overflow-wrap: anywhere;
+}
+
+.art-section li::marker {
+  color: var(--text-3);
+}
+
+/* ---- charts ----------------------------------------------------------------------- */
+
+.art-chart {
+  width: 100%;
+  min-height: 120px;
+}
+
+.art-svg {
+  /* tokens.css sizes every svg 16px; a chart is as wide as its box and as tall as its drawing. */
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  /* ...and sets a 1.5px currentColor stroke on every svg, which would outline the text and bars. */
+  stroke: none;
+  stroke-width: 1;
+  stroke-linecap: butt;
+}
+
+.art-tick {
+  font: 11px var(--font);
+  fill: var(--text-2);
+}
+
+.art-tick.end {
+  text-anchor: end;
+}
+
+.art-tick.middle {
+  text-anchor: middle;
+}
+
+.art-tick.start {
+  text-anchor: start;
+}
+
+.art-x-title {
+  font: 600 14px var(--font);
+  fill: var(--text);
+}
+
+.art-value-label {
+  font: 600 10.5px var(--font);
+  fill: var(--text);
+  text-anchor: middle;
+}
+
+.art-value-label.start {
+  text-anchor: start;
+}
+
+.art-slice-label {
+  font: 600 11px var(--font);
+  fill: var(--art-on);
+  text-anchor: middle;
+  stroke: var(--art-halo);
+  stroke-width: 2.5px;
+  paint-order: stroke;
+}
+
+.art-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.art-axis {
+  stroke: var(--text-3);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.art-bg-rect {
+  fill: var(--art-bg);
+}
+
+.art-bar,
+.art-dot,
+.art-swatch,
+.art-slice {
+  fill: var(--c);
+}
+
+.art-slice {
+  stroke: var(--art-bg);
+  stroke-width: 2px;
+}
+
+.art-line {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.art-dot {
+  stroke: var(--art-bg);
+  stroke-width: 1.5px;
+}
+
+.art-area {
+  fill: var(--c);
+  fill-opacity: 0.12;
+  stroke: none;
+}
+
+/* One colour per series, shared by bars, lines, slices and swatches. */
+.art-c1 { --c: var(--art-1); }
+.art-c2 { --c: var(--art-2); }
+.art-c3 { --c: var(--art-3); }
+.art-c4 { --c: var(--art-4); }
+.art-c5 { --c: var(--art-5); }
+.art-c6 { --c: var(--art-6); }
+.art-c7 { --c: var(--art-7); }
+.art-c8 { --c: var(--art-8); }
+.art-c9 { --c: var(--art-9); }
+.art-c10 { --c: var(--art-10); }
+.art-c11 { --c: var(--art-11); }
+.art-c12 { --c: var(--art-12); }
+
+/* A plain colour square in the saved picture's legend. */
+rect[class^='art-c'] {
+  fill: var(--c);
+}
+
+.art-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.art-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.art-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 3px; /* a favicon-sized square, not a control */
+  background: var(--c);
+}
+
+.art-legend-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.art-legend.pie {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 5px;
+}
+
+.art-legend.pie li {
+  width: 100%;
+}
+
+.art-legend.pie .art-legend-label {
+  flex: 1;
+}
+
+.art-legend-value {
+  flex: none;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.art-data summary {
+  width: fit-content;
+  padding: 2px 4px;
+  margin-left: -4px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: default;
+}
+
+.art-data summary:hover {
+  color: var(--text);
+}
+
+.art-data[open] summary {
+  margin-bottom: var(--space-2);
+}
+
+/* Where a picture to save is drawn: in the page, but out of sight. */
+.art-stage {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 640px;
+  visibility: hidden;
+  pointer-events: none;
+}

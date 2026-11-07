@@ -1,0 +1,249 @@
+--- a/chrome/browser/chrome_content_browser_client.cc
++++ b/chrome/browser/chrome_content_browser_client.cc
+@@ -103,6 +103,7 @@
+ #include "chrome/browser/enterprise/util/managed_browser_utils.h"
+ #include "chrome/browser/external_protocol/external_protocol_handler.h"
+ #include "chrome/browser/favicon/favicon_utils.h"
++#include "chrome/browser/anus/anus_shell.h"
+ #include "chrome/browser/font_family_cache.h"
+ #include "chrome/browser/glic/host/glic_url_loader_throttle.h"
+ #include "chrome/browser/glic/host/guest_util.h"
+@@ -4117,7 +4118,14 @@
+       !security_principal.IsWebUI()) {
+     preferred_color_scheme = blink::mojom::PreferredColorScheme::kLight;
+   } else {
+-    if (profile.IsIncognitoProfile() && !security_principal.IsWebUI()) {
++    if (profile.IsIncognitoProfile() &&
++        security_principal.SchemeIs(extensions::kExtensionScheme) &&
++        IsAnusShell(security_principal.GetHost())) {
++      // Uranus Browser: the incognito shell's pages (the window frame, the new tab
++      // page) are always dark, like Chromium's own incognito UI, so that an
++      // incognito window never looks like a normal one.
++      preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;
++    } else if (profile.IsIncognitoProfile() && !security_principal.IsWebUI()) {
+       // Incognito contents follow the device color mode by default.
+       preferred_color_scheme = ToBlinkPreferredColorScheme(
+           ui::NativeTheme::GetInstanceForWeb()->preferred_color_scheme());
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -23,6 +23,7 @@
+ #include "ui/display/screen.h"
+ #include "chrome/browser/anus/anus_accelerator.h"
+ #include "chrome/browser/anus/anus_frame_host.h"
++#include "chrome/browser/anus/anus_shell_events.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/themes/theme_service.h"
+ #include "chrome/browser/themes/theme_service_factory.h"
+@@ -54,9 +55,11 @@
+   return SkColorSetRGB((rgb >> 16) & 0xff, (rgb >> 8) & 0xff, rgb & 0xff);
+ }
+ 
++// Whether `host`'s window is one the calling shell answers for. The shell runs
++// in split incognito mode, so the regular shell and the incognito one each
++// have their own windows (and never reach the other's).
+ bool SameProfile(AnusFrameHost* host, content::BrowserContext* context) {
+-  return ExtensionsBrowserClient::Get()->IsSameContext(
+-      host->GetBrowserContext(), context);
++  return host->GetBrowserContext() == context;
+ }
+ 
+ AnusFrameHost* HostForWindow(int window_id,
+@@ -336,8 +339,8 @@
+   auto params = anus_private::OpenAnusMini::Params::Create(args());
+   EXTENSION_FUNCTION_VALIDATE(params);
+ 
+-  Profile* profile =
+-      Profile::FromBrowserContext(browser_context())->GetOriginalProfile();
++  // The caller's profile: the incognito shell's AnusMinis are incognito.
++  Profile* profile = Profile::FromBrowserContext(browser_context());
+   GURL url(chrome::kChromeUINewTabURL);
+   std::optional<int> tab_id;
+   if (params->options) {
+@@ -415,8 +418,7 @@
+     AnusFrameHost* host = HostForWindow(*window_id, context);
+     return host && !host->IsAnusMini() ? host : nullptr;
+   }
+-  return AnusFrameHost::Main(
+-      Profile::FromBrowserContext(context)->GetOriginalProfile());
++  return AnusFrameHost::Main(context);
+ }
+ 
+ }  // namespace
+@@ -488,9 +490,7 @@
+   EXTENSION_FUNCTION_VALIDATE(params);
+   AnusFrameHost* host =
+       params->window_id ? HostForWindow(*params->window_id, browser_context())
+-                        : AnusFrameHost::Main(Profile::FromBrowserContext(
+-                                                    browser_context())
+-                                                    ->GetOriginalProfile());
++                        : AnusFrameHost::Main(browser_context());
+   if (!host) {
+     return RespondNow(Error(kNoWindowError, "(find)"));
+   }
+@@ -542,4 +542,17 @@
+   return RespondNow(WithArguments(std::move(ids)));
+ }
+ 
++ExtensionFunction::ResponseAction
++AnusPrivateRunInRegularProfileFunction::Run() {
++  auto params = anus_private::RunInRegularProfile::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  base::ListValue event_args;
++  event_args.Append(params->command);
++  event_args.Append(-1);
++  DispatchAnusShellEvent(
++      Profile::FromBrowserContext(browser_context())->GetOriginalProfile(),
++      "anusPrivate.onShortcut", std::move(event_args));
++  return RespondNow(NoArguments());
++}
++
+ }  // namespace extensions
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -185,6 +185,15 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateRunInRegularProfileFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.runInRegularProfile", UNKNOWN)
++
++ protected:
++  ~AnusPrivateRunInRegularProfileFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ }  // namespace extensions
+ 
+ #endif  // CHROME_BROWSER_EXTENSIONS_API_ANUS_PRIVATE_ANUS_PRIVATE_API_H_
+--- a/chrome/browser/anus/anus_shell_commands.h
++++ b/chrome/browser/anus/anus_shell_commands.h
+@@ -11,6 +11,7 @@
+ 
+ #include "base/memory/scoped_refptr.h"
+ #include "chrome/browser/anus/anus_shell.h"
++#include "chrome/browser/anus/anus_shell_events.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "extensions/browser/event_router.h"
+ #include "extensions/browser/extension_event_histogram_value.h"
+@@ -25,7 +26,8 @@
+ 
+ inline void DispatchAnusShellCommand(Profile* profile,
+                                        std::string_view command) {
+-  profile = profile->GetOriginalProfile();
++  // To the shell of this window (an incognito window has its own).
++  profile = AnusShellProfile(profile);
+   if (!extensions::ExtensionRegistry::Get(profile)
+            ->enabled_extensions()
+            .Contains(kAnusShellExtensionId)) {
+--- a/chrome/browser/anus/anus_shell_events.h
++++ b/chrome/browser/anus/anus_shell_events.h
+@@ -18,13 +18,22 @@
+ #include "extensions/browser/extension_registry.h"
+ #include "extensions/common/event_args.h"
+ 
++// The profile whose shell answers for a window of `profile`. The shell runs in
++// split incognito mode: an incognito window has a shell of its own (with its
++// own tabs and state), every other window the regular profile's.
++inline Profile* AnusShellProfile(Profile* profile) {
++  return profile->IsIncognitoProfile() ? profile
++                                       : profile->GetOriginalProfile();
++}
++
+ // Sends one of chrome.anusPrivate's events ("anusPrivate.onSomething") to
+-// Uranus Browser's shell, and only to it. Header-only, like anus_shell_commands.h,
+-// so that any browser code can send one without a new dependency.
++// Uranus Browser's shell, and only to it: the shell of `profile`'s windows (see
++// AnusShellProfile). Header-only, like anus_shell_commands.h, so that any
++// browser code can send one without a new dependency.
+ inline void DispatchAnusShellEvent(Profile* profile,
+                                      const std::string& event_name,
+                                      base::ListValue args) {
+-  profile = profile->GetOriginalProfile();
++  profile = AnusShellProfile(profile);
+   if (!extensions::ExtensionRegistry::Get(profile)
+            ->enabled_extensions()
+            .Contains(kAnusShellExtensionId)) {
+--- a/chrome/browser/ui/chrome_pages.cc
++++ b/chrome/browser/ui/chrome_pages.cc
+@@ -477,8 +477,9 @@
+     base::ListValue args;
+     args.Append("settings");
+     args.Append(browser->GetSessionID().id());
+-    DispatchAnusShellEvent(browser->GetProfile(), "anusPrivate.onShortcut",
+-                             std::move(args));
++    // From an incognito window too: Settings are the regular profile's.
++    DispatchAnusShellEvent(browser->GetProfile()->GetOriginalProfile(),
++                             "anusPrivate.onShortcut", std::move(args));
+     return;
+   }
+   ShowSettingsSubPage(browser, std::string());
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -199,8 +199,8 @@
+ 
+ // static
+ AnusFrameView* AnusFrameView::MaybeCreate(BrowserView* browser_view) {
+-  if (!AnusHidesTopChrome(browser_view->browser()) ||
+-      browser_view->browser()->GetProfile()->IsOffTheRecord()) {
++  // Incognito windows too: their frame page is the incognito shell's.
++  if (!AnusHidesTopChrome(browser_view->browser())) {
+     return nullptr;
+   }
+   AnusFrameView* frame = browser_view->AddChildView(
+@@ -399,9 +399,8 @@
+   if (it == shortcuts.end()) {
+     return false;
+   }
+-  Profile* profile =
+-      Profile::FromBrowserContext(frame_->GetBrowserContext())
+-          ->GetOriginalProfile();
++  Profile* profile = AnusShellProfile(
++      Profile::FromBrowserContext(frame_->GetBrowserContext()));
+   if (!extensions::ExtensionRegistry::Get(profile)
+            ->enabled_extensions()
+            .Contains(kAnusShellExtensionId)) {
+--- a/chrome/browser/ui/views/frame/anus_top_chrome.h
++++ b/chrome/browser/ui/views/frame/anus_top_chrome.h
+@@ -20,12 +20,15 @@
+ // Pass --anus-show-top-chrome to get Chromium's tab strip and toolbar back,
+ // which is handy when debugging.
+ //
+-// Incognito and guest windows keep Chromium's tab strip and toolbar: the shell
+-// doesn't run in off-the-record profiles, so nothing else would show the URL.
++// Incognito windows are Uranus Browser windows too: the shell runs in split incognito
++// mode, so a second shell runs in the incognito profile and draws their frame.
++// Guest windows and other off-the-record profiles keep Chromium's tab strip
++// and toolbar: no shell runs there, so nothing else would show the URL.
+ inline bool AnusHidesTopChrome(const BrowserWindowInterface* browser) {
+   return browser &&
+          browser->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL &&
+-         !browser->GetProfile()->IsOffTheRecord() &&
++         (!browser->GetProfile()->IsOffTheRecord() ||
++          browser->GetProfile()->IsIncognitoProfile()) &&
+          !browser->GetProfile()->IsGuestSession() &&
+          !base::CommandLine::ForCurrentProcess()->HasSwitch(
+              "anus-show-top-chrome");
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -178,10 +178,19 @@
+ 
+     // The open AnusMinis' window ids.
+     static void getAnusMinis(WindowIdsCallback callback);
++
++    // For the incognito shell: runs one of Uranus Browser's commands in the regular
++    // profile's shell, which gets it as onShortcut(command, -1). Settings keep
++    // one state, the regular profile's, so the incognito windows open them
++    // there.
++    static void runInRegularProfile(
++        DOMString command,
++        optional DoneCallback callback);
+   };
+ 
+   interface Events {
+-    // A shortcut from setShortcuts() was pressed in the given window.
++    // A shortcut from setShortcuts() was pressed in the given window (-1:
++    // from runInRegularProfile(), no window in particular).
+     static void onShortcut(DOMString command, long windowId);
+ 
+     // The user finished dragging the gap between the panes of a split:

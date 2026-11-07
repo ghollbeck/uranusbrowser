@@ -1,0 +1,20 @@
+.build/
+.build-device/
+.run/
+__pycache__/
+DerivedData/
+*.xcodeproj
+*.xcworkspace
+.DS_Store
+app/Vendor/
+.build-device/
+.build-archive/
+# Private datasets and local validation outputs stay on this Mac.
+.scratch/
+history*.json
+*-history.json
+*.gguf
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.run/

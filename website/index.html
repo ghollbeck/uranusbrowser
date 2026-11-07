@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Uranus Browser — the sidebar browser with an agent inside</title>
+  <meta name="description" content="Real Chromium with Arc-style Spaces, Peek and Split View, developer tools built in, and an AI agent that reads, clicks and types in your tabs. It prompts for approval before sensitive actions.">
+  <meta property="og:title" content="Uranus Browser">
+  <meta property="og:description" content="The sidebar browser with an agent inside. Free for macOS.">
+  <meta property="og:image" content="assets/main-light.svg">
+  <link rel="icon" href="assets/logo-arrow.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/logo-arrow-64.png" sizes="64x64">
+  <link rel="apple-touch-icon" href="assets/logo-arrow-180.png">
+  <link rel="stylesheet" href="styles.css?v=mobile-motion-2">
+  <link rel="stylesheet" href="mobile-flight.css?v=mobile-motion-2">
+  <link rel="stylesheet" href="mobile-sidebar.css?v=uranus-iris-1">
+</head>
+<body>
+
+<!-- Shared SVG symbols -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-apple" viewBox="0 0 16 16"><path fill="currentColor" d="M11.2 8.5c0-1.6 1.3-2.4 1.4-2.4-.8-1.1-1.9-1.3-2.3-1.3-1-.1-1.9.6-2.4.6s-1.3-.6-2.1-.6c-1.1 0-2.1.6-2.7 1.6-1.1 2-.3 4.9.8 6.5.5.8 1.2 1.6 2 1.6s1.1-.5 2.1-.5 1.2.5 2.1.5 1.4-.8 1.9-1.6c.6-.9.8-1.7.8-1.8 0 0-1.6-.6-1.6-2.6zM9.6 3.7c.4-.5.7-1.2.6-1.9-.6 0-1.4.4-1.8.9-.4.4-.7 1.1-.6 1.8.7.1 1.4-.3 1.8-.8z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 8h10M9 4l4 4-4 4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M3.5 8.5l3 3 6-7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.2M8 13.3v1.2M1.5 8h1.2M13.3 8h1.2M3.4 3.4l.9.9M11.7 11.7l.9.9M3.4 12.6l.9-.9M11.7 4.3l.9-.9"/></g></symbol>
+  <symbol id="i-moon" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" d="M13.5 9.6A5.8 5.8 0 0 1 6.4 2.5a5.8 5.8 0 1 0 7.1 7.1z"/></symbol>
+  <symbol id="i-cursor" viewBox="0 0 20 20"><path d="M3 2.2l13.4 6.3-5.8 1.6-2.4 5.7z" fill="currentColor" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" d="M8 1.8l5 1.9v4c0 3.2-2.2 5.4-5 6.5-2.8-1.1-5-3.3-5-6.5v-4z"/><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M5.8 8l1.6 1.6 2.9-3.1"/></symbol>
+  <symbol id="i-sidebar" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M6 3v10"/></g></symbol>
+  <symbol id="i-moonsun" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5a5.5 5.5 0 0 1 0 11z" fill="currentColor"/></g></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></g></symbol>
+  <symbol id="i-peek" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="2"/><rect x="5.5" y="5.5" width="7" height="5.5" rx="1" fill="currentColor" stroke="none" opacity=".35"/></g></symbol>
+  <symbol id="i-split" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M8 3v10"/></g></symbol>
+  <symbol id="i-github" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1.3a6.7 6.7 0 0 0-2.1 13c.3.1.5-.1.5-.3v-1.2c-1.9.4-2.3-.8-2.3-.8-.3-.8-.7-1-.7-1-.6-.4 0-.4 0-.4.7 0 1 .7 1 .7.6 1 1.6.7 2 .5.1-.4.2-.7.4-.9-1.5-.2-3-.7-3-3.3 0-.7.2-1.3.7-1.8-.1-.2-.3-.9.1-1.8 0 0 .6-.2 1.8.7a6.2 6.2 0 0 1 3.3 0c1.3-.9 1.8-.7 1.8-.7.4.9.2 1.6.1 1.8.4.5.7 1.1.7 1.8 0 2.6-1.6 3.1-3 3.3.2.2.4.6.4 1.2v1.8c0 .2.2.4.5.3A6.7 6.7 0 0 0 8 1.3z"/></symbol>
+  <!-- app icon "Arrow" (logos/arrow/arrow.svg): the ScienceOS-style flat tile with a black mark -->
+  <symbol id="logo-tile" viewBox="46 46 932 932">
+    <defs><clipPath id="lg-clip"><rect x="46" y="50" width="932" height="924" rx="185"/></clipPath></defs>
+    <rect x="46" y="50" width="932" height="924" rx="185" fill="#fff"/>
+    <g clip-path="url(#lg-clip)">
+      <path class="logo-tail" d="M300 1120C300 760 360 620 660 360" fill="none" stroke="#000" stroke-width="212"/>
+      <path class="logo-head" d="M884 140L470 236L790 552Z" fill="#000" stroke="#000" stroke-width="40" stroke-linejoin="round"/>
+    </g>
+    <rect x="46.5" y="50.5" width="931" height="923" rx="184.5" fill="none" stroke="#000" stroke-opacity=".08"/>
+  </symbol>
+</svg>
+
+<header class="nav-wrap" id="top">
+  <div class="nav-bar">
+    <a class="brand" href="#top" aria-label="Uranus Browser home">
+      <span class="brand-logo"><svg><use href="#logo-tile"/></svg></span>
+      <span class="brand-name">Uranus Browser</span>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a href="#agent">Agent</a>
+      <a href="#features">Features</a>
+      <a href="#algorithm-diet">Diet</a>
+      <a href="#mobile">iPhone</a>
+      <a href="#developers">Developers</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-btn theme-toggle" type="button" aria-label="Switch light or dark mode">
+        <svg class="ic-sun" width="16" height="16"><use href="#i-sun"/></svg>
+        <svg class="ic-moon" width="16" height="16"><use href="#i-moon"/></svg>
+      </button>
+      <a class="btn btn-ink" href="#download">Build from source</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="guides" aria-hidden="true"></div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="frame">
+      <div class="hero-grid">
+        <h1 class="hero-title" data-letters>
+          <span class="line">The sidebar browser</span>
+          <span class="line muted">with an <span class="agent-word">agent<svg class="swoosh" viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 14C50 6 120 4 196 10"/></svg></span> inside.</span>
+        </h1>
+        <div class="hero-side">
+          <aside class="hero-postit" aria-label="A note from the browser">
+            <span class="postit-sticker arc-logo-sticker" aria-hidden="true"><span class="arc-icon-crossout"><img src="assets/browser-icon.svg" alt=""></span></span>
+            <span class="postit-label">A note from your new browser</span>
+            <p class="postit-build">Built from the bottom up.<br><span>Plug-and-play. Harness-ready.</span></p>
+            <p class="postit-arc-note">RIP <del class="arc-origin">Arc</del>.<br><span>We won’t pull the plug on you like Arc did.</span></p>
+          </aside>
+        </div>
+      </div>
+
+      <div class="plate hero-plate" id="heroProduct">
+        <div class="hero-controls">
+          <div class="seg" role="tablist" aria-label="Product demos" id="heroTabs">
+            <span class="seg-thumb" aria-hidden="true"></span>
+            <button id="heroTabMeet" role="tab" aria-selected="true" aria-controls="heroSlides" tabindex="0" data-view="0"><img src="assets/video-icon.svg" alt="" width="16" height="16">Meet joins</button>
+            <button id="heroTabAgent" role="tab" aria-selected="false" aria-controls="heroSlides" tabindex="-1" data-view="1"><svg width="16" height="16"><use href="#i-cursor"/></svg>Flight agent</button>
+            <button id="heroTabSidebar" role="tab" aria-selected="false" aria-controls="heroSlides" tabindex="-1" data-view="2"><svg width="16" height="16"><use href="#i-sidebar"/></svg>Sidebar</button>
+            <button id="heroTabDark" role="tab" aria-selected="false" aria-controls="heroSlides" tabindex="-1" data-view="3"><svg width="16" height="16"><use href="#i-moonsun"/></svg>Dark mode</button>
+            <button id="heroTabCommand" role="tab" aria-selected="false" aria-controls="heroSlides" tabindex="-1" data-view="4"><svg width="16" height="16"><use href="#i-search"/></svg>Command bar</button>
+            <button id="heroTabPeek" role="tab" aria-selected="false" aria-controls="heroSlides" tabindex="-1" data-view="5"><svg width="16" height="16"><use href="#i-peek"/></svg>Peek</button>
+            <button id="heroTabSplit" role="tab" aria-selected="false" aria-controls="heroSlides" tabindex="-1" data-view="6"><svg width="16" height="16"><use href="#i-split"/></svg>Split View</button>
+          </div>
+          <button class="hero-motion-toggle" id="heroMotionToggle" type="button" aria-pressed="false">Pause motion</button>
+        </div>
+        <div class="shot-wrap" id="heroSlides" role="tabpanel" aria-labelledby="heroTabMeet">
+          <div class="hero-scene hero-meeting is-on" data-shot="0" role="img" aria-label="Uranus Browser with its sidebar open on a Google Meet call. The Uranus Browser assistant is joining as a visible participant.">
+            <div class="hero-browser-window">
+              <div class="hero-chrome"><span class="hero-traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="hero-chrome-toggle" aria-hidden="true">◧</span><span class="hero-nav-arrows" aria-hidden="true">‹ &nbsp; › &nbsp; ↻</span><span class="hero-address"><b>⌑</b> meet.google.com/abc-defg-hjk <span>⋮</span></span></div>
+              <div class="hero-window-body">
+                <aside class="hero-browser-sidebar" aria-hidden="true"><div class="hero-favs"><b>◉</b><b>◧</b><b>▶</b><b>F</b></div><div class="hero-sidebar-group">◇ &nbsp; Work</div><div class="hero-sidebar-tab">GitHub</div><div class="hero-sidebar-tab">Hacker News</div><div class="hero-sidebar-tab active"><img src="assets/video-icon.svg" alt="" width="14" height="14"> Team sync</div><div class="hero-sidebar-section">Today</div><div class="hero-sidebar-tab">+ New Tab</div><div class="hero-sidebar-spaces">◈ &nbsp; ⌂ &nbsp; +</div></aside>
+                <div class="hero-page hero-meet-page">
+                  <div class="hero-meet-top"><div class="hero-meet-brand"><img src="assets/video-icon.svg" alt="" width="28" height="28"><span>Google Meet</span></div><div class="hero-meet-title">Product sync <span>·</span> 10:30 AM</div><div class="hero-meet-count">◉ &nbsp; 4</div></div>
+                  <div class="hero-meet-stage"><div class="hero-meet-copy"><span>Product sync</span><b>Meet with your team</b></div><div class="hero-meet-grid">
+                    <div class="hero-meet-tile meet-dana"><span class="hero-avatar">D</span><small>Dana</small><i class="hero-mic">⌁</i></div>
+                    <div class="hero-meet-tile meet-sam"><span class="hero-avatar">S</span><small>Sam</small><i class="hero-mic">⌁</i></div>
+                    <div class="hero-meet-tile meet-you"><span class="hero-avatar">Y</span><small>You</small><i class="hero-mic">⌁</i></div>
+                    <div class="hero-meet-tile meet-agent"><span class="hero-agent-mark"><svg width="29" height="29"><use href="#logo-tile"/></svg></span><small>Uranus Browser assistant</small><i class="hero-join-dot"></i><span class="hero-join-label">Joining</span></div>
+                  </div><div class="hero-meet-controls"><span>⌁</span><span>▣</span><span>▤</span><span>☷</span><b>☎</b></div><div class="hero-meet-toast"><i></i><span class="hero-join-status">Uranus Browser assistant is joining the call…</span></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-scene hero-flight" data-shot="1" role="img" aria-label="Uranus Browser with its sidebar open. Its browser agent is steering a Google Flights search for a smooth flight to Uranus, with a rear seat near the toilets.">
+            <div class="hero-browser-window">
+              <div class="hero-chrome"><span class="hero-traffic" aria-hidden="true"><i></i><i></i><i></i></span><span class="hero-chrome-toggle" aria-hidden="true">◧</span><span class="hero-nav-arrows" aria-hidden="true">‹ &nbsp; › &nbsp; ↻</span><span class="hero-address"><b>⌑</b> google.com/travel/flights <span>⋮</span></span></div>
+              <div class="hero-window-body">
+                <aside class="hero-browser-sidebar" aria-hidden="true"><div class="hero-favs"><b>◉</b><b>◧</b><b>▶</b><b>F</b></div><div class="hero-sidebar-group">◇ &nbsp; Travel</div><div class="hero-sidebar-tab">Trip ideas</div><div class="hero-sidebar-tab active">Google Flights</div><div class="hero-sidebar-section">Today</div><div class="hero-sidebar-tab">+ New Tab</div><div class="hero-sidebar-spaces">◈ &nbsp; ⌂ &nbsp; +</div></aside>
+                <div class="hero-flight-workspace"><div class="hero-flights-page demo-body"></div><aside class="hero-flight-panel demo-panel" aria-label="Agent panel preview"></aside></div>
+              </div>
+            </div>
+          </div>
+          <img class="shot" data-shot="2" src="assets/main-light.svg" alt="Illustration of the Uranus Browser sidebar in light mode" width="1800" height="1125" loading="lazy">
+          <img class="shot shot-iris" data-shot="3" src="assets/main-dark.svg" alt="Illustration of Uranus Browser in dark mode" width="1800" height="1125" loading="lazy">
+          <img class="shot" data-shot="4" src="assets/command-bar.svg" alt="Illustration of the command bar with synthetic suggestions" width="1800" height="1125" loading="lazy">
+          <img class="shot" data-shot="5" src="assets/peek.svg" alt="Illustration of Peek over an example page" width="1800" height="1125" loading="lazy">
+          <img class="shot" data-shot="6" src="assets/split.svg" alt="Illustration of two example pages in Split View" width="1800" height="1125" loading="lazy">
+        </div>
+        <div class="agent-cursor" aria-hidden="true">
+          <svg width="20" height="20"><use href="#i-cursor"/></svg>
+          <span class="cursor-label">Agent</span>
+          <span class="ripple"></span>
+        </div>
+      </div>
+
+      <div class="works-row">
+        <span class="works-label">Works with</span>
+        <div class="marquee" aria-label="Works with">
+          <div class="marquee-track">
+            <div class="marquee-set"><span>Google sign-in</span><span>Chrome Web Store</span><span>DevTools</span><span>GitHub</span><span>Figma</span><span>Linear</span><span>Notion</span><span>Google Docs</span><span>Slack</span><span>Vercel</span></div>
+            <div class="marquee-set" aria-hidden="true"><span>Google sign-in</span><span>Chrome Web Store</span><span>DevTools</span><span>GitHub</span><span>Figma</span><span>Linear</span><span>Notion</span><span>Google Docs</span><span>Slack</span><span>Vercel</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- IPHONE -->
+  <section class="sec" id="mobile">
+    <div class="frame dev-grid">
+      <div class="dev-copy" data-reveal>
+        <p class="eyebrow">Uranus Browser for iPhone <span class="tag">In development</span></p>
+        <h2>A little less chrome.<br><span class="muted">A lot more web.</span></h2>
+        <p class="lede">The same idea of a calmer browser, built for your thumb. Native on iPhone, with floating controls that give the page room to breathe. <span class="copy-wink">Fits in your hand; have fun all day.</span></p>
+        <ul class="dev-list">
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Tabs, in Spaces.</b> Colour, context and tab cards for the different parts of your day.</div></li>
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Algorithm Diet.</b> Explore your browsing topics with on-device analysis.</div></li>
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Your own corner of the web.</b> Private browsing, site blocking and a look you can make your own.</div></li>
+        </ul>
+        <p class="caption">Desktop agent control and meeting features aren’t available on iPhone yet.</p>
+      </div>
+      <div data-reveal style="--d:120ms">
+        <div class="plate mobile-plate">
+          <div class="mobile-stage" aria-label="iPhone browsing and Algorithm Diet previews">
+            <figure class="mobile-device mobile-device-back mobile-device-diet" aria-label="Illustrative Algorithm Diet iPhone preview with sample data">
+              <div class="diet-phone-screen" id="dietPhoneScreen"><div class="diet-phone-canvas">
+                <div class="diet-phone-status" aria-hidden="true"><span>9:41</span><i></i><span>▮▮▮ ▰</span></div>
+                <div class="diet-phone-nav" aria-hidden="true"><span>×</span><span>◌ &nbsp; ···</span></div>
+                <h3>Algorithm Diet</h3>
+                <div class="diet-phone-period" aria-hidden="true"><span data-diet-phone-range="today">Today</span><span class="is-period" data-diet-phone-range="week">Week</span><span data-diet-phone-range="month">Month</span></div>
+                <div class="diet-phone-card">
+                  <div class="diet-phone-score-row">
+                    <div class="diet-ring diet-phone-ring" aria-label="Sample browsing diet score" role="img">
+                      <svg viewBox="0 0 140 140" aria-hidden="true"><circle class="diet-ring-track" cx="70" cy="70" r="54"/><g transform="rotate(-90 70 70)"><circle class="diet-ring-arc" cx="70" cy="70" r="54" pathLength="100" data-diet-phone-arc="0"/><circle class="diet-ring-arc" cx="70" cy="70" r="54" pathLength="100" data-diet-phone-arc="1"/><circle class="diet-ring-arc" cx="70" cy="70" r="54" pathLength="100" data-diet-phone-arc="2"/><circle class="diet-ring-arc" cx="70" cy="70" r="54" pathLength="100" data-diet-phone-arc="3"/></g></svg>
+                      <div class="diet-ring-center"><strong data-diet-phone-score>71</strong><span>health</span></div>
+                    </div>
+                    <div><strong class="diet-phone-verdict" data-diet-phone-verdict>Superfood</strong><span data-diet-phone-total>8h 30m</span><small>Mostly learning</small></div>
+                  </div>
+                  <div class="diet-grade-strip diet-phone-grades" role="img" aria-label="Sample grade A"><span data-diet-phone-grade="A" class="is-grade">A</span><span data-diet-phone-grade="B">B</span><span data-diet-phone-grade="C">C</span><span data-diet-phone-grade="D">D</span><span data-diet-phone-grade="E">E</span></div>
+                </div>
+                <div class="diet-phone-card diet-phone-consumption"><strong>Your consumption</strong><span>Time browsing <b data-diet-phone-total>8h 30m</b></span></div>
+                <div class="diet-phone-card diet-phone-facts"><h4>Nutrition Facts</h4><p>Time-weighted points · sample data</p>
+                  <div data-diet-phone-fact="0"><strong>Protein<small>learning</small></strong><b>7.0</b><i><span></span></i></div>
+                  <div data-diet-phone-fact="1"><strong>Fiber<small>depth & focus</small></strong><b>6.0</b><i><span></span></i></div>
+                  <div data-diet-phone-fact="2"><strong>Vitamins<small>culture & people</small></strong><b>4.0</b><i><span></span></i></div>
+                  <div data-diet-phone-fact="3"><strong>Sugar<small>quick hits</small></strong><b>2.0</b><i><span></span></i></div>
+                  <div data-diet-phone-fact="4"><strong>Salt<small>outrage & anxiety</small></strong><b>1.0</b><i><span></span></i></div>
+                  <div data-diet-phone-fact="5"><strong>Fat<small>endless feeds</small></strong><b>1.5</b><i><span></span></i></div>
+                </div>
+                <div class="diet-phone-home" aria-hidden="true"></div>
+              </div></div>
+            </figure>
+            <figure class="mobile-device mobile-device-front"><img src="assets/iphone-browsing.svg" alt="Illustration of iPhone browsing with floating tab controls" width="1206" height="2622" loading="lazy"></figure>
+          </div>
+        </div>
+        <p class="caption">Browsing and Algorithm Diet illustrations with sample data.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ALGORITHM DIET: app-inspired nutrition labels, in the site's original visual language -->
+  <section class="sec" id="algorithm-diet" aria-labelledby="diet-title">
+    <div class="frame">
+      <div class="sec-head center" data-reveal>
+        <p class="eyebrow">Algorithm Diet · macOS + iPhone</p>
+        <h2 id="diet-title">You are what you browse.<br><span class="muted">Give your curiosity a little more room.</span></h2>
+        <p class="lede">Look beyond screen time. See what you read, watch and learn, with a nutrition label for your corner of the internet. <span class="copy-wink">Keep the people. Lose the rabbit holes. Your feed called; it thinks you need more fiber.</span></p>
+      </div>
+      <div class="plate diet-stage" id="dietDemo" data-reveal>
+        <div class="diet-demo-toolbar">
+          <span class="diet-demo-name"><svg width="17" height="17"><use href="#i-moonsun"/></svg>Algorithm Diet</span>
+          <div class="diet-range-controls" role="group" aria-label="Sample browsing period">
+            <button type="button" data-diet-range="today" aria-pressed="false">Today</button>
+            <button type="button" data-diet-range="week" aria-pressed="true">7 days</button>
+            <button type="button" data-diet-range="month" aria-pressed="false">30 days</button>
+          </div>
+          <button class="icon-btn diet-replay" id="dietReplay" type="button" aria-label="Replay Algorithm Diet animation" title="Replay animation"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 6a7 7 0 1 1-1 7M4 2v5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="diet-dashboard">
+          <div class="diet-overview">
+            <div class="diet-score-row">
+              <div class="diet-ring" role="img" aria-label="Sample browsing score 71 out of 100" id="dietRing">
+                <svg viewBox="0 0 140 140" aria-hidden="true"><circle class="diet-ring-track" cx="70" cy="70" r="54"/><g transform="rotate(-90 70 70)">
+                  <circle class="diet-ring-arc" cx="70" cy="70" r="54" pathLength="100" data-diet-arc="0"/>
+                  <circle class="diet-ring-arc" cx="70" cy="70" r="54" pathLength="100" data-diet-arc="1"/>
+                  <circle class="diet-ring-arc" cx="70" cy="70" r="54" pathLength="100" data-diet-arc="2"/>
+                  <circle class="diet-ring-arc" cx="70" cy="70" r="54" pathLength="100" data-diet-arc="3"/>
+                </g></svg>
+                <div class="diet-ring-center"><strong id="dietScore">71</strong><span>diet score</span></div>
+              </div>
+              <div class="diet-verdict"><span class="small">YOUR BROWSING, AT A GLANCE</span><h3 id="dietVerdict">Superfood</h3><p id="dietTotal">8h 30m · example week</p><span class="diet-mostly">A little more learning.</span></div>
+            </div>
+            <div class="diet-grade-strip" id="dietGrade" role="img" aria-label="Sample browsing grade A"><span data-diet-grade="A" class="is-grade">A</span><span data-diet-grade="B">B</span><span data-diet-grade="C">C</span><span data-diet-grade="D">D</span><span data-diet-grade="E">E</span></div>
+            <div class="diet-category-heading"><h4>Time by category</h4><span class="small" id="dietRangeLabel">Example week</span></div>
+            <div class="diet-category-list">
+              <div class="diet-category" style="--category:#2fa36b"><i></i><span>Learning</span><b data-diet-time="0">2h 50m</b><div><span data-diet-bar="0"></span></div></div>
+              <div class="diet-category" style="--category:#5b5bf0"><i></i><span>Building & code</span><b data-diet-time="1">2h 30m</b><div><span data-diet-bar="1"></span></div></div>
+              <div class="diet-category" style="--category:#84cc16"><i></i><span>Long reads & culture</span><b data-diet-time="2">1h 50m</b><div><span data-diet-bar="2"></span></div></div>
+              <div class="diet-category" style="--category:#e11d48"><i></i><span>Social feeds</span><b data-diet-time="3">1h 20m</b><div><span data-diet-bar="3"></span></div></div>
+            </div>
+          </div>
+          <div class="diet-nutrition">
+            <h3>Nutrition Facts</h3><p class="small">For your mind. Points out of 10.</p>
+            <div class="diet-facts-rule"></div>
+            <div class="diet-fact" data-diet-fact="0"><div><strong>Protein</strong><span>Learning</span></div><b>7.0</b><span class="diet-fact-bar"><i></i></span></div>
+            <div class="diet-fact" data-diet-fact="1"><div><strong>Fiber</strong><span>Depth & focus</span></div><b>6.0</b><span class="diet-fact-bar"><i></i></span></div>
+            <div class="diet-fact" data-diet-fact="2"><div><strong>Vitamins</strong><span>Culture & people</span></div><b>4.0</b><span class="diet-fact-bar"><i></i></span></div>
+            <div class="diet-facts-rule diet-facts-mid"></div>
+            <div class="diet-fact diet-fact-quick" data-diet-fact="3"><div><strong>Sugar</strong><span>Quick hits</span></div><b>2.0</b><span class="diet-fact-bar"><i></i></span></div>
+            <div class="diet-fact diet-fact-quick" data-diet-fact="4"><div><strong>Salt</strong><span>Outrage & anxiety</span></div><b>1.0</b><span class="diet-fact-bar"><i></i></span></div>
+            <div class="diet-fact diet-fact-quick" data-diet-fact="5"><div><strong>Fat</strong><span>Endless feeds</span></div><b>1.5</b><span class="diet-fact-bar"><i></i></span></div>
+            <div class="diet-facts-rule"></div><p class="diet-facts-note">A food-label metaphor for your browsing habits.</p>
+          </div>
+        </div>
+        <div class="diet-ask">
+          <div class="diet-ask-top"><span class="diet-ask-label"><svg width="16" height="16"><use href="#i-search"/></svg>Ask your history</span><div class="diet-questions" role="group" aria-label="Sample questions"><button type="button" data-diet-question="learn" aria-pressed="true">What did I learn?</button><button type="button" data-diet-question="time" aria-pressed="false">Where did my time go?</button></div></div>
+          <p id="dietAnswer" aria-live="polite">Learning and building took the largest share of this sample week. Long reads made a little room for deeper thinking, too.</p>
+        </div>
+      </div>
+      <p class="caption diet-caption">On-device analysis. Your browsing stays yours.</p>
+    </div>
+  </section>
+
+
+  <!-- MEETINGS -->
+  <section class="sec" id="meetings" aria-labelledby="meeting-title">
+    <div class="frame">
+      <div class="sec-head" data-reveal><p class="eyebrow">A little help, in the room</p><h2 id="meeting-title">Be in the conversation.<br><span class="muted">We’ll keep the thread.</span></h2><p class="lede">Invite your assistant when you want another pair of ears. Record when you’re ready. Leave with the decisions, not a page of half-finished notes.</p></div>
+      <div class="meeting-feature-grid">
+        <article class="meeting-feature-card" data-reveal>
+          <div class="plate meeting-animation-stage" id="meetingJoinDemo" data-meeting-animation="join">
+            <div class="meeting-animation-toolbar"><span>01 / The meeting assistant</span><div><button type="button" data-meeting-pause aria-label="Pause assistant joining animation">Pause</button><button type="button" data-meeting-replay aria-label="Replay assistant joining animation">Replay ↶</button></div></div>
+            <div class="meeting-browser join-window" data-phase="ready">
+              <aside class="meeting-browser-sidebar" aria-hidden="true"><div class="meeting-traffic"><i></i><i></i><i></i></div><div class="meeting-browser-tools">◧ &nbsp; ‹ &nbsp; ›</div><div class="meeting-browser-url">calls.example</div><div class="meeting-space-label">◈ &nbsp; Work</div><div class="meeting-pinned">Project brief</div><div class="meeting-tab-selected">Team sync</div><div class="meeting-sidebar-today">Today</div><div class="meeting-pinned">+ New Tab</div><div class="meeting-sidebar-spaces">◈ &nbsp; ⌂ &nbsp; +</div></aside>
+              <div class="meeting-call"><div class="meeting-call-title"><span>Friday catch-up</span><small id="joinParticipantCount">3 people</small></div><div class="meeting-call-status" id="joinStatus">Your assistant is ready when you are.</div>
+                <div class="meeting-participants"><div class="meeting-person participant-dana"><span>D</span><small>Dana</small></div><div class="meeting-person participant-sam"><span>S</span><small>Sam</small></div><div class="meeting-person participant-you"><span>Y</span><small>You</small></div><div class="meeting-agent-slot"><div class="meeting-agent-placeholder">A seat for<br>your assistant.</div><div class="meeting-person meeting-agent-tile"><span><svg width="23" height="23"><use href="#logo-tile"/></svg></span><small>Uranus Browser assistant</small><i></i></div></div></div>
+                <div class="meeting-call-controls" aria-hidden="true"><span>⌁</span><span>▣</span><span>↥</span><span class="meeting-end-call">⌕</span></div>
+                <div class="meeting-invite-row"><span class="meeting-invite-copy">Your assistant<small id="joinInviteDetail">Visible to everyone in the call</small></span><span class="meeting-invite-action" id="joinInviteAction">Invite to call <svg width="12" height="12"><use href="#i-arrow"/></svg></span></div>
+                <div class="meeting-assistant-bubble"><svg width="16" height="16"><use href="#logo-tile"/></svg><span>I’ll handle the minutes. You enjoy the meeting.</span></div>
+              </div>
+            </div>
+            <div class="meeting-demo-progress" aria-hidden="true"><span></span></div><p class="meeting-animation-caption" id="joinAnimationCaption">You choose when it joins.</p>
+          </div>
+          <div class="meeting-feature-copy"><h3>An assistant at the table.</h3><p>It joins as a visible participant, follows the conversation and helps with the meeting. Invite it when you need a hand. </p></div>
+        </article>
+        <article class="meeting-feature-card" data-reveal style="--d:100ms">
+          <div class="plate meeting-animation-stage" id="meetingRecordingDemo" data-meeting-animation="recording">
+            <div class="meeting-animation-toolbar"><span>02 / The meeting recorder</span><div><button type="button" data-meeting-pause aria-label="Pause meeting recording animation">Pause</button><button type="button" data-meeting-replay aria-label="Replay meeting recording animation">Replay ↶</button></div></div>
+            <div class="meeting-browser recording-window" data-phase="ready">
+              <div class="meeting-recording-header"><div class="meeting-traffic" aria-hidden="true"><i></i><i></i><i></i></div><span>Meeting notes</span><svg width="15" height="15"><use href="#i-sidebar"/></svg></div>
+              <div class="meeting-recording-body"><div class="meeting-recorder-meta"><span class="meeting-recorder-badge"><i></i><span id="recordingStateLabel">Ready to record</span></span><time id="meetingRecordingClock">00:00</time></div><h4>Friday catch-up</h4><p class="meeting-recording-source">Tab audio + microphone · sample meeting</p><div class="meeting-recording-wave" aria-hidden="true"></div>
+                <div class="meeting-recording-tabs" aria-hidden="true"><span class="is-active" data-recording-tab="transcript">Transcript</span><span data-recording-tab="notes">Notes</span><span class="meeting-recording-engine">On this Mac</span></div>
+              <div class="meeting-live-transcript"><div data-transcript-line="0"><time>00:01</time><p><strong>Dana</strong>Let’s give the homepage a little more room.</p></div><div data-transcript-line="1"><time>00:03</time><p><strong>Sam</strong>I’ll share a first design. Feedback by Friday?</p></div><div data-transcript-line="2"><time>00:05</time><p><strong>Dana</strong>Perfect. Let’s keep the product front and centre.</p></div><div class="meeting-transcript-waiting">Every word captured. Even the awkward pauses.</div></div>
+                <div class="meeting-ready-notes" hidden><h5>A clear plan for next week.</h5><p>Give the homepage room to breathe and lead with the product.</p><div><span>✓</span><p>Share the first design<small>Sam</small></p></div><div><span>✓</span><p>Collect feedback<small>By Friday</small></p></div></div>
+              </div><div class="meeting-recording-footer"><span id="recordingFooterLabel">You decide when recording starts.</span><span class="meeting-recording-action" id="recordingAction">Start recording</span></div>
+            </div>
+            <div class="meeting-demo-progress" aria-hidden="true"><span></span></div><p class="meeting-animation-caption" id="recordingAnimationCaption">From conversation to something you can use.</p>
+          </div>
+          <div class="meeting-feature-copy"><h3>Good notes. Full attention.</h3><p>Record a call, follow the live transcript and get a summary with decisions and action items. Choose a local or cloud transcription engine.</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENT -->
+  <section class="sec" id="agent">
+    <div class="frame">
+      <div class="sec-head" data-reveal>
+        <p class="eyebrow">The agent panel · <kbd>⌥⌘A</kbd></p>
+        <h2>Tell it the outcome.<br><span class="muted">Watch it click.</span></h2>
+        <p class="lede">It works in your real, signed-in tabs: reads the page, scrolls, clicks, types and switches tabs, and every step shows up in the panel. Stop or take over whenever you like.</p>
+      </div>
+
+      <div class="plate" data-reveal>
+        <div class="agent-demo" id="agentDemo">
+          <div class="demo-page">
+            <div class="demo-chrome">
+              <span class="dots"><i></i><i></i><i></i></span>
+              <span class="demo-url">google.com/travel/flights</span>
+            </div>
+            <div class="demo-body">
+              <div class="glow-corners"></div>
+              <div class="gf">
+                <div class="gf-top">
+                  <svg class="gf-ham" width="20" height="20" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  <nav class="gf-tabs"><span>Travel</span><span>Explore</span><span class="on"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>Flights</span><span>Hotels</span></nav>
+                  <span class="gf-avatar">A</span>
+                </div>
+                <div class="gf-card">
+                  <div class="gf-opts"><span>⇄ Round trip ▾</span><span>1 passenger ▾</span><span>Economy ▾</span></div>
+                  <div class="gf-fields">
+                    <div class="gf-pair">
+                      <div class="gf-field" data-target="from"><i class="gi ring"></i><b>Zurich</b></div>
+                      <span class="gf-swap">⇄</span>
+                      <div class="gf-field" data-target="to"><i class="gi pin"></i><b class="typed" data-type="to" data-ph="Where to?"></b></div>
+                    </div>
+                    <div class="gf-pair dates">
+                      <div class="gf-field" data-target="date"><i class="gi cal"></i><b class="typed" data-type="date" data-ph="Departure"></b></div>
+                      <div class="gf-field"><b class="typed" data-ph="Return"></b></div>
+                    </div>
+                  </div>
+                  <div class="gf-search" data-target="search"><svg width="18" height="18" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Search</div>
+                </div>
+                <div class="fl-results">
+                  <div class="gf-chips"><span>All filters</span><span>Stops ▾</span><span>Airlines ▾</span><span>Bags ▾</span><span>Price ▾</span><span>Times ▾</span></div>
+                  <p class="gf-h">Top departing flights · one-way to Uranus</p>
+                  <p class="gf-sub">Ranked based on price and convenience · Prices include required taxes + fees for 1 adult.</p>
+                  <div class="gf-list">
+                    <div class="fl-row"><span class="al" style="--c:#d71920">UA</span><div class="tm"><b>7:05 AM – 9:10 AM</b><small>Uranus Air</small></div><div class="dur">3 hr 5 min<small>ZRH–URA</small></div><div class="stops">Nonstop</div><div class="pr">€142<small>one way</small></div></div>
+                    <div class="fl-row cheapest"><span class="al" style="--c:#00a651">BA</span><div class="tm"><b>10:40 AM – 12:45 PM</b><small>Cheeky Airways</small></div><div class="dur">3 hr 5 min<small>ZRH–URA</small></div><div class="stops">Nonstop</div><div class="pr green">€84<small>one way</small></div></div>
+                    <div class="fl-row"><span class="al" style="--c:#ff6600">RA</span><div class="tm"><b>2:15 PM – 4:25 PM</b><small>Rear View Air</small></div><div class="dur">3 hr 10 min<small>ZRH–URA</small></div><div class="stops">Nonstop</div><div class="pr">€97<small>one way</small></div></div>
+                    <div class="fl-row"><span class="al" style="--c:#c8102e">IA</span><div class="tm"><b>6:20 AM – 11:45 AM</b><small>Smooth Landing Air</small></div><div class="dur">6 hr 25 min<small>ZRH–URA</small></div><div class="stops">1 stop<small>1 hr 30 min MOO</small></div><div class="pr">€79<small>one way</small></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="demo-cursor" aria-hidden="true">
+                <svg width="20" height="20"><use href="#i-cursor"/></svg>
+                <span class="ripple"></span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="demo-panel" aria-label="Agent panel preview">
+            <div class="panel-head">
+              <span class="panel-title"><svg width="16" height="16"><use href="#logo-tile"/></svg> Agent</span>
+              <span class="panel-state"><i></i><span>Idle</span></span>
+            </div>
+            <div class="panel-log" id="panelLog"></div>
+            <div class="composer">
+              <span>Ask, or give it a task…</span>
+              <span class="send"><svg width="12" height="12"><use href="#i-arrow"/></svg></span>
+            </div>
+          </aside>
+        </div>
+      </div>
+      <p class="caption" data-reveal>A replay of a run, slowed down: running the search waited for an Allow. Google Flights is shown as an example site. Uranus Browser isn’t affiliated with Google, and the fares and Uranus itinerary are made up.</p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="sec" id="features">
+    <div class="frame">
+      <div class="sec-head" data-reveal>
+        <p class="eyebrow">Everything Arc taught us, rebuilt</p>
+        <h2>A smooth ride,<br><span class="muted">from first click to last.</span></h2>
+      </div>
+
+      <div class="cards">
+        <article class="card span-2" data-reveal>
+          <div class="card-plate">
+            <div class="cmdbar">
+              <div class="cmd-input"><svg width="16" height="16"><use href="#i-search"/></svg><span class="cmd-typed" id="cmdTyped"></span><i class="caret"></i></div>
+              <ul class="cmd-list" id="cmdList"></ul>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3>Command bar</h3>
+            <p><kbd>⌘T</kbd> searches open tabs, the archive and history. <code>gh</code>, <code>npm</code>, <code>mdn</code> and <code>caniuse</code> shortcuts; paste a JWT or a timestamp to decode it. <span class="copy-wink">Find the <del class="copy-cancel">Tab</del> <ins class="copy-add">Chad</ins> you’ve been chasing all day.</span></p>
+          </div>
+        </article>
+
+        <article class="card" data-reveal style="--d:80ms">
+          <div class="card-plate">
+            <div class="spaces">
+              <div class="space-side">
+                <i class="s-row w70"></i><i class="s-row w50"></i><i class="s-row w60"></i><i class="s-row w40"></i>
+                <div class="space-dots"><b></b><b></b><b></b><b></b></div>
+              </div>
+              <div class="space-page"><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3>Spaces</h3>
+            <p>A colour and an emoji per context, with separate cookies when you need to be two people. <kbd>⌃1</kbd>–<kbd>⌃9</kbd>. <span class="copy-wink">Keep work and play in separate Spaces. Some tabs like a little privacy.</span></p>
+          </div>
+        </article>
+
+        <article class="card card-peek" data-reveal>
+          <div class="card-plate">
+            <div class="peek-page"><i></i><i></i><i></i><i></i></div>
+            <div class="peek-sheet"><div class="peek-bar"><span>Open</span></div><i></i><i></i><i></i></div>
+          </div>
+          <div class="card-body">
+            <h3>Peek</h3>
+            <p>Links from pinned tabs float in a preview. <kbd>Esc</kbd> closes it, Open keeps it. <span class="copy-wink">A quick peek before you commit.</span></p>
+          </div>
+        </article>
+
+        <article class="card" data-reveal style="--d:80ms">
+          <div class="card-plate">
+            <div class="split-wrap"><div class="pane l"><i></i><i></i><i></i></div><div class="pane r"><i></i><i></i><i></i></div></div>
+          </div>
+          <div class="card-body">
+            <h3>Split View</h3>
+            <p>Two pages side by side. <kbd>⌃⇧=</kbd> to split, <kbd>⌃⇧-</kbd> to leave. <span class="copy-wink">A very productive arrangement.</span></p>
+          </div>
+        </article>
+
+        <article class="card" data-reveal style="--d:160ms">
+          <div class="card-plate">
+            <div class="meet">
+              <div class="wave"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
+              <div class="transcript">
+                <p><em>Dana</em> Let's ship the sidebar fix Friday.</p>
+                <p><em>Sam</em> I'll take the release notes.</p>
+                <p class="action"><svg width="14" height="14"><use href="#i-check"/></svg> Sam writes the release notes</p>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3>Meeting recorder & assistant</h3>
+            <p>Record and transcribe a call, on this Mac or with OpenAI. Get summaries, decisions and actions. Invite an AI assistant to join as a visible participant when you want a hand. <span class="copy-wink">Keep your seat at the table. We’ll take the minutes.</span></p>
+            <a class="diet-feature-link" href="#meetings">Watch the meeting demos <svg width="14" height="14"><use href="#i-arrow"/></svg></a>
+          </div>
+        </article>
+
+        <article class="card span-2" data-reveal>
+          <div class="card-plate">
+            <div class="routine">
+              <div class="r-node"><span class="r-ic">⏰</span><div><b>Weekdays at 08:30</b><small>Trigger</small></div></div>
+              <div class="r-line"><i></i></div>
+              <div class="r-node"><span class="r-ic">✍️</span><div><b>Clear the inbox <del class="copy-cancel">before the second coffee</del> <ins class="copy-add">before the frontier labs fuck you</ins></b><small>Instructions</small></div></div>
+              <div class="r-line"><i></i></div>
+              <div class="r-node done"><span class="r-ic"><svg width="14" height="14"><use href="#i-check"/></svg></span><div><b>Done · 6 issues, 2 urgent</b><small>Opens as a chat</small></div></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3>Routines and companions</h3>
+            <p>Give a companion a role, memory and a schedule. Every run opens a chat record, and anything that sends or changes something still waits for you. </p>
+          </div>
+        </article>
+
+
+
+
+
+        <article class="card" data-reveal style="--d:80ms">
+          <div class="card-plate">
+            <div class="password-preview">
+              <div class="password-preview-icon"><svg width="22" height="22"><use href="#i-shield"/></svg></div>
+              <p>example.com</p><span>you@example.com</span>
+              <div class="password-preview-field">••••••••••••<svg width="14" height="14"><use href="#i-check"/></svg></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3>Password manager</h3>
+            <p>Save and fill logins with Chromium’s built-in manager. Import saved Arc passwords with macOS Keychain authorization. <span class="copy-wink">Good protection never goes out of style. Invite-only, front door to back.</span></p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- BRING YOUR ARC -->
+  <section class="sec" id="import">
+    <div class="frame dev-grid">
+      <div class="dev-copy" data-reveal>
+        <p class="eyebrow">A new browser. Your familiar setup.</p>
+        <h2>Bring your <del class="arc-origin">Arc</del> Plug and Harnesses.</h2>
+        <p class="lede">Leaving Arc? Bring your setup and your favourite plug-ins. Import during onboarding or later in Settings. Spaces, nested folders, favourites, pinned tabs and open tabs land in their places. History and saved passwords come too.</p>
+        <ul class="dev-list">
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Your structure, preserved.</b> Space names and colours, folders and pinned sites map into the new sidebar.</div></li>
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Move at your pace.</b> Import again without duplicating your tabs or replacing existing logins.</div></li>
+        </ul>
+      </div>
+      <div data-reveal style="--d:120ms">
+        <div class="plate">
+          <div class="import-preview">
+            <div class="import-preview-route"><span>Arc</span><svg width="20" height="20"><use href="#i-arrow"/></svg><svg width="38" height="38" aria-label="Uranus Browser"><use href="#logo-tile"/></svg></div>
+            <div class="import-preview-row"><span>Spaces & nested folders</span><svg width="16" height="16"><use href="#i-check"/></svg></div>
+            <div class="import-preview-row"><span>Favourites & pinned tabs</span><svg width="16" height="16"><use href="#i-check"/></svg></div>
+            <div class="import-preview-row"><span>Open tabs & history</span><svg width="16" height="16"><use href="#i-check"/></svg></div>
+            <div class="import-preview-row"><span>Saved passwords</span><svg width="16" height="16"><use href="#i-check"/></svg></div>
+            <div class="import-preview-done"><span class="srv-dot"></span>Right at home.</div>
+          </div>
+          <aside class="arc-sunset-note" aria-label="A note about Arc's sunset">
+            <div class="arc-note-bar"><span class="dots"><i></i><i></i><i></i></span><span>notes · 1</span></div>
+            <div class="arc-note-body">
+              <span class="arc-sticker" aria-hidden="true"><span class="arc-icon-crossout"><img src="assets/browser-icon.svg" alt=""></span><small>RIP <del class="arc-origin">Arc</del></small></span>
+              <p class="arc-note-kicker">A little heads-up from the browser internet</p>
+              <p class="arc-note-title">Arc sunsets<br><span>December 22, 2026.</span></p>
+              <p class="arc-note-copy">We won’t pull the plug on you like Arc did. Bring your tabs and Spaces along for the ride.</p>
+              <a href="https://arc.net/" target="_blank" rel="noopener noreferrer">The official farewell <svg width="13" height="13"><use href="#i-arrow"/></svg></a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEVELOPERS -->
+  <section class="sec" id="developers">
+    <div class="frame dev-grid">
+      <div class="dev-copy" data-reveal>
+        <p class="eyebrow">Made for people who build the web</p>
+        <h2>Your dev servers<br><span class="muted">live in the sidebar.</span></h2>
+        <ul class="dev-list">
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Running locally.</b> Anything listening on this Mac shows up, named after its project folder.</div></li>
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Environments.</b> <kbd>⌥⌘E</kbd> jumps the same path between local, staging and prod.</div></li>
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Console badge.</b> Local tabs count their errors; one click opens the Console.</div></li>
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>Boosts.</b> Per-site CSS and TypeScript, edited in the browser, applied live. <span class="copy-wink">Smoother scrolling. Softer landings.</span></div></li>
+          <li><span class="tick"><svg width="12" height="12"><use href="#i-check"/></svg></span><div><b>MCP for coding agents.</b> Codex, Claude Code, Cursor and other agents read tabs, logs and screenshots, then navigate, click and type through a local, token-gated server.</div></li>
+        </ul>
+      </div>
+
+      <div class="plate" data-reveal style="--d:120ms">
+        <div class="dev-visual">
+          <div class="dev-side">
+            <p class="dev-label">Running locally</p>
+            <div class="dev-tab active"><span class="srv-dot"></span>my-app <small>:5173</small><span class="err-badge" id="errBadge">3</span></div>
+            <div class="dev-tab"><span class="srv-dot"></span>docs-site <small>:3000</small></div>
+            <div class="dev-tab"><span class="srv-dot"></span>api <small>:8787</small></div>
+          </div>
+          <div class="dev-main">
+            <div class="addr"><span class="env-badge" id="envBadge">LOCAL</span><span class="addr-url" id="envUrl">localhost:5173/pricing</span></div>
+            <div class="term">
+              <div class="term-line"><span class="pr">claude ›</span> read the console of my-app</div>
+              <div class="term-line dim">→ anus.list_tabs · anus.console_logs(tab 2)</div>
+              <div class="term-line err">TypeError: price is undefined · Pricing.tsx:42</div>
+              <div class="term-line ok">✓ Fixed. Reloaded the tab, 0 errors.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KEYS -->
+  <section class="keys-sec" data-reveal>
+    <div class="frame">
+      <p class="eyebrow center">Keyboard first</p>
+      <div class="keys" id="keys">
+        <div class="combo"><span class="keycap">⌘</span><span class="keycap">T</span><small>New tab</small></div>
+        <div class="combo"><span class="keycap">⌃</span><span class="keycap">1</span><small>Space</small></div>
+        <div class="combo"><span class="keycap">⌥</span><span class="keycap">⌘</span><span class="keycap">A</span><small>Agent</small></div>
+        <div class="combo"><span class="keycap">⌥</span><span class="keycap">⌘</span><span class="keycap">N</span><small>Uranus Mini</small></div>
+        <div class="combo"><span class="keycap">⌥</span><span class="keycap">⌘</span><span class="keycap">M</span><small>Responsive</small></div>
+        <div class="combo"><span class="keycap">⌥</span><span class="keycap">⌘</span><span class="keycap">B</span><small>Boost</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAYERS + SAFETY -->
+  <section class="sec" id="safety">
+    <div class="frame">
+      <div class="layers-grid">
+        <div data-reveal>
+          <p class="eyebrow">Not Electron. Not a wrapper.</p>
+          <h2>A real Chromium fork,<br><span class="muted">top to bottom.</span></h2>
+          <p class="lede">Google sign-in works, extensions install from the Chrome Web Store, and DevTools is DevTools. On top sits a shell written from scratch, and a native helper that handles browser tools and optional AI. Using a cloud provider can send page content or meeting data to that provider.</p>
+        </div>
+        <div class="layers-stack" id="layersStack" aria-hidden="true">
+          <div class="layer l3"><span class="layer-tag">Agent · memory · routines · meetings</span></div>
+          <div class="layer l2"><span class="layer-tag">Sidebar · Spaces · Peek · Split · Boosts</span></div>
+          <div class="layer l1"><span class="layer-tag">Chromium 158</span></div>
+        </div>
+      </div>
+
+      <div class="safety" data-reveal>
+        <div class="safety-head">
+          <p class="eyebrow"><svg width="14" height="14"><use href="#i-shield"/></svg> Asks before it acts</p>
+          <h3>It does the busywork. <span class="muted">You keep the keys.</span></h3>
+        </div>
+        <div class="gates">
+          <span>Submits a form</span><span>Sends a message</span><span>Buys something</span><span>Signs in</span><span>Changes an account</span><span>Uploads a file</span><span>Downloads a file</span><span>Types a secret</span>
+        </div>
+        <p class="small">Each of these stops and waits for an Allow in the panel. Stop and Take over end a run instantly. </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="sec" id="faq">
+    <div class="frame faq-grid">
+      <div data-reveal>
+        <p class="eyebrow">FAQ</p>
+        <h2>Questions,<br><span class="muted">answered.</span></h2>
+      </div>
+      <div class="faq" data-reveal style="--d:80ms">
+        <details class="qa"><summary>Is it really free?<span class="pm"></span></summary><div class="ans"><div><p>Yes. The browser is free. The AI features use your own ChatGPT plan, an OpenAI API key, or a model running on your Mac.</p></div></div></details>
+        <details class="qa"><summary>Can I bring my Arc or Chrome setup?<span class="pm"></span></summary><div class="ans"><div><p>Yes. During onboarding or in Settings › Import, bring Arc Spaces, colours, nested folders, favourites, pinned and open tabs, history and saved passwords. Arc password import needs macOS Keychain authorization. Chrome import is available too.</p></div></div></details>
+        <details class="qa"><summary>Do Chrome extensions work?<span class="pm"></span></summary><div class="ans"><div><p>On macOS, yes: extensions install straight from the Chrome Web Store. iPhone extension support is planned.</p></div></div></details>
+        <details class="qa"><summary>What can the agent do without asking?<span class="pm"></span></summary><div class="ans"><div><p>Read, scroll, click, type into ordinary fields, navigate and switch tabs. Submitting, sending, buying, signing in, account changes, uploads, downloads and secrets all wait for your approval.</p></div></div></details>
+        <details class="qa"><summary>Which Macs are supported?<span class="pm"></span></summary><div class="ans"><div><p>The current download is for Apple silicon Macs. Check for a newer download before use.</p></div></div></details>
+        <details class="qa"><summary>Is there an iPhone version?<span class="pm"></span></summary><div class="ans"><div><p>A native iPhone version is in development, with Spaces, tab cards, private browsing and on-device Algorithm Diet. The images above are from the app. Desktop agent control and meeting features aren’t available on iPhone yet.</p></div></div></details>
+        <details class="qa"><summary>Can I walk through onboarding again?<span class="pm"></span></summary><div class="ans"><div><p>Yes. Open Settings › General › Replay onboarding. It keeps your existing tabs, Spaces, passwords and other profile data.</p></div></div></details>
+        <details class="qa"><summary>Is there a Windows version?<span class="pm"></span></summary><div class="ans"><div><p>Not yet. macOS first.</p></div></div></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="download">
+    <div class="frame">
+      <div class="cta-panel" data-reveal>
+        <div class="float f1"><svg><use href="#logo-tile"/></svg></div>
+        <div class="float f2"><span class="keycap sm">⌘</span><span class="keycap sm">T</span></div>
+        <div class="float f3"><svg width="20" height="20"><use href="#i-cursor"/></svg><span class="cursor-label">Agent</span></div>
+        <div class="float f4"><span class="sw-dot" style="--c:#7c5cff"></span><span class="sw-dot" style="--c:#10b981"></span><span class="sw-dot" style="--c:#ff4d00"></span></div>
+        <h2>Browse less.<br><span class="muted">Get more done.</span></h2>
+        <p class="lede">Download Uranus Browser for Apple silicon, or build it from source.</p>
+        <div class="cta-row">
+          <a class="btn btn-ink btn-lg" href="https://ab.gaborhollbeck.com/download/macos/arm64">Download for Mac</a>
+          <a class="btn btn-outline btn-lg" href="../README.md#build-from-source">Build for Mac</a>
+          <a class="btn btn-outline btn-lg" href="../mobile/app/README.md">Build for iPhone</a>
+        </div>
+        <p class="small">Early release, provided as is. Back up important browser data. Cloud AI can send page or meeting content to a provider. Get permission before recording. See the <a href="../README.md#before-you-use-uranus-browser">safety notice</a>.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="frame foot-grid">
+    <div class="foot-brand">
+      <a class="brand" href="#top"><span class="brand-logo"><svg><use href="#logo-tile"/></svg></span><span class="brand-name">Uranus Browser</span></a>
+      <p>A Chromium browser with an Arc-style sidebar, developer tools built in, and an agent that asks before it acts.</p>
+    </div>
+    <div class="foot-col">
+      <p class="foot-h">Product</p>
+      <a href="#agent">Agent panel</a><a href="#features">Features</a><a href="#meetings">Meetings</a><a href="#mobile">iPhone</a><a href="#algorithm-diet">Algorithm Diet</a><a href="#import">Import from Arc</a><a href="#download">Build from source</a>
+    </div>
+    <div class="foot-col">
+      <p class="foot-h">Developers</p>
+      <a href="#developers">Running locally</a><a href="#developers">Boosts</a><a href="#developers">MCP server</a>
+    </div>
+    <div class="foot-col">
+      <p class="foot-h">Help</p>
+      <a href="#faq">FAQ</a><a href="#safety">Safety</a><a href="../docs/privacy.md">Privacy</a>
+    </div>
+  </div>
+  <div class="frame foot-fine">
+    <p>Built on Chromium. Not affiliated with The Browser Company or Google.</p>
+  </div>
+</footer>
+
+<script src="main.js?v=mobile-motion-2"></script>
+<script src="mobile-flight.js?v=mobile-motion-2"></script>
+<script src="mobile-sidebar.js?v=uranus-iris-1"></script>
+</body>
+</html>

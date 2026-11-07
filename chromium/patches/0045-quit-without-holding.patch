@@ -1,0 +1,13 @@
+--- a/chrome/browser/ui/cocoa/confirm_quit.cc
++++ b/chrome/browser/ui/cocoa/confirm_quit.cc
+@@ -15,7 +15,9 @@ void RecordHistogram(ConfirmQuitMetric sample) {
+ }
+ 
+ void RegisterLocalState(PrefRegistrySimple* registry) {
+-  registry->RegisterBooleanPref(prefs::kConfirmToQuitEnabled, true);
++  // Uranus Browser: ⌘Q quits at once. "Warn Before Quitting" in the app menu turns
++  // the hold-to-quit back on.
++  registry->RegisterBooleanPref(prefs::kConfirmToQuitEnabled, false);
+ }
+ 
+ }  // namespace confirm_quit

@@ -1,0 +1,240 @@
+--- a/components/remote_cocoa/app_shim/browser_native_widget_window_mac.h
++++ b/components/remote_cocoa/app_shim/browser_native_widget_window_mac.h
+@@ -12,6 +12,12 @@
+ // When set to `YES`, the traffic lights will always be shown. When set to `NO`,
+ // the traffic lights follow the default AppKit behavior.
+ - (void)setAlwaysShowTrafficLights:(BOOL)alwaysShow;
++// Uranus Browser: puts the traffic lights where Uranus Browser's window frame wants them, with
++// the close button's top-left corner at `origin` from the window's top-left
++// corner, or hides them. Outside fullscreen only.
++- (void)setAnusTrafficLightsVisible:(BOOL)visible origin:(NSPoint)origin;
++// Uranus Browser: gives the traffic lights back to AppKit (and Chromium).
++- (void)resetAnusTrafficLights;
+ // A controller that keeps a small portion (0.5px) of the fullscreen AppKit
+ // NSWindow on screen.
+ // This controller is used as a workaround for an AppKit bug
+--- a/components/remote_cocoa/app_shim/browser_native_widget_window_mac.mm
++++ b/components/remote_cocoa/app_shim/browser_native_widget_window_mac.mm
+@@ -24,6 +24,7 @@
+ - (CGFloat)_getCachedWindowCornerRadius;
+ - (void)setStyleMask:(NSUInteger)styleMask;
+ - (void)setButtonRevealAmount:(double)amount;
++- (void)_tileTitlebarAndRedisplay:(BOOL)redisplay;
+ @end
+ 
+ // The base class of traffic light buttons.
+@@ -38,14 +39,61 @@
+ @implementation BrowserWindowFrame {
+   BOOL _inFullScreen;
+   BOOL _alwaysShowTrafficLights;
++  // Uranus Browser: the window frame places the traffic lights (see
++  // -setAnusTrafficLightsVisible:origin:).
++  BOOL _anusTrafficLights;
++  BOOL _anusTrafficLightsVisible;
++  NSPoint _anusTrafficLightsOrigin;
+ }
+ 
++// Uranus Browser: AppKit centres the traffic lights in the title bar, and puts the
++// leading one -_minXTitlebarWidgetInset from the window's edge; both follow
++// the origin Uranus Browser's window frame asks for.
++- (void)setAnusTrafficLightsVisible:(BOOL)visible origin:(NSPoint)origin {
++  _anusTrafficLights = YES;
++  _anusTrafficLightsVisible = visible;
++  _anusTrafficLightsOrigin = origin;
++  [self updateAnusTrafficLights];
++}
++
++- (void)resetAnusTrafficLights {
++  if (!_anusTrafficLights) {
++    return;
++  }
++  _anusTrafficLights = NO;
++  _anusTrafficLightsVisible = YES;
++  [self updateAnusTrafficLights];
++}
++
++- (void)updateAnusTrafficLights {
++  const NSWindowButton kButtons[] = {
++      NSWindowCloseButton,
++      NSWindowMiniaturizeButton,
++      NSWindowZoomButton,
++  };
++  const BOOL hidden =
++      _anusTrafficLights && !_anusTrafficLightsVisible && !_inFullScreen;
++  for (NSWindowButton type : kButtons) {
++    [[self.window standardWindowButton:type] setHidden:hidden];
++  }
++  // Lays the title bar out again, which moves the traffic lights.
++  if ([self respondsToSelector:@selector(_tileTitlebarAndRedisplay:)]) {
++    [self _tileTitlebarAndRedisplay:YES];
++  }
++}
++
+ // NSThemeFrame overrides.
+ 
+ // Note that while this has an effect on the location of the window control
+ // widgets, this is also an important part of the functioning of immersive
+ // fullscreen and must not be removed lest that break.
+ - (CGFloat)_titlebarHeight {
++  // Uranus Browser: as tall as centres the traffic lights at the frame's origin.
++  if (_anusTrafficLights && !_inFullScreen) {
++    NSButton* close = [self.window standardWindowButton:NSWindowCloseButton];
++    return 2 * _anusTrafficLightsOrigin.y + NSHeight(close.frame);
++  }
++
+   auto* window = base::apple::ObjCCast<NativeWidgetMacNSWindow>(self.window);
+   remote_cocoa::NativeWidgetNSWindowBridge* bridge = window.bridge;
+   if (!bridge) {
+@@ -69,6 +117,9 @@
+ }
+ 
+ - (CGFloat)_minXTitlebarWidgetInset {
++  if (_anusTrafficLights && !_inFullScreen) {
++    return _anusTrafficLightsOrigin.x;
++  }
+   if (@available(macOS 26, *)) {
+     // On macOS 26, position the leading window widget the same distance from
+     // the leading edge of the window as it is from the top of the window. That
+@@ -95,6 +146,9 @@
+ - (void)setStyleMask:(NSUInteger)styleMask {
+   _inFullScreen = (styleMask & NSWindowStyleMaskFullScreen) != 0;
+   [super setStyleMask:styleMask];
++  if (_anusTrafficLights) {
++    [self updateAnusTrafficLights];
++  }
+ }
+ 
+ - (BOOL)_shouldCenterTrafficLights {
+@@ -220,4 +274,15 @@
+       setAlwaysShowTrafficLights:alwaysShow];
+ }
+ 
++- (void)setAnusTrafficLightsVisible:(BOOL)visible origin:(NSPoint)origin {
++  [base::apple::ObjCCastStrict<BrowserWindowFrame>(self.contentView.superview)
++      setAnusTrafficLightsVisible:visible
++                             origin:origin];
++}
++
++- (void)resetAnusTrafficLights {
++  [base::apple::ObjCCastStrict<BrowserWindowFrame>(self.contentView.superview)
++      resetAnusTrafficLights];
++}
++
+ @end
+--- /dev/null
++++ b/chrome/browser/ui/views/frame/anus_frame_view_mac.mm
+@@ -0,0 +1,31 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "chrome/browser/ui/views/frame/anus_frame_view.h"
++
++#import <AppKit/AppKit.h>
++
++#import "components/remote_cocoa/app_shim/browser_native_widget_window_mac.h"
++#include "ui/views/widget/widget.h"
++
++void SetAnusTrafficLights(views::Widget* widget,
++                            const AnusFrameState* state) {
++  if (!widget) {
++    return;
++  }
++  // Browser windows are in-process NSWindows (only PWAs may live in an app
++  // shim, and those never get a Uranus Browser frame).
++  NSWindow* ns_window = widget->GetNativeWindow().GetNativeNSWindow();
++  if (![ns_window isKindOfClass:[BrowserNativeWidgetWindow class]]) {
++    return;
++  }
++  auto* window = static_cast<BrowserNativeWidgetWindow*>(ns_window);
++  if (!state) {
++    [window resetAnusTrafficLights];
++    return;
++  }
++  const gfx::Point origin = state->TrafficLightsOrigin();
++  [window setAnusTrafficLightsVisible:state->TrafficLightsVisible()
++                                 origin:NSMakePoint(origin.x(), origin.y())];
++}
+--- a/chrome/browser/ui/views/frame/anus_frame_view.h
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -19,6 +19,16 @@
+ 
+ class BrowserView;
+ 
++namespace views {
++class Widget;
++}
++
++// Puts the window controls (the macOS traffic lights) of `widget` where
++// `state` wants them, or gives them back to the platform when `state` is null.
++// A no-op off macOS.
++void SetAnusTrafficLights(views::Widget* widget,
++                            const AnusFrameState* state);
++
+ // Uranus Browser's window frame (see anus_frame_host.h): the shell's frame page,
+ // chrome-extension://<shell>/window.html?window=<id>, in a transparent view
+ // stacked above the page area of a normal browser window, plus the window
+@@ -58,6 +68,7 @@
+   // views::WebView:
+   gfx::Size CalculatePreferredSize(
+       const views::SizeBounds& available_size) const override;
++  void AddedToWidget() override;
+ 
+   // AnusFrameHost:
+   int GetWindowId() const override;
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -8,6 +8,7 @@
+ #include <utility>
+ 
+ #include "base/strings/string_number_conversions.h"
++#include "build/build_config.h"
+ #include "chrome/browser/extensions/chrome_extension_web_contents_observer.h"
+ #include "chrome/browser/anus/anus_shell.h"
+ #include "chrome/browser/profiles/profile.h"
+@@ -47,6 +48,11 @@
+ 
+ }  // namespace
+ 
++#if !BUILDFLAG(IS_MAC)
++void SetAnusTrafficLights(views::Widget* widget,
++                            const AnusFrameState* state) {}
++#endif
++
+ // static
+ AnusFrameView* AnusFrameView::MaybeCreate(BrowserView* browser_view) {
+   if (!AnusHidesTopChrome(browser_view->browser()) ||
+@@ -93,6 +99,11 @@
+   SetWebContents(nullptr);
+ }
+ 
++void AnusFrameView::AddedToWidget() {
++  views::WebView::AddedToWidget();
++  ApplyState();
++}
++
+ gfx::Size AnusFrameView::CalculatePreferredSize(
+     const views::SizeBounds& available_size) const {
+   // The browser view layout reads the frame's width from here (it doesn't know
+@@ -239,6 +250,8 @@
+   }
+   PreferredSizeChanged();
+   browser_view_->InvalidateLayout();
++  // The traffic lights sit in the frame page's toolbar row, and go with it.
++  SetAnusTrafficLights(GetWidget(), IsActive() ? &state_ : nullptr);
+ }
+ 
+ BEGIN_METADATA(AnusFrameView)
+--- a/chrome/browser/ui/views/frame/BUILD.gn
++++ b/chrome/browser/ui/views/frame/BUILD.gn
+@@ -771,6 +771,10 @@
+     "//extensions/common",
+     "//ui/base",
+   ]
++  if (is_mac) {
++    sources += [ "anus_frame_view_mac.mm" ]
++    deps += [ "//components/remote_cocoa/app_shim" ]
++  }
+ }
+ 
+ source_set("browser_view") {

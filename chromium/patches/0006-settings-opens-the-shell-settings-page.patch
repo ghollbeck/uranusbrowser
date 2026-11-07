@@ -1,0 +1,47 @@
+--- a/chrome/browser/ui/chrome_pages.cc
++++ b/chrome/browser/ui/chrome_pages.cc
+@@ -26,6 +26,7 @@
+ #include "chrome/browser/download/bubble/download_bubble_ui_controller.h"
+ #include "chrome/browser/extensions/extension_util.h"
+ #include "chrome/browser/file_system_access/file_system_access_features.h"
++#include "chrome/browser/anus/anus_shell.h"
+ #include "chrome/browser/policy/profile_policy_connector.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/signin/account_consistency_mode_manager.h"
+@@ -65,12 +66,14 @@
+ #include "components/version_info/version_info.h"
+ #include "content/public/browser/web_contents.h"
+ #include "extensions/browser/extension_prefs.h"
++#include "extensions/browser/extension_registry.h"
+ #include "extensions/common/constants.h"
+ #include "extensions/common/extension_urls.h"
+ #include "net/base/url_util.h"
+ #include "ui/base/l10n/l10n_util.h"
+ #include "ui/base/page_transition_types.h"
+ #include "ui/base/window_open_disposition.h"
++#include "url/url_constants.h"
+ #include "url/url_util.h"
+ 
+ #if BUILDFLAG(IS_CHROMEOS)
+@@ -461,6 +464,21 @@
+ }
+ 
+ void ShowSettings(BrowserWindowInterface* browser) {
++  // Uranus Browser: Settings (Cmd+, and the app menu) is the shell's settings page.
++  // chrome://settings stays reachable by typing it, and Chromium's own
++  // sub-pages (clear browsing data, passwords, ...) still open there.
++  if (extensions::ExtensionRegistry::Get(browser->GetProfile())
++          ->enabled_extensions()
++          .Contains(kAnusShellExtensionId)) {
++    base::RecordAction(UserMetricsAction("ShowOptions"));
++    FocusWebContents(browser);
++    ShowSingletonTabOverwritingNTP(
++        browser,
++        GURL(base::StrCat({extensions::kExtensionScheme,
++                           url::kStandardSchemeSeparator,
++                           kAnusShellExtensionId, "/settings.html"})));
++    return;
++  }
+   ShowSettingsSubPage(browser, std::string());
+ }
+ 

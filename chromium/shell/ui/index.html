@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; font-src 'self'; img-src * data: crx: favicon:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    />
+    <title>Uranus Browser</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="select.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="onboarding.css" />
+    <link rel="stylesheet" href="diet.css" />
+  </head>
+  <body>
+    <div id="edge" aria-hidden="true"></div>
+    <aside id="sidebar">
+      <div class="toolbar">
+        <div class="traffic-lights"></div>
+        <button id="btn-sidebar" class="icon-button" data-tip="Hide sidebar" data-shortcut="toggleSidebar"><i data-icon="sidebar"></i></button>
+        <button id="btn-agent" class="icon-button" data-tip="Agent" data-shortcut="toggleAgentPanel" aria-label="Agent panel" aria-pressed="false" hidden><i data-icon="agent"></i></button>
+        <button id="btn-diet" class="icon-button" aria-label="Algorithm Diet" aria-haspopup="dialog" hidden><i data-icon="diet"></i></button>
+        <span class="spacer"></span>
+        <button id="btn-back" class="icon-button" data-tip="Back" data-shortcut="back"><i data-icon="arrowLeft"></i></button>
+        <button id="btn-forward" class="icon-button" data-tip="Forward" data-shortcut="forward"><i data-icon="arrowRight"></i></button>
+        <button id="btn-reload" class="icon-button" data-tip="Reload" data-shortcut="reload"><i data-icon="reload"></i></button>
+      </div>
+
+      <div id="urlbar-wrap">
+        <button id="urlbar" data-tip="Open location" data-shortcut="openLocation">
+          <span id="urlbar-icon"></span>
+          <span id="urlbar-env"></span>
+          <span id="urlbar-text"></span>
+        </button>
+        <button id="btn-copy-link" class="url-action" data-tip="Copy link" data-shortcut="copyLink"><i data-icon="link"></i></button>
+        <button id="btn-site" class="url-action" data-tip="Site controls"><i data-icon="sliders"></i></button>
+      </div>
+
+      <browser-action-list id="extensions"></browser-action-list>
+
+      <div id="agent-status" hidden>
+        <span class="agent-dot"></span>
+        <span id="agent-status-text"></span>
+      </div>
+
+      <div id="favorites"></div>
+
+      <section id="local-servers" class="group" hidden>
+        <header class="group-header"><span>Running locally</span></header>
+        <div id="local-server-list"></div>
+      </section>
+
+      <header id="space-header">
+        <span id="space-emoji"></span>
+        <span id="space-title"></span>
+        <span id="space-isolated" data-tip="This Space has its own cookies and logins" hidden><i data-icon="lock"></i></span>
+        <button id="btn-collapse-pinned" class="collapse-pinned" type="button" aria-controls="pinned" aria-expanded="true" data-shortcut="togglePinned"><i data-icon="chevron"></i></button>
+      </header>
+
+      <div id="scroll">
+        <div id="pinned" class="drop-zone"></div>
+        <header class="group-header today-header">
+          <span>Today</span>
+          <button id="btn-clear" class="text-button" data-tip="Archive today's tabs" data-shortcut="clearToday">Clear</button>
+        </header>
+        <button id="btn-newtab" class="row new-tab"><span class="row-icon"><i data-icon="plus"></i></span><span class="title">New Tab</span><kbd data-shortcut="newTab"></kbd></button>
+        <div id="today" class="drop-zone"></div>
+      </div>
+
+      <div id="site-panel" class="popover site-panel" hidden>
+        <header class="site-header">
+          <span id="site-favicon"></span>
+          <span class="site-title">
+            <strong id="site-host"></strong>
+            <small id="site-security"></small>
+          </span>
+        </header>
+        <div class="site-actions">
+          <button id="site-copy" class="site-action"><i data-icon="link"></i><span>Copy Link</span></button>
+          <button id="site-shot" class="site-action"><i data-icon="camera"></i><span>Screenshot</span></button>
+          <button id="site-boost" class="site-action"><i data-icon="zap"></i><span>Boost</span></button>
+          <button id="site-devtools" class="site-action"><i data-icon="wrench"></i><span>DevTools</span></button>
+        </div>
+        <div class="field-label site-label">Permissions</div>
+        <div id="site-permissions"></div>
+        <div class="site-row">
+          <span>Zoom</span>
+          <span class="zoom-control">
+            <button id="zoom-out" class="icon-button" data-tip="Zoom out" data-shortcut="zoomOut"><i data-icon="minus"></i></button>
+            <button id="zoom-reset" class="zoom-value" data-tip="Actual size" data-shortcut="actualSize"></button>
+            <button id="zoom-in" class="icon-button" data-tip="Zoom in" data-shortcut="zoomIn"><i data-icon="plus"></i></button>
+          </span>
+        </div>
+        <footer class="popover-footer">
+          <button id="site-clear" class="text-button danger"><i data-icon="trash"></i>Clear Site Data</button>
+        </footer>
+      </div>
+
+      <div id="space-editor" class="popover space-editor" hidden>
+        <header class="popover-header"><span>Edit Space</span></header>
+        <div class="editor-body">
+          <input id="space-name" class="text-field" maxlength="40" placeholder="Space name" spellcheck="false" />
+          <div class="field-label">Icon</div>
+          <div id="space-emojis" class="emoji-grid"></div>
+          <div class="field-label">Colour</div>
+          <div id="space-colors" class="swatches"></div>
+          <label class="toggle-row">
+            <span>
+              <strong>Separate cookies and logins</strong>
+              <small>Sign in as someone else in this Space.</small>
+            </span>
+            <input type="checkbox" id="space-isolated-toggle" class="switch" />
+          </label>
+        </div>
+        <footer class="popover-footer">
+          <button id="space-delete" class="text-button danger">Delete Space</button>
+          <button id="space-done" class="primary-button">Done</button>
+        </footer>
+      </div>
+
+      <div id="downloads-panel" class="popover" hidden>
+        <header class="popover-header">
+          <span>Downloads</span>
+          <button id="btn-clear-downloads" class="text-button">Clear</button>
+        </header>
+        <ul id="downloads-list"></ul>
+      </div>
+
+      <div id="selection-bar" role="toolbar" aria-label="Selected tabs" hidden>
+        <span id="selection-count"></span>
+        <button id="sel-move" class="icon-button" data-tip="Move to Space" aria-label="Move to Space"><i data-icon="space"></i></button>
+        <button id="sel-pin" class="icon-button" data-tip="Pin" aria-label="Pin or unpin"><i data-icon="pin"></i></button>
+        <button id="sel-folder" class="icon-button" data-tip="Pin together in a new folder" aria-label="Pin together in a new folder"><i data-icon="folderPlus"></i></button>
+        <button id="sel-archive" class="icon-button" data-tip="Archive" data-kbd="⌫" aria-label="Archive"><i data-icon="archive"></i></button>
+        <button id="sel-delete" class="icon-button danger" data-tip="Delete…" aria-label="Delete"><i data-icon="trash"></i></button>
+        <button id="sel-clear" class="icon-button" data-tip="Clear selection" data-kbd="Esc" aria-label="Clear selection"><i data-icon="close"></i></button>
+      </div>
+
+      <footer>
+        <button id="btn-downloads" class="icon-button" data-tip="Downloads">
+          <i data-icon="download"></i>
+          <span id="downloads-badge" hidden></span>
+        </button>
+        <button id="btn-theme" class="icon-button" data-tip="Light Mode"><i data-icon="sun"></i></button>
+        <div id="spaces"></div>
+        <button id="btn-newspace" class="icon-button" data-tip="New Space" data-shortcut="newSpace"><i data-icon="plus"></i></button>
+      </footer>
+    </aside>
+
+    <div id="tooltip" role="tooltip" hidden><span id="tooltip-text"></span><kbd id="tooltip-kbd"></kbd></div>
+
+    <!-- A window whose tab another window took: the page as it was, frozen and faded, and the way back. -->
+    <div id="parked-view" hidden>
+      <img id="parked-shot" alt="" hidden />
+      <div class="parked-scrim"></div>
+      <section class="elsewhere-note">
+        <span id="elsewhere-icon" class="elsewhere-icon"></span>
+        <span class="elsewhere-text">
+          <strong id="elsewhere-title"></strong>
+          <span>Open in another window</span>
+        </span>
+        <button id="elsewhere-show" class="primary-button">Show Here</button>
+      </section>
+    </div>
+
+    <div id="empty-state" hidden>
+      <div class="empty-body">
+        <div id="empty-space" class="empty-space"></div>
+        <h2 id="empty-title"></h2>
+        <button id="empty-new-tab" class="empty-search">
+          <i data-icon="search"></i>
+          <span>Search or enter a URL</span>
+          <kbd data-shortcut="newTab"></kbd>
+        </button>
+        <section id="empty-local" class="empty-section" hidden>
+          <header>Running locally</header>
+          <div id="empty-local-list" class="local-chips"></div>
+        </section>
+      </div>
+    </div>
+
+    <div id="split-drop" hidden>
+      <div class="drop-half" data-side="left"><span class="drop-label"><i data-icon="columns"></i><span class="drop-text">Open on the left</span></span></div>
+      <div class="drop-half" data-side="right"><span class="drop-label"><i data-icon="columns"></i><span class="drop-text">Open on the right</span></span></div>
+    </div>
+
+    <div id="peek" hidden>
+      <div class="peek-bar">
+        <span class="peek-title"></span>
+        <button id="peek-open" class="pill-button" data-tip="Open as a tab"><i data-icon="external"></i>Open as Tab</button>
+        <button id="peek-close" class="icon-button" data-tip="Close" data-kbd="Esc"><i data-icon="close"></i></button>
+      </div>
+    </div>
+
+    <div id="onboarding" hidden></div>
+
+    <div id="palette" hidden>
+      <div class="palette-box">
+        <div class="palette-field">
+          <i data-icon="search"></i>
+          <input id="palette-input" spellcheck="false" autocomplete="off" placeholder="Search tabs, history, or type a URL" />
+          <span id="palette-mode"></span>
+        </div>
+        <ul id="palette-results"></ul>
+        <pre id="palette-detail" hidden></pre>
+        <footer class="palette-footer">
+          <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+          <span><kbd>↵</kbd> Open</span>
+          <span><kbd>esc</kbd> Close</span>
+        </footer>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

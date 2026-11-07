@@ -1,0 +1,885 @@
+/* Meeting notes in the Agent panel: the header mic, the recording bar, and the sheet with the
+   recorder, the live transcript, the saved meetings and one meeting's notes. It sits on the same
+   tokens as the rest of the panel, so light and dark follow the system. */
+
+.icon-button.recording {
+  color: var(--red);
+}
+
+.icon-button.recording::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+#meetings {
+  position: relative;
+}
+
+.danger-button {
+  height: 30px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 500;
+  transition: opacity var(--fast) var(--ease);
+}
+
+.danger-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.danger-button:disabled {
+  opacity: 0.5;
+}
+
+.danger-button:focus-visible,
+.meetings-sheet .primary-button:focus-visible,
+.meetings-sheet .secondary-button:focus-visible,
+.meetings-sheet .text-button:focus-visible,
+.meetings-sheet .icon-button:focus-visible,
+.mt-row:focus-visible,
+.mt-engine:focus-visible,
+.rec-bar button:focus-visible,
+.mt-live:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* Sheets open below the recording bar (its height is set by meetingsSheet.ts). */
+.sheet {
+  inset-block-start: calc(44px + var(--bar-h, 0px));
+}
+
+.meetings-sheet {
+  z-index: 6;
+}
+
+/* ---- the recording bar: always visible while a recording runs ------------------------------ */
+
+.rec-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 var(--space-3) var(--space-2);
+  padding: 6px 8px 6px 12px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--red) 11%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 35%, transparent);
+  font-size: var(--text-sm);
+}
+
+.rec-bar-open {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 4px 0;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-weight: 600;
+}
+
+.rec-bar.asking {
+  box-shadow: inset 0 0 0 2px var(--red);
+}
+
+.rec-bar-ask {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+
+.rec-bar-ask > span {
+  flex-basis: 100%;
+  color: var(--text-2);
+}
+
+.mt-time {
+  font: 500 var(--text-sm) / 1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+.mt-rec-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.mt-rec-dot.pulse {
+  animation: mt-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes mt-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---- the recorder card ----------------------------------------------------------------------------- */
+
+.mt-home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mt-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-3);
+  border-radius: var(--radius-xl);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+}
+
+.mt-card.recording {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 40%, transparent);
+}
+
+.mt-card-title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.mt-card .sheet-hint {
+  margin: 0;
+}
+
+.mt-tab {
+  margin: 0;
+  font-size: var(--text-md);
+  overflow-wrap: anywhere;
+}
+
+.mt-tab-label,
+.mt-tab-host {
+  color: var(--text-2);
+}
+
+.mt-notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--amber) 13%, transparent);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.mt-start {
+  margin-top: var(--space-1);
+}
+
+.mt-start:disabled {
+  opacity: 0.5;
+}
+
+.mt-start .mt-rec-dot {
+  margin-right: 2px;
+  background: #ff6b6b;
+}
+
+.mt-engines {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+}
+
+.mt-engine {
+  flex: 1;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.mt-engine[aria-checked='true'] {
+  background: var(--ink);
+  color: var(--settings-page);
+  font-weight: 500;
+}
+
+.mt-engine:disabled {
+  opacity: 0.4;
+}
+
+.mt-live-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mt-meters {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.mt-meter {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--text-2);
+}
+
+.mt-meter-track {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-line);
+  overflow: hidden;
+}
+
+.mt-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--green);
+  transform-origin: left;
+  transform: scaleX(var(--level, 0));
+  transition: transform 120ms linear;
+}
+
+/* ---- the live transcript and a saved one ----------------------------------------------------------------- */
+
+.mt-live-wrap {
+  position: relative;
+}
+
+.mt-live {
+  max-height: 230px;
+  min-height: 70px;
+  margin: 0;
+  padding: var(--space-2);
+  overflow-y: auto;
+  list-style: none;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+}
+
+.mt-live-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: var(--space-3);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.mt-latest {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  color: var(--text-2);
+}
+
+.mt-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mt-live .mt-line + .mt-line {
+  margin-top: 6px;
+}
+
+.mt-line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+  line-height: 1.45;
+}
+
+.mt-line .mt-who {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.mt-line .mt-at {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.mt-line .mt-text {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.mt-lines .mt-line:nth-child(odd) {
+  background: color-mix(in srgb, var(--surface-line) 40%, transparent);
+}
+
+.mt-who {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--agent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-line.me .mt-who {
+  color: var(--settings-ink);
+}
+
+.mt-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mt-at {
+  font: 500 var(--text-xs) / 1.6 var(--mono);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- the saved meetings ------------------------------------------------------------------------------------ */
+
+.mt-past {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-lg);
+  text-align: left;
+}
+
+.mt-row:hover {
+  background: var(--surface-2);
+}
+
+.mt-row > svg {
+  color: var(--text-3);
+}
+
+.mt-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mt-row-title {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-row-meta {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--agent) 14%, transparent);
+  font-size: var(--text-xs);
+  color: var(--agent);
+}
+
+/* ---- one meeting ---------------------------------------------------------------------------------------------- */
+
+.mt-meeting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mt-title {
+  border: 0;
+  text-overflow: ellipsis;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.mt-meta {
+  margin: -6px 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.mt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mt-actions .secondary-button,
+.mt-actions .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mt-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+.mt-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mt-section-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.mt-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mt-item {
+  display: flex;
+  gap: var(--space-2);
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  font-size: var(--text-md);
+  line-height: 1.45;
+}
+
+.mt-item .mt-at {
+  padding-top: 2px;
+}
+
+.mt-item-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mt-quote {
+  overflow-wrap: anywhere;
+}
+
+.mt-none {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-3);
+}
+
+.mt-working {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-2);
+}
+
+.mt-transcript {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- the microphone permission page (opened in a tab) ------------------------------------------------------------ */
+
+.capture-page {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text);
+  font: 14px / 1.5 var(--font);
+}
+
+.permission {
+  max-width: 460px;
+  margin: 12vh auto 0;
+  padding: var(--space-4);
+}
+
+.permission h1 {
+  font-size: var(--text-xl);
+}
+
+.capture-page .primary-button {
+  height: 32px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--settings-page);
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-rec-dot.pulse {
+    animation: none;
+  }
+
+  .mt-meter-fill {
+    transition: none;
+  }
+}
+
+.mt-past > .text-button {
+  align-self: flex-start;
+}
+
+.rec-bar-hint {
+  flex-basis: 100%;
+  margin: 0;
+  padding-bottom: 2px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+/* The microphone picker in the recorder card. */
+.mt-miclabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+  font-size: var(--text-sm);
+  color: var(--text-2);
+}
+
+/* Microphone and Language rows share a label column so the two pickers line up. */
+.mt-miclabel label {
+  flex: 0 0 6.25em;
+}
+
+.mt-mic {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  border: 0;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.mt-mic:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* ---- calendar reminders: the strip above the conversation, the Upcoming card, the Calendar screen ---- */
+
+.meeting-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 var(--space-3) var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  font-size: var(--text-sm);
+}
+
+.meeting-strip-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--text-2);
+}
+
+.meeting-strip-text {
+  display: flex;
+  flex: 1 1 160px;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.meeting-strip-text strong {
+  overflow: hidden;
+  font-size: var(--text-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meeting-strip-text span {
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+.meeting-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+.meeting-strip .icon-button.small {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+}
+
+.meeting-strip button:focus-visible,
+.mt-upcoming button:focus-visible,
+.mt-cal button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.mt-upcoming {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mt-upcoming > .secondary-button {
+  align-self: flex-start;
+}
+
+.mt-upcoming .memory-title .icon-button.small,
+.mt-cal .icon-button.small {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+}
+
+.mt-up-empty {
+  margin: 0;
+}
+
+.mt-up-empty svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.mt-up-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mt-up-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px var(--space-3);
+  padding: 8px 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.mt-up-time {
+  align-self: baseline;
+  padding-top: 1px;
+  font: 500 var(--text-sm) / 1.4 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+.mt-up-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mt-up-title {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-up-meta {
+  overflow: hidden;
+  font-size: var(--text-xs);
+  color: var(--text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-up-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.mt-platform {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--fill-subtle);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.mt-ready {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--space-2);
+  margin: 0;
+  font-size: var(--text-md);
+  overflow-wrap: anywhere;
+}
+
+.mt-consent {
+  color: var(--text-2);
+}
+
+.mt-not-now {
+  align-self: center;
+}
+
+.mt-cal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mt-cal .sheet-hint,
+.mt-cal .sheet-error {
+  margin: 0;
+}
+
+.mt-cal-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.mt-cal-head svg {
+  flex: none;
+  color: var(--green);
+}
+
+.mt-cal-host {
+  overflow: hidden;
+  margin-left: auto;
+  font: 500 var(--text-xs) / 1.4 var(--mono);
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-cal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mt-cal-form .label {
+  margin: 0;
+}
+
+.mt-cal-ok {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--green);
+}
+
+.mt-cal-offer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+}
+
+.mt-cal-offer-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.mt-cal-offer-text strong {
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--text);
+}

@@ -1,0 +1,187 @@
+/* Uranus Browser design tokens, shared by the sidebar, the find bar and Settings.
+   Colours follow the ScienceOS design system (v1.1): six neutral roles (page, panel, control,
+   soft, ink, muted), one hairline colour for every border, and saturated colour only for status.
+   Radii are 8 / 12 / 20 (+ pill); everything else sits on a 4px grid. Dark mode follows the system. */
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/jetbrains-mono.woff2') format('woff2');
+  font-weight: 100 800;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* ScienceOS roles */
+  --settings-font-ui: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  --settings-page: #ffffff;
+  --settings-panel: #fafafb;
+  --settings-control: #ffffff;
+  --settings-soft: #eaeaec; /* hover = selected = every border */
+  --settings-ink: #202123;
+  --settings-muted: #74767a;
+  --ds-frame: #f4f4f5;
+  --ds-success: #16a56b;
+  --ds-danger: #d92d20;
+  --ds-warn: #b7791f;
+  --ds-switch-on: #3484ff; /* the switch colour, never a focus ring */
+  --ds-switch-off: #e5e5e7;
+  --ds-scrim: rgb(0 0 0 / 32%);
+  --ds-r-sm: 8px;
+  --ds-r-md: 12px;
+  --ds-r-lg: 20px;
+  --ds-h-xs: 24px;
+  --ds-h-sm: 32px;
+  --ds-h-md: 36px;
+
+  /* Brand: ink on paper */
+  --ink: var(--settings-ink);
+  --paper: var(--ds-frame);
+  --blue: var(--settings-ink);
+  --mark: var(--ds-danger);
+
+  /* Text */
+  --text: var(--settings-ink);
+  --text-2: var(--settings-muted);
+  --text-3: color-mix(in srgb, var(--settings-muted) 65%, transparent);
+
+  /* Fills on top of the Space tint: translucent, so any tint shows through.
+     Hover and selected are the same grey (one `soft` role). */
+  --fill-hover: rgb(0 0 0 / 5.5%);
+  --fill-active: rgb(0 0 0 / 5.5%);
+  --fill-subtle: rgb(0 0 0 / 3%);
+  --line: var(--settings-soft);
+
+  /* Floating surfaces: command bar, menus, panels */
+  --surface: var(--settings-page);
+  --surface-2: var(--settings-panel);
+  --surface-line: var(--settings-soft);
+  --selection: var(--settings-soft);
+  --selection-text: var(--settings-ink);
+  --focus: transparent; /* no focus rings anywhere */
+
+  /* Status: the only saturated colours */
+  --green: var(--ds-success);
+  --amber: var(--ds-warn);
+  --red: var(--ds-danger);
+  --agent: var(--settings-ink);
+
+  /* Type */
+  --font: var(--settings-font-ui);
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-lg: 15px;
+  --text-xl: 17px;
+
+  /* Space, shape, depth, motion */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius-sm: var(--ds-r-sm);
+  --radius-md: var(--ds-r-sm);
+  --radius-lg: var(--ds-r-md);
+  --radius-xl: var(--ds-r-lg);
+  /* Corners nested in the window are concentric with it: its radius minus their inset.
+     macOS draws a borderless window with 20pt corners. */
+  --window-radius: 20px;
+  --page-radius: calc(var(--window-radius) - 8px); /* the page area, 8px in (main.ts GAP) */
+  --float-radius: var(--ds-r-md); /* the floating sidebar, 10px in */
+  --shadow-row: 0 0 0 1px var(--settings-soft); /* a hairline, no drop shadow */
+  --shadow-pop: 0 16px 60px rgb(0 0 0 / 8%), 0 0 0 1px var(--settings-soft);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fast: 150ms;
+  --medium: 200ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --settings-page: #191919;
+    --settings-panel: #1e1e1e;
+    --settings-control: #232323;
+    --settings-soft: #323232;
+    --settings-ink: #ececec;
+    --settings-muted: #a4a4a4;
+    --ds-frame: #191919;
+    --ds-danger: #ff6b61;
+    --ds-switch-off: #3a3a3c;
+    --ds-scrim: rgb(0 0 0 / 55%);
+
+    --fill-hover: rgb(255 255 255 / 8%);
+    --fill-active: rgb(255 255 255 / 8%);
+    --fill-subtle: rgb(255 255 255 / 4%);
+
+    --shadow-pop: 0 16px 60px rgb(0 0 0 / 40%), 0 0 0 1px var(--settings-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fast: 0ms;
+    --medium: 0ms;
+  }
+}
+
+/* Light <-> dark: a one-second fade on OpenWhisper's slow-fast-slow curve (quick in the middle,
+   long soft ends). lib/themeFade.ts sets the class for the second after the scheme flips. */
+.theme-fading *,
+.theme-fading *::before,
+.theme-fading *::after,
+.theme-fading body {
+  transition:
+    background-color 1s cubic-bezier(0.37, 0, 0.63, 1),
+    color 1s cubic-bezier(0.37, 0, 0.63, 1),
+    border-color 1s cubic-bezier(0.37, 0, 0.63, 1),
+    outline-color 1s cubic-bezier(0.37, 0, 0.63, 1),
+    fill 1s cubic-bezier(0.37, 0, 0.63, 1),
+    stroke 1s cubic-bezier(0.37, 0, 0.63, 1),
+    box-shadow 1s cubic-bezier(0.37, 0, 0.63, 1) !important;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: default;
+}
+
+/* No focus ring, outline or focus border anywhere; keyboard behaviour stays. */
+:focus,
+:focus-visible {
+  outline: none;
+}
+
+svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: var(--ds-r-sm);
+  background: var(--fill-subtle);
+  box-shadow: inset 0 0 0 0.5px var(--surface-line);
+  font: 500 var(--text-xs) / 16px var(--mono);
+  text-align: center;
+  color: var(--text-2);
+}

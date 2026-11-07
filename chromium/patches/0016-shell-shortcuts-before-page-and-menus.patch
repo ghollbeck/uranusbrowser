@@ -1,0 +1,477 @@
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -8,6 +8,7 @@
+ #include <string>
+ 
+ #include "base/strings/string_number_conversions.h"
++#include "chrome/browser/anus/anus_accelerator.h"
+ #include "chrome/browser/anus/anus_frame_host.h"
+ #include "chrome/common/extensions/api/anus_private.h"
+ #include "content/public/browser/web_contents.h"
+@@ -161,4 +162,27 @@
+   return RespondNow(WithArguments(host->GetWindowId()));
+ }
+ 
++ExtensionFunction::ResponseAction AnusPrivateSetShortcutsFunction::Run() {
++  auto params = anus_private::SetShortcuts::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++
++  std::map<ui::Accelerator, std::string> shortcuts;
++  base::ListValue rejected;
++  for (const auto [keys, command] :
++       params->shortcuts.additional_properties) {
++    const std::optional<ui::Accelerator> accelerator =
++        ParseAnusAccelerator(keys);
++    if (!accelerator || !command.is_string()) {
++      rejected.Append(keys);
++      continue;
++    }
++    shortcuts[*accelerator] = command.GetString();
++  }
++  AnusFrameHost::Shortcuts() = std::move(shortcuts);
++  for (AnusFrameHost* host : AnusFrameHost::All()) {
++    host->UpdateShortcuts();
++  }
++  return RespondNow(WithArguments(std::move(rejected)));
++}
++
+ }  // namespace extensions
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -40,6 +40,15 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateSetShortcutsFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.setShortcuts", UNKNOWN)
++
++ protected:
++  ~AnusPrivateSetShortcutsFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ }  // namespace extensions
+ 
+ #endif  // CHROME_BROWSER_EXTENSIONS_API_ANUS_PRIVATE_ANUS_PRIVATE_API_H_
+--- a/chrome/browser/anus/BUILD.gn
++++ b/chrome/browser/anus/BUILD.gn
+@@ -7,11 +7,15 @@
+ # directory are header-only and belong to no target.
+ source_set("anus_frame_host") {
+   sources = [
++    "anus_accelerator.cc",
++    "anus_accelerator.h",
+     "anus_frame_host.cc",
+     "anus_frame_host.h",
+   ]
+   public_deps = [
+     "//skia",
++    "//ui/base",
++    "//ui/events:events_base",
+     "//ui/gfx/geometry",
+   ]
+   deps = [ "//base" ]
+--- /dev/null
++++ b/chrome/browser/anus/anus_accelerator.cc
+@@ -0,0 +1,136 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "chrome/browser/anus/anus_accelerator.h"
++
++#include <string>
++#include <vector>
++
++#include "base/strings/string_number_conversions.h"
++#include "base/strings/string_split.h"
++#include "base/strings/string_util.h"
++#include "build/build_config.h"
++#include "ui/events/event_constants.h"
++#include "ui/events/keycodes/keyboard_codes.h"
++
++namespace {
++
++std::optional<ui::KeyboardCode> KeyFor(std::string_view name) {
++  if (name.size() == 1) {
++    const char c = base::ToUpperASCII(name[0]);
++    if (c >= 'A' && c <= 'Z') {
++      return static_cast<ui::KeyboardCode>(ui::VKEY_A + (c - 'A'));
++    }
++    if (c >= '0' && c <= '9') {
++      return static_cast<ui::KeyboardCode>(ui::VKEY_0 + (c - '0'));
++    }
++    switch (c) {
++      case '[':
++        return ui::VKEY_OEM_4;
++      case ']':
++        return ui::VKEY_OEM_6;
++      case '=':
++        return ui::VKEY_OEM_PLUS;
++      case '-':
++        return ui::VKEY_OEM_MINUS;
++      case ',':
++        return ui::VKEY_OEM_COMMA;
++      case '.':
++        return ui::VKEY_OEM_PERIOD;
++      case '/':
++        return ui::VKEY_OEM_2;
++      case ';':
++        return ui::VKEY_OEM_1;
++      case '\'':
++        return ui::VKEY_OEM_7;
++      case '`':
++        return ui::VKEY_OEM_3;
++      case '\\':
++        return ui::VKEY_OEM_5;
++    }
++    return std::nullopt;
++  }
++  const std::string key = base::ToLowerASCII(name);
++  static constexpr struct {
++    const char* name;
++    ui::KeyboardCode code;
++  } kNamed[] = {
++      {"plus", ui::VKEY_OEM_PLUS},   {"tab", ui::VKEY_TAB},
++      {"space", ui::VKEY_SPACE},     {"enter", ui::VKEY_RETURN},
++      {"return", ui::VKEY_RETURN},   {"escape", ui::VKEY_ESCAPE},
++      {"esc", ui::VKEY_ESCAPE},      {"backspace", ui::VKEY_BACK},
++      {"delete", ui::VKEY_DELETE},   {"up", ui::VKEY_UP},
++      {"down", ui::VKEY_DOWN},       {"left", ui::VKEY_LEFT},
++      {"right", ui::VKEY_RIGHT},     {"home", ui::VKEY_HOME},
++      {"end", ui::VKEY_END},         {"pageup", ui::VKEY_PRIOR},
++      {"pagedown", ui::VKEY_NEXT},
++  };
++  for (const auto& named : kNamed) {
++    if (key == named.name) {
++      return named.code;
++    }
++  }
++  int f = 0;
++  if (key.size() >= 2 && key[0] == 'f' &&
++      base::StringToInt(std::string_view(key).substr(1), &f) && f >= 1 &&
++      f <= 24) {
++    return static_cast<ui::KeyboardCode>(ui::VKEY_F1 + (f - 1));
++  }
++  return std::nullopt;
++}
++
++std::optional<int> ModifierFor(std::string_view name) {
++  const std::string modifier = base::ToLowerASCII(name);
++#if BUILDFLAG(IS_MAC)
++  constexpr int kCmdOrCtrl = ui::EF_COMMAND_DOWN;
++#else
++  constexpr int kCmdOrCtrl = ui::EF_CONTROL_DOWN;
++#endif
++  if (modifier == "cmdorctrl" || modifier == "commandorcontrol") {
++    return kCmdOrCtrl;
++  }
++  if (modifier == "cmd" || modifier == "command" || modifier == "super" ||
++      modifier == "meta") {
++    return ui::EF_COMMAND_DOWN;
++  }
++  if (modifier == "ctrl" || modifier == "control") {
++    return ui::EF_CONTROL_DOWN;
++  }
++  if (modifier == "alt" || modifier == "option") {
++    return ui::EF_ALT_DOWN;
++  }
++  if (modifier == "shift") {
++    return ui::EF_SHIFT_DOWN;
++  }
++  return std::nullopt;
++}
++
++}  // namespace
++
++std::optional<ui::Accelerator> ParseAnusAccelerator(std::string_view text) {
++  // "Cmd++" is Cmd and the plus key: a trailing empty part is "+".
++  std::vector<std::string_view> parts = base::SplitStringPiece(
++      text, "+", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
++  if (parts.size() >= 2 && parts.back().empty() &&
++      parts[parts.size() - 2].empty()) {
++    parts.pop_back();
++    parts.back() = "Plus";
++  }
++  if (parts.empty() || parts.back().empty()) {
++    return std::nullopt;
++  }
++  int modifiers = ui::EF_NONE;
++  for (size_t i = 0; i + 1 < parts.size(); ++i) {
++    const std::optional<int> modifier = ModifierFor(parts[i]);
++    if (!modifier) {
++      return std::nullopt;
++    }
++    modifiers |= *modifier;
++  }
++  const std::optional<ui::KeyboardCode> key = KeyFor(parts.back());
++  if (!key) {
++    return std::nullopt;
++  }
++  return ui::Accelerator(*key, modifiers);
++}
+--- /dev/null
++++ b/chrome/browser/anus/anus_accelerator.h
+@@ -0,0 +1,23 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_ANUS_ANUS_ACCELERATOR_H_
++#define CHROME_BROWSER_ANUS_ANUS_ACCELERATOR_H_
++
++#include <optional>
++#include <string_view>
++
++#include "ui/base/accelerators/accelerator.h"
++
++// Parses one of Uranus Browser's keyboard shortcuts, written as an Electron
++// accelerator ("CmdOrCtrl+Shift+T", "Alt+CmdOrCtrl+Left", "Ctrl+Tab", "Cmd+["):
++// modifiers (Cmd/Command/CmdOrCtrl/CommandOrControl/Super/Meta, Ctrl/Control,
++// Alt/Option, Shift) then one key: a letter, a digit, punctuation
++// ([ ] = - , . / ; ' ` \), Plus, Tab, Space, Enter/Return, Escape/Esc,
++// Backspace, Delete, Up/Down/Left/Right, Home, End, PageUp, PageDown or
++// F1-F24. Case doesn't matter. CmdOrCtrl is Command on macOS, Control
++// elsewhere. Returns nullopt for anything else.
++std::optional<ui::Accelerator> ParseAnusAccelerator(std::string_view text);
++
++#endif  // CHROME_BROWSER_ANUS_ANUS_ACCELERATOR_H_
+--- a/chrome/browser/anus/anus_frame_host.cc
++++ b/chrome/browser/anus/anus_frame_host.cc
+@@ -26,6 +26,12 @@
+   return state;
+ }
+ 
++// static
++std::map<ui::Accelerator, std::string>& AnusFrameHost::Shortcuts() {
++  static base::NoDestructor<std::map<ui::Accelerator, std::string>> shortcuts;
++  return *shortcuts;
++}
++
+ AnusFrameHost::AnusFrameHost() {
+   Hosts().push_back(this);
+ }
+--- a/chrome/browser/anus/anus_frame_host.h
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -6,10 +6,13 @@
+ #define CHROME_BROWSER_ANUS_ANUS_FRAME_HOST_H_
+ 
+ #include <algorithm>
++#include <map>
+ #include <optional>
++#include <string>
+ #include <vector>
+ 
+ #include "third_party/skia/include/core/SkColor.h"
++#include "ui/base/accelerators/accelerator.h"
+ #include "ui/gfx/geometry/insets.h"
+ #include "ui/gfx/geometry/point.h"
+ #include "ui/gfx/geometry/rect.h"
+@@ -98,6 +101,12 @@
+   // after it.
+   static std::optional<AnusFrameState>& DefaultState();
+ 
++  // Uranus Browser's keyboard shortcuts, from chrome.anusPrivate.setShortcuts():
++  // each accelerator and the shell command it runs. Every window's frame
++  // takes these keys before the page and before Chromium's own shortcuts, and
++  // hands them to the shell (chrome.anusPrivate.onShortcut).
++  static std::map<ui::Accelerator, std::string>& Shortcuts();
++
+   // The extension window ID (the window's session ID) of this host's window.
+   virtual int GetWindowId() const = 0;
+   // The profile of this host's window.
+@@ -109,6 +118,8 @@
+   virtual void SetFrameState(const AnusFrameState& state) = 0;
+   virtual void FocusFrame() = 0;
+   virtual void FocusPage() = 0;
++  // Takes the keys in Shortcuts() from now on, and lets go of any others.
++  virtual void UpdateShortcuts() = 0;
+ 
+  protected:
+   AnusFrameHost();
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -18,7 +18,10 @@
+ #include "content/public/browser/navigation_controller.h"
+ #include "content/public/browser/site_instance.h"
+ #include "content/public/browser/web_contents.h"
++#include "extensions/browser/event_router.h"
++#include "extensions/browser/extension_event_histogram_value.h"
+ #include "extensions/browser/view_type_utils.h"
++#include "extensions/common/event_args.h"
+ #include "extensions/common/extension.h"
+ #include "extensions/common/mojom/view_type.mojom.h"
+ #include "third_party/blink/public/common/input/web_input_event.h"
+@@ -29,6 +32,7 @@
+ #include "ui/views/background.h"
+ #include "ui/views/border.h"
+ #include "ui/views/controls/webview/web_contents_set_background_color.h"
++#include "ui/views/focus/focus_manager.h"
+ 
+ namespace {
+ 
+@@ -100,14 +104,74 @@
+ }
+ 
+ AnusFrameView::~AnusFrameView() {
++  UnregisterShortcuts();
+   SetWebContents(nullptr);
+ }
+ 
+ void AnusFrameView::AddedToWidget() {
+   views::WebView::AddedToWidget();
+   ApplyState();
++  UpdateShortcuts();
++}
++
++void AnusFrameView::RemovedFromWidget() {
++  UnregisterShortcuts();
++  views::WebView::RemovedFromWidget();
++}
++
++void AnusFrameView::UpdateShortcuts() {
++  UnregisterShortcuts();
++  views::FocusManager* focus_manager = GetFocusManager();
++  if (!focus_manager) {
++    return;
++  }
++  shortcuts_focus_manager_ = focus_manager;
++  for (const auto& [accelerator, command] : AnusFrameHost::Shortcuts()) {
++    focus_manager->RegisterAccelerator(
++        accelerator, ui::AcceleratorManager::kHighPriority, &shortcut_target_);
++  }
++}
++
++void AnusFrameView::UnregisterShortcuts() {
++  if (shortcuts_focus_manager_) {
++    shortcuts_focus_manager_->UnregisterAccelerators(&shortcut_target_);
++    shortcuts_focus_manager_ = nullptr;
++  }
++}
++
++bool AnusFrameView::ShortcutTarget::AcceleratorPressed(
++    const ui::Accelerator& accelerator) {
++  const auto& shortcuts = AnusFrameHost::Shortcuts();
++  // The focus manager matches without the repeat flag; so does the map.
++  const auto it = shortcuts.find(
++      ui::Accelerator(accelerator.key_code(), accelerator.modifiers()));
++  if (it == shortcuts.end()) {
++    return false;
++  }
++  Profile* profile =
++      Profile::FromBrowserContext(frame_->GetBrowserContext())
++          ->GetOriginalProfile();
++  if (!extensions::ExtensionRegistry::Get(profile)
++           ->enabled_extensions()
++           .Contains(kAnusShellExtensionId)) {
++    return false;
++  }
++  auto args = base::MakeRefCounted<extensions::EventArgs>();
++  args->data.Append(it->second);
++  args->data.Append(frame_->GetWindowId());
++  auto event = std::make_unique<extensions::Event>(
++      extensions::events::UNKNOWN, "anusPrivate.onShortcut",
++      std::move(args), profile);
++  event->user_gesture = extensions::EventRouter::UserGestureState::kEnabled;
++  extensions::EventRouter::Get(profile)->DispatchEventToExtension(
++      kAnusShellExtensionId, std::move(event));
++  return true;
+ }
+ 
++bool AnusFrameView::ShortcutTarget::CanHandleAccelerators() const {
++  return frame_->IsActive();
++}
++
+ gfx::Size AnusFrameView::CalculatePreferredSize(
+     const views::SizeBounds& available_size) const {
+   // The browser view layout reads the frame's width from here (it doesn't know
+--- a/chrome/browser/ui/views/frame/anus_frame_view.h
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -22,6 +22,7 @@
+ class BrowserView;
+ 
+ namespace views {
++class FocusManager;
+ class Widget;
+ }
+ 
+@@ -77,6 +78,7 @@
+   gfx::Size CalculatePreferredSize(
+       const views::SizeBounds& available_size) const override;
+   void AddedToWidget() override;
++  void RemovedFromWidget() override;
+ 
+   // AnusFrameHost:
+   int GetWindowId() const override;
+@@ -86,6 +88,7 @@
+   void SetFrameState(const AnusFrameState& state) override;
+   void FocusFrame() override;
+   void FocusPage() override;
++  void UpdateShortcuts() override;
+ 
+   // content::WebContentsDelegate (through views::WebView):
+   content::WebContents* OpenURLFromTab(
+@@ -117,6 +120,21 @@
+   // Applies `state_` to the background, the layout and the window controls.
+   void ApplyState();
+ 
++  // Takes Uranus Browser's shortcuts (AnusFrameHost::Shortcuts()) at the window's
++  // focus manager with high priority, the way extension commands are: on
++  // macOS that is before the page and before the main menu's key
++  // equivalents, so Cmd+S toggles the sidebar instead of saving the page.
++  class ShortcutTarget : public ui::AcceleratorTarget {
++   public:
++    explicit ShortcutTarget(AnusFrameView* frame) : frame_(frame) {}
++    bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
++    bool CanHandleAccelerators() const override;
++
++   private:
++    raw_ptr<AnusFrameView> frame_;
++  };
++  void UnregisterShortcuts();
++
+   raw_ptr<BrowserView> browser_view_;
+   // Owned by `browser_view_`, like this view; it may go first.
+   views::ViewTracker background_view_;
+@@ -126,6 +144,10 @@
+   // coordinates.
+   SkRegion draggable_region_;
+ 
++  ShortcutTarget shortcut_target_{this};
++  // The focus manager that has our shortcuts, if any.
++  raw_ptr<views::FocusManager> shortcuts_focus_manager_ = nullptr;
++
+   base::ScopedObservation<extensions::ExtensionRegistry,
+                           extensions::ExtensionRegistryObserver>
+       registry_observation_{this};
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -37,6 +37,7 @@
+ 
+   callback DoneCallback = void();
+   callback WindowIdCallback = void(long windowId);
++  callback RejectedCallback = void(DOMString[] rejected);
+ 
+   interface Functions {
+     // Lays out a window's frame. Applies to every normal window (and to the
+@@ -55,5 +56,19 @@
+ 
+     // The window the calling frame page belongs to.
+     static void getWindowId(WindowIdCallback callback);
++
++    // Uranus Browser's keyboard shortcuts: <code>shortcuts</code> maps Electron
++    // accelerators ("CmdOrCtrl+Shift+T") to the shell's command ids. Uranus Browser
++    // windows take these keys before the page and before Chromium's own
++    // shortcuts, and send them to onShortcut. Replaces the previous map. The
++    // callback gets the accelerators that couldn't be read.
++    static void setShortcuts(
++        object shortcuts,
++        optional RejectedCallback callback);
+   };
++
++  interface Events {
++    // A shortcut from setShortcuts() was pressed in the given window.
++    static void onShortcut(DOMString command, long windowId);
++  };
+ };

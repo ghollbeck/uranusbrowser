@@ -1,0 +1,50 @@
+/* Sidebar and Dark mode share a browser scene in the phone carousel. */
+.shot-wrap > .mobile-sidebar-demo { display: none; }
+@media (max-width: 640px) {
+  .mobile-uranus-ready > .shot:is([data-shot="2"], [data-shot="3"]) { visibility: hidden; }
+  .shot-wrap > .mobile-sidebar-demo { display: block; }
+  .mobile-sidebar-demo .hero-browser-sidebar {
+    flex-basis: 18%; min-width: 0; transition: flex-basis .75s var(--ease), padding .75s var(--ease), opacity .4s var(--ease);
+  }
+  .mobile-sidebar-demo .hero-browser-sidebar > * { flex-shrink: 0; }
+  .mobile-sidebar-demo.sidebar-is-closed .hero-browser-sidebar { flex-basis: 0; padding-inline: 0; opacity: 0; }
+  .mobile-sidebar-demo {
+    --guide-bg: #f3f5ed; --guide-ink: #192c29; --guide-muted: #65756c; --guide-line: #192c2926;
+  }
+  .uranus-dark-layer { position: absolute; inset: 0; z-index: 2; }
+  .mobile-sidebar-demo .uranus-is-dark {
+    --guide-bg: #101c1e; --guide-ink: #e6f3ee; --guide-muted: #a2bdb3; --guide-line: #b2d8cc38;
+  }
+  .mobile-sidebar-demo .uranus-is-dark .hero-chrome { background: #141b21; }
+  .mobile-sidebar-demo .uranus-is-dark .hero-address { background: #253036; }
+  .mobile-sidebar-demo .uranus-is-dark .hero-browser-sidebar { background: #20292e; }
+  .mobile-sidebar-demo .uranus-is-dark .hero-favs b { background: #2b373d; }
+  .mobile-sidebar-demo .uranus-is-dark .hero-sidebar-tab.active { background: #35464a; }
+  .mobile-sidebar-demo .uranus-guide { position: relative; background: var(--guide-bg); color: var(--guide-ink); overflow: hidden; }
+  .uranus-guide-nav { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; height: 76px; margin: 0 40px; border-bottom: 1px solid #192c2926; }
+  .uranus-guide-nav > strong { font: 600 18px/1 var(--font); letter-spacing: .12em; }
+  .uranus-guide-nav > strong > span { font-size: 9px; letter-spacing: .03em; opacity: .52; }
+  .uranus-guide-nav > div { display: flex; gap: 24px; font-size: 11px; }
+  .uranus-guide-intro { position: relative; z-index: 2; margin: 76px 0 0 46px; }
+  .uranus-guide-intro > p:first-child { font: 500 10px/1 var(--font); letter-spacing: .14em; color: #65756c; }
+  .uranus-guide-intro h2 { margin-top: 19px; font: 500 72px/.97 var(--head); letter-spacing: -.05em; text-wrap: initial; }
+  .uranus-guide-intro .uranus-guide-deck { margin-top: 24px; font-size: 15px; line-height: 1.6; color: #65756c; }
+  .uranus-guide-link { display: inline-flex; align-items: center; gap: 38px; margin-top: 26px; padding-bottom: 8px; border-bottom: 1px solid #192c2966; font-size: 13px; }
+  .uranus-guide-link b { font-size: 18px; font-weight: 400; }
+  .uranus-orbit { position: absolute; z-index: 1; width: 390px; height: 390px; right: 2%; top: 118px; }
+  .uranus-planet { position: absolute; width: 294px; height: 294px; left: 48px; top: 48px; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #e2fff6 0, #a3d9ce 25%, #78bcb2 52%, #3c827b 82%, #245952 100%); box-shadow: inset -18px -12px 36px #154a4f4a, 14px 30px 65px -24px #23554e57; }
+  .uranus-planet::after { content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: .5; background: repeating-linear-gradient(165deg, transparent 0 24px, #c8f3e61a 29px 34px, transparent 40px 55px); }
+  .uranus-planet-ring { position: absolute; z-index: 2; left: -29px; top: 140px; width: 450px; height: 106px; border: 2px solid #567e6f94; border-radius: 50%; transform: rotate(-35deg); box-shadow: 0 0 0 4px #f3f5ed66, 0 0 0 5px #567e6f33; }
+  .uranus-orbit-dot { position: absolute; width: 7px; height: 7px; right: 20px; bottom: 62px; border-radius: 50%; background: #416a55; box-shadow: 0 0 0 5px #416a551a; }
+  .uranus-guide-facts { position: absolute; z-index: 2; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 25px; left: 46px; right: 40px; bottom: 37px; padding-top: 20px; border-top: 1px solid #192c2926; }
+  .uranus-guide-facts > span { display: grid; gap: 9px; }
+  .uranus-guide-facts small { font-size: 8px; letter-spacing: .08em; color: #65756c; }
+  .uranus-guide-facts b { font: 500 15px/1.3 var(--head); }
+  .uranus-guide-nav, .uranus-guide-facts, .uranus-guide-link { border-color: var(--guide-line); }
+  .uranus-guide-intro > p:first-child, .uranus-guide-intro .uranus-guide-deck, .uranus-guide-facts small { color: var(--guide-muted); }
+  .uranus-is-dark .uranus-planet-ring { border-color: #a3d9ce99; box-shadow: 0 0 0 4px #101c1e66, 0 0 0 5px #a3d9ce33; }
+  .mobile-sidebar-shortcut { position: absolute; z-index: 8; left: 50%; bottom: 12px; display: flex; align-items: center; gap: 5px; padding: 8px 11px; border: 1px solid #ffffff2e; border-radius: 10px; color: #fff; background: #202724ed; box-shadow: 0 12px 28px #0003; font-size: 12px; opacity: 0; transform: translate(-50%, 12px); transition: opacity .25s var(--ease), transform .3s var(--ease); }
+  .mobile-sidebar-shortcut-label { margin-right: 6px; }
+  .mobile-sidebar-shortcut kbd { display: grid; place-items: center; min-width: 21px; height: 21px; padding: 2px; border: 1px solid #ffffff3b; border-radius: 6px; background: #ffffff12; color: white; font-size: 12px; }
+  .mobile-sidebar-demo.shortcut-is-visible .mobile-sidebar-shortcut { opacity: 1; transform: translate(-50%, 0); }
+}

@@ -1,0 +1,24 @@
+--- a/chrome/browser/ui/browser_window_state.cc
++++ b/chrome/browser/ui/browser_window_state.cc
+@@ -13,6 +13,7 @@
+ #include "base/strings/string_number_conversions.h"
+ #include "chrome/browser/buildflags.h"
+ #include "chrome/browser/defaults.h"
++#include "chrome/browser/anus/anus_frame_host.h"
+ #include "chrome/browser/sessions/session_service_base.h"
+ #include "chrome/browser/sessions/session_service_lookup.h"
+ #include "chrome/browser/ui/browser_init_state.h"
+@@ -104,6 +105,13 @@
+ }
+ 
+ bool ShouldSaveWindowPlacement(const BrowserWindowInterface* browser) {
++  // Uranus Browser: a AnusMini's small size and place are its own; new Uranus Browser
++  // windows shouldn't take them.
++  if (AnusFrameHost* host =
++          AnusFrameHost::ForWindow(browser->GetSessionID().id());
++      host && host->IsAnusMini()) {
++    return false;
++  }
+   // Never track app windows that do not have a trusted source (i.e. windows
+   // spawned by an app).  See similar code in
+   // SessionServiceBase::ShouldTrackBrowser().

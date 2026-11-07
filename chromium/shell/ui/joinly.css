@@ -1,0 +1,497 @@
+/* Meetings in the Agent panel (joinlySheet.ts): the header button, the sheet over the
+   conversation, and the banner that stays while the agent is in a meeting. It reuses the
+   panel's sheet, field and button styles (agent.css) and adds only what is its own. */
+
+/* ---- the header button and the live banner ------------------------------------------------- */
+
+#joinly-open {
+  position: relative;
+}
+
+#joinly-open[aria-expanded='true'] {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+#joinly-open.live::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.meeting-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 var(--space-3) var(--space-2);
+  padding: 4px 4px 4px var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  box-shadow: inset 0 0 0 0.5px color-mix(in srgb, var(--green) 35%, transparent);
+  font-size: var(--text-sm);
+}
+
+.jn-live-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--green);
+  animation: jn-pulse 1.8s var(--ease) infinite;
+}
+
+@keyframes jn-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.jn-banner-text {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 0;
+  text-align: left;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.jn-banner-text:hover {
+  text-decoration: underline;
+}
+
+.jn-banner-leave {
+  height: 26px;
+  padding: 0 12px;
+  font-size: var(--text-sm);
+}
+
+/* ---- the sheet --------------------------------------------------------------------------------- */
+
+.jn-region:empty {
+  display: none;
+}
+
+.jn-region:not(:empty) ~ .jn-region:not(:empty) {
+  margin-top: var(--space-4);
+}
+
+.jn-title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.jn-sub {
+  margin: var(--space-3) 0 var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.jn-detail {
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--text-2);
+}
+
+.jn-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 10px 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.jn-dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+
+.jn-status.ok .jn-dot {
+  background: var(--green);
+}
+
+.jn-status.warn .jn-dot {
+  background: var(--amber);
+}
+
+.jn-status.busy .jn-dot {
+  background: var(--agent);
+  animation: jn-pulse 1.2s var(--ease) infinite;
+}
+
+.jn-status-text {
+  display: flex;
+  flex: 1 1 190px;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.jn-check {
+  height: 28px;
+  margin-left: auto;
+  padding: 0 12px;
+  flex: none;
+  font-size: var(--text-sm);
+}
+
+.jn-check:disabled,
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.45;
+}
+
+.jn-code-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.jn-code {
+  align-self: stretch;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  font: 12px / 1.5 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.jn-code-row .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  font-size: var(--text-sm);
+}
+
+.jn-endpoint-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.jn-endpoint {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+
+.jn-endpoint-row .secondary-button {
+  flex: none;
+}
+
+.jn-endpoint-region .text-button {
+  margin-left: -10px;
+}
+
+.jn-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.jn-switch-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.jn-switch-label {
+  font-weight: 600;
+}
+
+.jn-switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--text-3);
+  transition: background var(--fast) var(--ease);
+}
+
+.jn-switch[aria-checked='true'] {
+  background: var(--green);
+}
+
+.jn-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform var(--fast) var(--ease);
+}
+
+.jn-switch[aria-checked='true'] .jn-knob {
+  transform: translateX(16px);
+}
+
+.jn-consent {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  font-size: var(--text-sm);
+}
+
+.jn-points {
+  margin: var(--space-2) 0 0;
+  padding-left: 18px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.jn-points li + li {
+  margin-top: 6px;
+}
+
+.jn-more {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.jn-more summary {
+  cursor: default;
+  color: var(--text-2);
+}
+
+.jn-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.jn-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: var(--space-2) 0;
+}
+
+.jn-facts dt {
+  color: var(--text-2);
+}
+
+.jn-facts dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.primary-button.danger {
+  background: var(--red);
+}
+
+.jn-leave-row {
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
+
+.jn-leave-row .jn-detail {
+  flex: 1 1 140px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.primary-button,
+.secondary-button {
+  white-space: nowrap;
+}
+
+/* The questions (consent, the join confirmation) keep their buttons in reach while the text scrolls. */
+.jn-consent .jn-actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: var(--space-2);
+  padding: var(--space-2) 0 2px;
+  background: var(--surface-2);
+}
+
+.jn-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jn-chip {
+  max-width: 100%;
+  padding: 3px 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jn-talk {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.jn-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.jn-line.self {
+  background: color-mix(in srgb, var(--agent) 12%, transparent);
+}
+
+.jn-at {
+  font: 11px var(--mono);
+  color: var(--text-3);
+}
+
+.jn-who {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jn-text {
+  flex-basis: 100%;
+  overflow-wrap: anywhere;
+  font-size: var(--text-md);
+}
+
+.joinly-sheet .sheet-hint a {
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jn-live-dot,
+  .jn-status.busy .jn-dot {
+    animation: none;
+  }
+}
+
+/* ---- voice mode: loud while it is on ------------------------------------------------------------------ */
+
+.jn-voice-on {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--red, #d33) 12%, transparent);
+  box-shadow: inset 0 0 0 0.5px color-mix(in srgb, var(--red, #d33) 45%, transparent);
+}
+
+.jn-voice-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--space-2);
+}
+
+.jn-banner-voice {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--text-xs, 11px);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--red, #d33) 18%, transparent);
+  color: var(--text);
+}
+
+/* ---- "Pick a meeting": this tab and today's calendar meetings, no pasting (joinlySheet.ts) ---- */
+
+.jn-picks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-2);
+}
+
+.jn-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--surface-line);
+  text-align: left;
+}
+
+.jn-pick:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-2) 45%, transparent);
+}
+
+.jn-pick[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 1.5px var(--text);
+}
+
+.jn-pick > svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.jn-pick > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.jn-pick strong {
+  overflow: hidden;
+  font-size: var(--text-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jn-pick span span {
+  overflow: hidden;
+  font-size: var(--text-xs);
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

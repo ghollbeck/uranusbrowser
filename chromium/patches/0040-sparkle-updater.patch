@@ -1,0 +1,91 @@
+--- a/chrome/browser/app_controller_mac.mm
++++ b/chrome/browser/app_controller_mac.mm
+@@ -677,8 +677,24 @@
+   const raw_ptr<ProfileManager> profile_manager_;
+   AppController* const app_controller_;  // Weak; owns us.
+ };
++
++// Uranus Browser: Sparkle 2 (https://sparkle-project.org) updates the app. Release
++// builds carry Sparkle.framework in Contents/Frameworks (the
++// anus_sparkle_framework GN arg), and the feed and key in the Info.plist
++// (SUFeedURL, SUPublicEDKey). It is loaded when the app starts, so Uranus Browser
++// doesn't link it: dev builds, which don't carry it, simply never update.
++// This is the part of SPUStandardUpdaterController's API used here.
++@protocol AnusSparkleUpdaterController
++- (instancetype)initWithStartingUpdater:(BOOL)startUpdater
++                        updaterDelegate:(id)updaterDelegate
++                     userDriverDelegate:(id)userDriverDelegate;
++- (void)checkForUpdates:(id)sender;
++@end
+ 
+ @implementation AppController {
++  // Uranus Browser: Sparkle's updater controller, if the app carries Sparkle.
++  NSObject* _anusUpdater;
++
+   // Manages the state of the command menu items.
+   std::unique_ptr<CommandUpdater> _menuState;
+ 
+@@ -1233,6 +1249,54 @@
+ // Placed here for 2 reasons:
+ // 1) Same spot as other Pref stuff
+ // 2) Try and be friendly by keeping this after app launch
++// Uranus Browser: starts Sparkle's standard updater (it checks the feed on its own
++// schedule, SUEnableAutomaticChecks) and adds "Check for Updates…" under
++// "About Uranus Browser" in the app menu. Without Sparkle.framework in the app, does
++// nothing.
++- (void)startAnusUpdater {
++  if (_anusUpdater) {
++    return;
++  }
++  NSURL* frameworkURL = [NSBundle.mainBundle.privateFrameworksURL
++      URLByAppendingPathComponent:@"Sparkle.framework"];
++  NSBundle* sparkle = [NSBundle bundleWithURL:frameworkURL];
++  if (!sparkle) {
++    return;
++  }
++  NSError* error = nil;
++  if (![sparkle loadAndReturnError:&error]) {
++    LOG(ERROR) << "Uranus Browser: can't load Sparkle: "
++               << base::SysNSStringToUTF8(error.localizedDescription);
++    return;
++  }
++  Class controllerClass = NSClassFromString(@"SPUStandardUpdaterController");
++  if (![controllerClass instancesRespondToSelector:@selector
++                        (initWithStartingUpdater:
++                                 updaterDelegate:userDriverDelegate:)]) {
++    LOG(ERROR) << "Uranus Browser: Sparkle has no SPUStandardUpdaterController";
++    return;
++  }
++  NSObject<AnusSparkleUpdaterController>* updater =
++      [[controllerClass alloc] initWithStartingUpdater:YES
++                                       updaterDelegate:nil
++                                    userDriverDelegate:nil];
++  _anusUpdater = updater;
++
++  NSMenu* appMenu = [[NSApp.mainMenu itemWithTag:IDC_CHROME_MENU] submenu];
++  const NSInteger about = [appMenu indexOfItemWithTag:IDC_ABOUT];
++  if (!appMenu || about < 0) {
++    return;
++  }
++  NSMenuItem* item =
++      [[NSMenuItem alloc] initWithTitle:@"Check for Updates…"
++                                 action:@selector(checkForUpdates:)
++                          keyEquivalent:@""];
++  // Sparkle's controller enables the item (-validateMenuItem:) while it can
++  // check.
++  item.target = updater;
++  [appMenu insertItem:item atIndex:about + 1];
++}
++
+ - (void)setUpdateCheckInterval {
+ #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+   CFStringRef app = CFSTR("com.google.Keystone.Agent");
+@@ -1328,6 +1392,8 @@
+   // Makes "Services" menu items available.
+   [self registerServicesMenuTypesTo:[notify object]];
+ 
++  [self startAnusUpdater];
++
+   _startupComplete = YES;
+ 
+   if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kKioskMode))

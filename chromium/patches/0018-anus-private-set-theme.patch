@@ -1,0 +1,101 @@
+--- a/chrome/browser/extensions/api/anus_private/BUILD.gn
++++ b/chrome/browser/extensions/api/anus_private/BUILD.gn
+@@ -13,6 +13,8 @@
+   deps = [
+     "//base",
+     "//chrome/browser/anus:anus_frame_host",
++    "//chrome/browser/profiles:profile",
++    "//chrome/browser/themes",
+     "//chrome/common/extensions/api",
+     "//content/public/browser",
+     "//extensions/browser",
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -10,6 +10,9 @@
+ #include "base/strings/string_number_conversions.h"
+ #include "chrome/browser/anus/anus_accelerator.h"
+ #include "chrome/browser/anus/anus_frame_host.h"
++#include "chrome/browser/profiles/profile.h"
++#include "chrome/browser/themes/theme_service.h"
++#include "chrome/browser/themes/theme_service_factory.h"
+ #include "chrome/common/extensions/api/anus_private.h"
+ #include "content/public/browser/web_contents.h"
+ #include "extensions/browser/extensions_browser_client.h"
+@@ -185,4 +188,30 @@
+   return RespondNow(WithArguments(std::move(rejected)));
+ }
+ 
++ExtensionFunction::ResponseAction AnusPrivateSetThemeFunction::Run() {
++  auto params = anus_private::SetTheme::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++
++  ThemeService::BrowserColorScheme scheme;
++  switch (params->theme) {
++    case anus_private::Theme::kSystem:
++      scheme = ThemeService::BrowserColorScheme::kSystem;
++      break;
++    case anus_private::Theme::kLight:
++      scheme = ThemeService::BrowserColorScheme::kLight;
++      break;
++    case anus_private::Theme::kDark:
++      scheme = ThemeService::BrowserColorScheme::kDark;
++      break;
++    case anus_private::Theme::kNone:
++      return RespondNow(BadMessage());
++  }
++  ThemeService* themes = ThemeServiceFactory::GetForProfile(
++      Profile::FromBrowserContext(browser_context())->GetOriginalProfile());
++  if (themes->GetBrowserColorScheme() != scheme) {
++    themes->SetBrowserColorScheme(scheme);
++  }
++  return RespondNow(NoArguments());
++}
++
+ }  // namespace extensions
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -49,6 +49,15 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateSetThemeFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.setTheme", UNKNOWN)
++
++ protected:
++  ~AnusPrivateSetThemeFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ }  // namespace extensions
+ 
+ #endif  // CHROME_BROWSER_EXTENSIONS_API_ANUS_PRIVATE_ANUS_PRIVATE_API_H_
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -26,6 +26,14 @@
+     page
+   };
+ 
++  // The browser's colour scheme, like Electron's nativeTheme.themeSource.
++  enum Theme {
++    // Follow macOS's appearance.
++    system,
++    light,
++    dark
++  };
++
+   dictionary FrameState {
+     SidebarMode sidebar;
+     // The frame page covers the whole window (command bar, Peek, tour, tab
+@@ -65,6 +73,11 @@
+     static void setShortcuts(
+         object shortcuts,
+         optional RejectedCallback callback);
++
++    // Sets the browser's colour scheme: Chromium's own UI and pages'
++    // prefers-color-scheme (the frame page's too) follow it. Kept in the
++    // profile, like Settings > Appearance > Mode.
++    static void setTheme(Theme theme, optional DoneCallback callback);
+   };
+ 
+   interface Events {

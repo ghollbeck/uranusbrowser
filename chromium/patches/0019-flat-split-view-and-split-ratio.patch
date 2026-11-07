@@ -1,0 +1,285 @@
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -8,11 +8,15 @@
+ #include <string>
+ 
+ #include "base/strings/string_number_conversions.h"
++#include "chrome/browser/extensions/extension_tab_util.h"
+ #include "chrome/browser/anus/anus_accelerator.h"
+ #include "chrome/browser/anus/anus_frame_host.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/themes/theme_service.h"
+ #include "chrome/browser/themes/theme_service_factory.h"
++#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
++#include "chrome/browser/ui/tabs/tab_strip_model.h"
++#include "components/tabs/public/tab_interface.h"
+ #include "chrome/common/extensions/api/anus_private.h"
+ #include "content/public/browser/web_contents.h"
+ #include "extensions/browser/extensions_browser_client.h"
+@@ -26,6 +30,8 @@
+ constexpr char kNoWindowError[] = "No Uranus Browser window with id *.";
+ constexpr char kNotAFramePageError[] = "The caller is not a frame page.";
+ constexpr char kBadColorError[] = "background must be #rrggbb.";
++constexpr char kNoTabError[] = "No tab with id *.";
++constexpr char kNotSplitError[] = "The tab is not in a split view.";
+ 
+ std::optional<SkColor> ParseColor(const std::string& text) {
+   uint32_t rgb = 0;
+@@ -214,4 +220,22 @@
+   return RespondNow(NoArguments());
+ }
+ 
++ExtensionFunction::ResponseAction AnusPrivateSetSplitRatioFunction::Run() {
++  auto params = anus_private::SetSplitRatio::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++
++  content::WebContents* contents = nullptr;
++  if (!ExtensionTabUtil::GetTabById(params->tab_id, browser_context(),
++                                    /*include_incognito=*/false, &contents)) {
++    return RespondNow(Error(kNoTabError, base::NumberToString(params->tab_id)));
++  }
++  tabs::TabInterface* tab = tabs::TabInterface::MaybeGetFromContents(contents);
++  if (!tab || !tab->GetSplit() || !tab->GetBrowserWindowInterface()) {
++    return RespondNow(Error(kNotSplitError));
++  }
++  tab->GetBrowserWindowInterface()->GetTabStripModel()->UpdateSplitRatio(
++      *tab->GetSplit(), std::clamp(params->ratio, 0.1, 0.9));
++  return RespondNow(NoArguments());
++}
++
+ }  // namespace extensions
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -58,6 +58,15 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateSetSplitRatioFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.setSplitRatio", UNKNOWN)
++
++ protected:
++  ~AnusPrivateSetSplitRatioFunction() override = default;
++  ResponseAction Run() override;
++};
++
+ }  // namespace extensions
+ 
+ #endif  // CHROME_BROWSER_EXTENSIONS_API_ANUS_PRIVATE_ANUS_PRIVATE_API_H_
+--- /dev/null
++++ b/chrome/browser/anus/anus_shell_events.h
+@@ -0,0 +1,41 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_ANUS_ANUS_SHELL_EVENTS_H_
++#define CHROME_BROWSER_ANUS_ANUS_SHELL_EVENTS_H_
++
++#include <memory>
++#include <string>
++#include <utility>
++
++#include "base/memory/scoped_refptr.h"
++#include "base/values.h"
++#include "chrome/browser/anus/anus_shell.h"
++#include "chrome/browser/profiles/profile.h"
++#include "extensions/browser/event_router.h"
++#include "extensions/browser/extension_event_histogram_value.h"
++#include "extensions/browser/extension_registry.h"
++#include "extensions/common/event_args.h"
++
++// Sends one of chrome.anusPrivate's events ("anusPrivate.onSomething") to
++// Uranus Browser's shell, and only to it. Header-only, like anus_shell_commands.h,
++// so that any browser code can send one without a new dependency.
++inline void DispatchAnusShellEvent(Profile* profile,
++                                     const std::string& event_name,
++                                     base::ListValue args) {
++  profile = profile->GetOriginalProfile();
++  if (!extensions::ExtensionRegistry::Get(profile)
++           ->enabled_extensions()
++           .Contains(kAnusShellExtensionId)) {
++    return;
++  }
++  auto event_args = base::MakeRefCounted<extensions::EventArgs>();
++  event_args->data = std::move(args);
++  auto event = std::make_unique<extensions::Event>(
++      extensions::events::UNKNOWN, event_name, std::move(event_args), profile);
++  extensions::EventRouter::Get(profile)->DispatchEventToExtension(
++      kAnusShellExtensionId, std::move(event));
++}
++
++#endif  // CHROME_BROWSER_ANUS_ANUS_SHELL_EVENTS_H_
+--- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
++++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
+@@ -1273,7 +1273,10 @@
+         include_leading_inset ? default_inset : panel_side_inset, default_inset,
+         include_trailing_inset ? default_inset : panel_side_inset);
+ 
+-    views().multi_contents_view->SetSplitViewInsets(contents_insets);
++    // Uranus Browser: the panes fill the page area; the frame's gap is around it.
++    views().multi_contents_view->SetSplitViewInsets(
++        views().multi_contents_view->IsAnusFlatSplit() ? gfx::Insets()
++                                                         : contents_insets);
+   }
+ 
+   // Update the multi-contents view about if we will be animating content
+--- a/chrome/browser/ui/views/frame/multi_contents_resize_area.cc
++++ b/chrome/browser/ui/views/frame/multi_contents_resize_area.cc
+@@ -170,7 +170,10 @@
+       axis() == Axis::kHorizontal ? views::LayoutOrientation::kVertical
+                                   : views::LayoutOrientation::kHorizontal);
+ 
+-  gfx::Size preferred_size(kHandleResizeAxisSize + kHandleResizeAxisPadding,
++  // Uranus Browser: the gap between the panes is the page area's gap, and the handle.
++  gfx::Size preferred_size(multi_contents_view_->IsAnusFlatSplit()
++                               ? MultiContentsView::kAnusSplitGap
++                               : kHandleResizeAxisSize + kHandleResizeAxisPadding,
+                            kHandleOffAxisSize);
+   gfx::Size resize_handle_preferred_size(kHandleResizeAxisSize,
+                                          kHandleOffAxisSize);
+--- a/chrome/browser/ui/views/frame/multi_contents_view.cc
++++ b/chrome/browser/ui/views/frame/multi_contents_view.cc
+@@ -4,6 +4,8 @@
+ 
+ #include "chrome/browser/ui/views/frame/multi_contents_view.h"
+ 
++#include "chrome/browser/ui/views/frame/anus_top_chrome.h"
++
+ #include <algorithm>
+ #include <cstdlib>
+ 
+@@ -257,6 +259,10 @@
+ 
+ bool MultiContentsView::IsInSplitView() const {
+   return resize_area_->GetVisible();
++}
++
++bool MultiContentsView::IsAnusFlatSplit() const {
++  return AnusHidesTopChrome(browser_view_->browser());
+ }
+ 
+ void MultiContentsView::SetWebContentsAtIndex(
+@@ -507,8 +513,10 @@
+ 
+   gfx::Rect available_space = gfx::Rect(width, height);
+ 
++  // Uranus Browser: the window's own background shows between the panes.
+   const bool show_background =
+-      drop_target_view_->GetVisible() || IsInSplitView();
++      drop_target_view_->GetVisible() ||
++      (IsInSplitView() && !IsAnusFlatSplit());
+   layouts.child_layouts.emplace_back(background_view_.get(), show_background,
+                                      available_space);
+ 
+@@ -581,8 +589,11 @@
+   {
+     // Need to temporarily override the split view insets.
+     const auto split_view_insets =
+-        gfx::Insets::TLBR(split_view_insets_.top(), kSplitViewContentInset,
+-                          kSplitViewContentInset, kSplitViewContentInset);
++        IsAnusFlatSplit()
++            ? gfx::Insets()
++            : gfx::Insets::TLBR(split_view_insets_.top(),
++                                kSplitViewContentInset, kSplitViewContentInset,
++                                kSplitViewContentInset);
+     base::AutoReset inset_override(&split_view_insets_, split_view_insets);
+     target_layout = CalculateProposedLayout(
+         views::SizeBounds(target_content_bounds_->actual_size));
+@@ -803,8 +814,11 @@
+         is_in_split
+             ? kSplitViewContentRoundedCorners
+             : (is_active ? GetBackgroundRadii() : gfx::RoundedCornersF()));
++    // Uranus Browser: each pane looks like a single page (no border, outline or mini
++    // toolbar); only its corners say it is a pane.
+     contents_container_view->UpdateBorderAndOverlay(
+-        is_in_split, is_active, is_active && active_contents_view_highlighted_);
++        is_in_split && !IsAnusFlatSplit(), is_active,
++        is_active && active_contents_view_highlighted_);
+   }
+ }
+ 
+--- a/chrome/browser/ui/views/frame/multi_contents_view.h
++++ b/chrome/browser/ui/views/frame/multi_contents_view.h
+@@ -98,6 +98,13 @@
+   // Returns true if more than one WebContents is displayed.
+   bool IsInSplitView() const;
+ 
++  // Uranus Browser: in Uranus Browser windows (top chrome hidden, see anus_top_chrome.h) a
++  // split has none of Chromium's own chrome: the panes sit straight in the
++  // page area, kAnusSplitGap apart (the resize area), each with its own
++  // round corners; no inset, padding, outline, background or mini toolbar.
++  bool IsAnusFlatSplit() const;
++  static constexpr int kAnusSplitGap = 8;
++
+   // Show the split view without set any WebContents and update the size and
+   // layout of contents views based on `visual_data`, this is used to prepare
+   // the layout and prevent a re-layout of WebContents.
+--- a/chrome/browser/ui/views/frame/multi_contents_view_delegate.cc
++++ b/chrome/browser/ui/views/frame/multi_contents_view_delegate.cc
+@@ -4,6 +4,7 @@
+ 
+ #include "chrome/browser/ui/views/frame/multi_contents_view_delegate.h"
+ 
++#include "chrome/browser/anus/anus_shell_events.h"
+ #include "chrome/browser/sessions/session_service.h"
+ #include "chrome/browser/sessions/session_service_factory.h"
+ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+@@ -13,7 +14,9 @@
+ #include "chrome/browser/ui/tabs/tab_enums.h"
+ #include "chrome/browser/ui/tabs/tab_strip_model.h"
+ #include "chrome/browser/ui/tabs/tab_strip_model_delegate.h"
++#include "chrome/browser/ui/views/frame/anus_top_chrome.h"
+ #include "chrome/browser/ui/views/frame/multi_contents_drop_target_view.h"
++#include "components/sessions/content/session_tab_helper.h"
+ #include "components/sessions/core/session_id.h"
+ #include "components/split_tabs/split_tab_visual_data.h"
+ #include "components/tabs/public/split_tab_data.h"
+@@ -74,6 +77,22 @@
+     const split_tabs::SplitTabId split_id =
+         tab_strip_model_->GetActiveTab()->GetSplit().value();
+ 
++    // Uranus Browser: the shell keeps the ratio in its Store (splitRatio).
++    if (AnusHidesTopChrome(&*browser_)) {
++      const std::vector<tabs::TabInterface*> tabs =
++          tab_strip_model_->GetSplitData(split_id)->ListTabs();
++      if (!tabs.empty()) {
++        base::ListValue args;
++        args.Append(sessions::SessionTabHelper::IdForTab(
++                        tabs.front()->GetContents())
++                        .id());
++        args.Append(start_ratio);
++        DispatchAnusShellEvent(browser_->GetProfile(),
++                                 "anusPrivate.onSplitRatioChanged",
++                                 std::move(args));
++      }
++    }
++
+     SessionService* const session_service =
+         SessionServiceFactory::GetForProfile(browser_->GetProfile());
+ 
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -78,10 +78,22 @@
+     // prefers-color-scheme (the frame page's too) follow it. Kept in the
+     // profile, like Settings > Appearance > Mode.
+     static void setTheme(Theme theme, optional DoneCallback callback);
++
++    // Sets how much of a split view the first (left) pane takes, 0.1 to 0.9.
++    // <code>tabId</code> is either tab of the split.
++    static void setSplitRatio(
++        long tabId,
++        double ratio,
++        optional DoneCallback callback);
+   };
+ 
+   interface Events {
+     // A shortcut from setShortcuts() was pressed in the given window.
+     static void onShortcut(DOMString command, long windowId);
++
++    // The user finished dragging the gap between the panes of a split:
++    // <code>tabId</code> is the first (left) pane's tab, <code>ratio</code>
++    // the share of the width it now takes.
++    static void onSplitRatioChanged(long tabId, double ratio);
+   };
+ };

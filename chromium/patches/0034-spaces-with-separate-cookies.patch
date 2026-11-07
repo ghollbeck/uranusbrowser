@@ -1,0 +1,468 @@
+Uranus Browser: Spaces with separate cookies and logins.
+
+The Electron spike gives such a Space its own persistent session partition
+(session.fromPartition("persist:space-<id>"), src/main/sessions.ts). The
+Chromium equivalent here is a persistent StoragePartition per Space, fixed
+on each of the Space's tabs through its SiteInstance
+(SiteInstance::CreateForFixedStoragePartition), which the shell asks for with
+chrome.anusPrivate.createTab({partition}).
+
+Why a storage partition and not a Profile per Space: a Profile has its own
+extension system, so the shell (and its one Store of Spaces), the window
+frame, Uranus Browser's shortcuts and every other Space would have to be split or
+bridged across profiles, and a Chromium window belongs to one profile, so a
+Space's tabs couldn't share the window with the others. A StoragePartition
+keeps everything else (the window, the shell, extensions, history, the
+password manager, prefs) and gives the tab its own cookies, localStorage,
+IndexedDB, service workers and cache, on disk under
+<profile>/Storage/ext/anus-space/, as <webview> partitions are. Chromium
+already keeps a fixed partition across navigations, cross-site ones and new
+BrowsingInstances included (RenderFrameHostManager, NavigationRequest), and
+Chrome on Android opens real tabs this way, so pages behave as in any tab.
+
+What this patch adds:
+- chrome/browser/anus/anus_spaces.h: the partition of a Space, by name.
+- anusPrivate.createTab / getTabPartition / clearPartition.
+- Tabs opened from a page stay in its partition: noopener windows
+  (WebContentsImpl::CreateNewWindow, which made them in a default
+  SiteInstance), links to a new tab and "Open Link in New Tab"
+  (CreateTargetContents, asked of the initiating frame), and Peek.
+- The partitions survive Chromium's storage partition garbage collection.
+
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.cc
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.cc
+@@ -24,6 +24,14 @@
+ #include "chrome/browser/anus/anus_accelerator.h"
+ #include "chrome/browser/anus/anus_frame_host.h"
+ #include "chrome/browser/anus/anus_shell_events.h"
++#include "chrome/browser/anus/anus_spaces.h"
++#include "chrome/browser/ui/tabs/tab_enums.h"
++#include "content/public/browser/navigation_controller.h"
++#include "content/public/browser/site_instance.h"
++#include "content/public/browser/storage_partition.h"
++#include "services/network/public/mojom/clear_data_filter.mojom.h"
++#include "services/network/public/mojom/cookie_manager.mojom.h"
++#include "services/network/public/mojom/network_context.mojom.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/themes/theme_service.h"
+ #include "chrome/browser/themes/theme_service_factory.h"
+@@ -434,7 +442,7 @@
+   if (!host) {
+     return RespondNow(Error(kNoWindowError, "(peek)"));
+   }
+-  host->OpenPeek(url);
++  host->OpenPeek(url, /*source=*/nullptr);
+   return RespondNow(NoArguments());
+ }
+ 
+@@ -540,8 +548,98 @@
+     }
+   }
+   return RespondNow(WithArguments(std::move(ids)));
++}
++
++ExtensionFunction::ResponseAction AnusPrivateCreateTabFunction::Run() {
++  auto params = anus_private::CreateTab::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  const anus_private::CreateTabOptions& options = params->options;
++
++  AnusFrameHost* host =
++      options.window_id ? HostForWindow(*options.window_id, browser_context())
++                        : AnusFrameHost::Main(browser_context());
++  if (!host || host->IsAnusMini()) {
++    return RespondNow(Error(kNoWindowError,
++                            options.window_id
++                                ? base::NumberToString(*options.window_id)
++                                : std::string("(main)")));
++  }
++  GURL url(chrome::kChromeUINewTabURL);
++  if (options.url && !options.url->empty()) {
++    url = GURL(*options.url);
++    if (!url.is_valid()) {
++      return RespondNow(Error("Invalid url: " + *options.url));
++    }
++  }
++
++  // The SiteInstance decides the storage partition, for the tab's life.
++  content::BrowserContext* context = browser_context();
++  const std::string partition = options.partition.value_or(std::string());
++  scoped_refptr<content::SiteInstance> site_instance =
++      partition.empty()
++          ? content::SiteInstance::CreateForURL(context, url)
++          : content::SiteInstance::CreateForFixedStoragePartition(
++                context, url, AnusSpacePartition(context, partition));
++  const bool active = options.active.value_or(true);
++  content::WebContents::CreateParams create_params(context,
++                                                    std::move(site_instance));
++  create_params.initially_hidden = !active;
++  std::unique_ptr<content::WebContents> contents =
++      content::WebContents::Create(create_params);
++  content::WebContents* raw = contents.get();
++  contents->GetController().LoadURL(url, content::Referrer(),
++                                    ui::PAGE_TRANSITION_AUTO_TOPLEVEL,
++                                    std::string());
++  host->GetBrowserWindowInterface()->GetTabStripModel()->AddWebContents(
++      std::move(contents), TabStripModel::kNoTab,
++      ui::PAGE_TRANSITION_AUTO_TOPLEVEL,
++      active ? AddTabTypes::ADD_ACTIVE : AddTabTypes::ADD_NONE);
++  return RespondNow(WithArguments(ExtensionTabUtil::GetTabId(raw)));
+ }
+ 
++ExtensionFunction::ResponseAction AnusPrivateGetTabPartitionFunction::Run() {
++  auto params = anus_private::GetTabPartition::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  content::WebContents* contents = nullptr;
++  if (!ExtensionTabUtil::GetTabById(params->tab_id, browser_context(),
++                                    /*include_incognito=*/false, &contents)) {
++    return RespondNow(Error(kNoTabError, base::NumberToString(params->tab_id)));
++  }
++  return RespondNow(WithArguments(AnusSpaceOf(contents)));
++}
++
++ExtensionFunction::ResponseAction AnusPrivateClearPartitionFunction::Run() {
++  auto params = anus_private::ClearPartition::Params::Create(args());
++  EXTENSION_FUNCTION_VALIDATE(params);
++  if (params->partition.empty()) {
++    return RespondNow(Error("Only a Space's own partition can be cleared."));
++  }
++  content::StoragePartition* partition = browser_context()->GetStoragePartition(
++      AnusSpacePartition(browser_context(), params->partition));
++  // Cookies (session ones too), every kind of site storage, and the cache.
++  auto cookies = network::mojom::CookieDeletionFilter::New();
++  cookies->session_control =
++      network::mojom::CookieDeletionSessionControl::IGNORE_CONTROL;
++  pending_ = 2;
++  partition->ClearData(
++      content::StoragePartition::REMOVE_DATA_MASK_ALL,
++      /*filter_builder=*/nullptr,
++      content::StoragePartition::StorageKeyPolicyMatcherFunction(),
++      std::move(cookies), /*perform_storage_cleanup=*/true, base::Time(),
++      base::Time::Max(),
++      base::BindOnce(&AnusPrivateClearPartitionFunction::OnCleared, this));
++  partition->GetNetworkContext()->ClearHttpCache(
++      base::Time(), base::Time::Max(), /*filter=*/nullptr,
++      base::BindOnce(&AnusPrivateClearPartitionFunction::OnCleared, this));
++  return RespondLater();
++}
++
++void AnusPrivateClearPartitionFunction::OnCleared() {
++  if (--pending_ == 0) {
++    Respond(NoArguments());
++  }
++}
++
+ ExtensionFunction::ResponseAction
+ AnusPrivateRunInRegularProfileFunction::Run() {
+   auto params = anus_private::RunInRegularProfile::Params::Create(args());
+--- a/chrome/browser/extensions/api/anus_private/anus_private_api.h
++++ b/chrome/browser/extensions/api/anus_private/anus_private_api.h
+@@ -185,6 +185,37 @@
+   ResponseAction Run() override;
+ };
+ 
++class AnusPrivateCreateTabFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.createTab", UNKNOWN)
++
++ protected:
++  ~AnusPrivateCreateTabFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateGetTabPartitionFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.getTabPartition", UNKNOWN)
++
++ protected:
++  ~AnusPrivateGetTabPartitionFunction() override = default;
++  ResponseAction Run() override;
++};
++
++class AnusPrivateClearPartitionFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("anusPrivate.clearPartition", UNKNOWN)
++
++ protected:
++  ~AnusPrivateClearPartitionFunction() override = default;
++  ResponseAction Run() override;
++
++ private:
++  void OnCleared();
++  int pending_ = 0;
++};
++
+ class AnusPrivateRunInRegularProfileFunction : public ExtensionFunction {
+  public:
+   DECLARE_EXTENSION_FUNCTION("anusPrivate.runInRegularProfile", UNKNOWN)
+--- a/chrome/browser/anus/anus_frame_host.h
++++ b/chrome/browser/anus/anus_frame_host.h
+@@ -168,7 +168,9 @@
+ 
+   // Peek: a page in a floating card over the page area (the spike's
+   // openPeek()). Opening one replaces the one before.
+-  virtual void OpenPeek(const GURL& url) = 0;
++  // `source` is the page whose link it is, if any: the Peek opens in its
++  // storage partition (a Space with separate cookies, anus_spaces.h).
++  virtual void OpenPeek(const GURL& url, content::WebContents* source) = 0;
+   // Peek with a page that is already made (a window.open() from a Peek tab),
+   // so that it keeps its opener.
+   virtual void OpenPeekWithContents(
+--- /dev/null
++++ b/chrome/browser/anus/anus_spaces.h
+@@ -0,0 +1,94 @@
++// Copyright 2026 The Uranus Browser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_ANUS_ANUS_SPACES_H_
++#define CHROME_BROWSER_ANUS_ANUS_SPACES_H_
++
++#include <string>
++
++#include "base/files/file_path.h"
++#include "base/memory/scoped_refptr.h"
++#include "content/public/browser/browser_context.h"
++#include "content/public/browser/security_principal.h"
++#include "content/public/browser/site_instance.h"
++#include "content/public/browser/storage_partition_config.h"
++#include "content/public/browser/web_contents.h"
++#include "url/gurl.h"
++
++// Spaces with separate cookies and logins ("Separate Cookies and Logins" in
++// the Space menu), like the Electron spike's persist:space-<id> session
++// partitions. The tabs of such a Space live in a storage partition of their
++// own: cookies, localStorage, IndexedDB, service workers, cache and the rest,
++// on disk under <profile>/Storage/ext/anus-space/<hash of the name>, so it
++// stays across restarts. The shell names the partition (the Space's id) and
++// opens the Space's tabs in it (chrome.anusPrivate.createTab).
++//
++// A tab's partition is fixed for its life: its SiteInstance is made with
++// SiteInstance::CreateForFixedStoragePartition(), which Chromium keeps across
++// navigations, cross-site ones and new BrowsingInstances included (as for
++// <webview>). Tabs a page opens stay in its partition: window.open() shares
++// the opener's BrowsingInstance, and links to a new tab (noopener, the
++// context menu's "Open Link in New Tab", Peek) inherit it
++// (AnusSiteInstanceFor()). A tab moving to another Space can't change
++// partition, so the shell closes it and opens it again in the other one.
++//
++// Header-only: every user already depends on //content/public/browser.
++
++inline constexpr char kAnusSpacePartitionDomain[] = "anus-space";
++
++// The storage partition of the Space named `name` (the shell's Space id). In
++// an off-the-record profile it is in memory, like the rest of that profile.
++inline content::StoragePartitionConfig AnusSpacePartition(
++    content::BrowserContext* context,
++    const std::string& name) {
++  return content::StoragePartitionConfig::Create(
++      context, kAnusSpacePartitionDomain, name, context->IsOffTheRecord());
++}
++
++inline bool IsAnusSpacePartition(
++    const content::StoragePartitionConfig& config) {
++  return !config.is_default() &&
++         config.partition_domain() == kAnusSpacePartitionDomain;
++}
++
++// The Space partition `contents` is in, or "" (the profile's own storage).
++inline std::string AnusSpaceOf(content::WebContents* contents) {
++  if (!contents) {
++    return std::string();
++  }
++  const content::StoragePartitionConfig& config =
++      contents->GetSiteInstance()->GetSecurityPrincipal()
++          .GetStoragePartitionConfig();
++  return IsAnusSpacePartition(config) ? config.partition_name()
++                                        : std::string();
++}
++
++// A SiteInstance in a new BrowsingInstance for `url`, in the Space partition
++// `source` is in; null when `source` is in the profile's own storage (then
++// the caller makes its SiteInstance as usual).
++inline scoped_refptr<content::SiteInstance> AnusSiteInstanceFor(
++    content::WebContents* source,
++    const GURL& url) {
++  if (!source) {
++    return nullptr;
++  }
++  const content::StoragePartitionConfig& config =
++      source->GetSiteInstance()->GetSecurityPrincipal()
++          .GetStoragePartitionConfig();
++  if (!IsAnusSpacePartition(config)) {
++    return nullptr;
++  }
++  return content::SiteInstance::CreateForFixedStoragePartition(
++      source->GetBrowserContext(), url, config);
++}
++
++// Where the Space partitions live, relative to the profile directory; kept
++// when Chromium garbage-collects storage partitions it doesn't know.
++inline base::FilePath AnusSpacePartitionsPath() {
++  return base::FilePath(FILE_PATH_LITERAL("Storage"))
++      .Append(FILE_PATH_LITERAL("ext"))
++      .AppendASCII(kAnusSpacePartitionDomain);
++}
++
++#endif  // CHROME_BROWSER_ANUS_ANUS_SPACES_H_
+--- a/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
++++ b/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
+@@ -619,7 +619,7 @@
+   // Uranus Browser: like Arc, links leaving a pinned tab open in Peek.
+   if (AnusFrameHost* peek =
+           AnusPeekHostFor(*browser_, source, params.disposition)) {
+-    peek->OpenPeek(params.url);
++    peek->OpenPeek(params.url, source);
+     return nullptr;
+   }
+ 
+--- a/chrome/browser/ui/navigator/browser_navigator.cc
++++ b/chrome/browser/ui/navigator/browser_navigator.cc
+@@ -21,6 +21,7 @@
+ #include "build/build_config.h"
+ #include "chrome/browser/apps/app_service/web_contents_app_id_utils.h"
+ #include "chrome/browser/apps/link_capturing/link_capturing_tab_data.h"
++#include "chrome/browser/anus/anus_spaces.h"
+ #include "chrome/browser/browser_about_handler.h"
+ #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
+ #include "chrome/browser/platform_util.h"
+@@ -579,6 +580,23 @@
+       params.opener ? params.opener->GetSiteInstance()
+                     : tab_util::GetSiteInstanceForNewTab(
+                           params.browser->GetProfile(), url);
++  // Uranus Browser: a tab a page opens (a link to a new tab, "Open Link in New Tab")
++  // stays in the storage partition of that page's Space if it has its own
++  // cookies and logins (anus_spaces.h). Asked of the frame that started the
++  // navigation: source_contents is the window's active tab when the browser
++  // or an extension opens the tab, and a Peek isn't one.
++  if (!params.opener && params.initiator_frame_token) {
++    content::RenderFrameHost* initiator =
++        content::RenderFrameHost::FromFrameToken(
++            content::GlobalRenderFrameHostToken(
++                params.initiator_process_id, *params.initiator_frame_token));
++    if (scoped_refptr<content::SiteInstance> space = AnusSiteInstanceFor(
++            initiator ? content::WebContents::FromRenderFrameHost(initiator)
++                      : nullptr,
++            url)) {
++      initial_site_instance_for_new_contents = std::move(space);
++    }
++  }
+ 
+   WebContents::CreateParams create_params(
+       params.browser->GetProfile(), initial_site_instance_for_new_contents);
+--- a/chrome/browser/ui/views/frame/anus_frame_view.cc
++++ b/chrome/browser/ui/views/frame/anus_frame_view.cc
+@@ -15,6 +15,7 @@
+ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
+ #include "chrome/browser/ui/views/frame/anus_top_chrome.h"
++#include "chrome/browser/anus/anus_spaces.h"
+ #include "base/task/sequenced_task_runner.h"
+ #include "chrome/browser/anus/anus_shell_events.h"
+ #include "chrome/browser/ui/browser_tabstrip.h"
+@@ -259,10 +260,13 @@
+   SetWebContents(nullptr);
+ }
+ 
+-void AnusFrameView::OpenPeek(const GURL& url) {
++void AnusFrameView::OpenPeek(const GURL& url, content::WebContents* source) {
+   content::BrowserContext* context = GetBrowserContext();
+-  std::unique_ptr<content::WebContents> contents =
+-      content::WebContents::Create(content::WebContents::CreateParams(context));
++  scoped_refptr<content::SiteInstance> space =
++      AnusSiteInstanceFor(source, url);
++  std::unique_ptr<content::WebContents> contents = content::WebContents::Create(
++      space ? content::WebContents::CreateParams(context, std::move(space))
++            : content::WebContents::CreateParams(context));
+   contents->GetController().LoadURL(url, content::Referrer(),
+                                     ui::PAGE_TRANSITION_LINK, std::string());
+   OpenPeekWithContents(std::move(contents));
+--- a/chrome/browser/ui/views/frame/anus_frame_view.h
++++ b/chrome/browser/ui/views/frame/anus_frame_view.h
+@@ -95,7 +95,7 @@
+   void FocusFrame() override;
+   void FocusPage() override;
+   void UpdateShortcuts() override;
+-  void OpenPeek(const GURL& url) override;
++  void OpenPeek(const GURL& url, content::WebContents* source) override;
+   void OpenPeekWithContents(
+       std::unique_ptr<content::WebContents> contents) override;
+   void ClosePeek() override;
+--- a/chrome/browser/web_applications/commands/garbage_collect_storage_partitions_command.cc
++++ b/chrome/browser/web_applications/commands/garbage_collect_storage_partitions_command.cc
+@@ -14,6 +14,7 @@
+ #include "base/functional/concurrent_closures.h"
+ #include "base/memory/weak_ptr.h"
+ #include "base/values.h"
++#include "chrome/browser/anus/anus_spaces.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/web_applications/extensions_manager.h"
+ #include "chrome/browser/web_applications/locks/all_apps_lock.h"
+@@ -74,6 +75,9 @@
+   // Get all paths from Web App system.
+   allowlist.merge(lock_->isolation_delegate().GetIsolatedStoragePaths());
+ 
++  // Uranus Browser: the storage of Spaces with separate cookies and logins.
++  allowlist.insert(profile_->GetPath().Append(AnusSpacePartitionsPath()));
++
+   base::ListValue* debug_paths =
+       GetMutableDebugValue().EnsureList("allow_list_paths");
+   for (const auto& path : allowlist) {
+--- a/chrome/common/extensions/api/anus_private.idl
++++ b/chrome/common/extensions/api/anus_private.idl
+@@ -78,6 +78,21 @@
+     boolean? console;
+   };
+ 
++  // A new tab (createTab()).
++  dictionary CreateTabOptions {
++    // The window (default: Uranus Browser's main window).
++    long? windowId;
++    // The page (default: the new tab page).
++    DOMString? url;
++    // Whether it becomes the window's active tab (default: true).
++    boolean? active;
++    // The storage partition of a Space with separate cookies and logins: the
++    // Space's id. Default: the profile's own storage.
++    DOMString? partition;
++  };
++
++  callback PartitionCallback = void(DOMString partition);
++
+   // What a new AnusMini shows.
+   dictionary AnusMiniOptions {
+     // A page to open (default: the new tab page).
+@@ -186,6 +201,19 @@
+     static void runInRegularProfile(
+         DOMString command,
+         optional DoneCallback callback);
++
++    // Opens a tab, like tabs.create(), optionally in a Space's own storage
++    // partition (cookies, logins, site data; kept on disk). The tab stays in
++    // that partition across navigations, and the tabs it opens inherit it.
++    static void createTab(CreateTabOptions options, TabIdCallback callback);
++    // The storage partition a tab is in: a Space's id, or "" (the profile's
++    // own storage).
++    static void getTabPartition(long tabId, PartitionCallback callback);
++    // Signs out of everything in a Space's partition: removes its cookies,
++    // storage and cache.
++    static void clearPartition(
++        DOMString partition,
++        optional DoneCallback callback);
+   };
+ 
+   interface Events {
+--- a/content/browser/web_contents/web_contents_impl.cc
++++ b/content/browser/web_contents/web_contents_impl.cc
+@@ -5783,6 +5783,12 @@
+       // as long as they preserve the guest's StoragePartition.
+       site_instance =
+           SiteInstance::CreateForGuest(GetBrowserContext(), partition_config);
++    } else if (source_site_instance->IsFixedStoragePartition()) {
++      // Uranus Browser: likewise, a page in a fixed storage partition (a tab of a
++      // Space with separate cookies and logins) keeps it in its noopener
++      // windows.
++      site_instance = SiteInstance::CreateForFixedStoragePartition(
++          GetBrowserContext(), params.target_url, partition_config);
+     } else {
+       site_instance = SiteInstance::Create(GetBrowserContext());
+     }
